@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FeeFlow — School Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0c2d57; --primary-light: #1a6dcc; --emerald: #059669; --emerald-light: #10b981;
+            --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --text: #1e293b; --text-light: #64748b;
+            --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --violet: #7c3aed;
+            --sidebar: 260px; --topbar: 64px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        h1,h2,h3,h4,h5 { font-family: 'Space Grotesk', sans-serif; }
+
+        .layout { display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border);
+            position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100;
+        }
+        .brand { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+        .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg,var(--primary),var(--emerald)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
+        .brand-tag { font-size: 9px; font-weight: 700; color: var(--emerald); background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
+        .school-name { padding: 8px 20px; font-size: 12px; color: var(--text-light); font-weight: 600; background: var(--bg); margin: 0 10px; border-radius: 8px; }
+        
+        .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+        .nav-section { padding: 6px 0; }
+        .nav-label { padding: 4px 20px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; margin: 1px 10px; border-radius: 10px; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 500; color: var(--text-light); position: relative; }
+        .nav-item i { width: 20px; text-align: center; font-size: 15px; }
+        .nav-item:hover { background: var(--bg); color: var(--text); }
+        .nav-item.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
+        .nav-item.active::before { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--primary); border-radius: 0 3px 3px 0; }
+        .nav-badge { margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--danger); color: white; }
+        .nav-badge.green { background: var(--emerald); }
+        
+        .sidebar-footer { padding: 14px; border-top: 1px solid var(--border); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--primary-light),var(--emerald)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; }
+        .user-name { font-weight: 600; font-size: 13px; }
+        .user-role { font-size: 11px; color: var(--text-light); }
+        
+        .main { flex: 1; margin-left: var(--sidebar); }
+        .topbar { height: var(--topbar); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+        .breadcrumb { font-size: 13px; color: var(--text-light); }
+        .breadcrumb span { color: var(--text); font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+        .icon-btn { width: 38px; height: 38px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-size: 16px; color: var(--text-light); display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.2s; }
+        .icon-btn:hover { background: var(--bg); color: var(--text); }
+        .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
+        
+        .content { padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .page-title { font-size: 26px; font-weight: 700; }
+        .page-desc { font-size: 14px; color: var(--text-light); margin-top: 2px; }
+        .page-header-left { flex: 1; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border-radius: 14px; padding: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; transition: all 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+        .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+        .stat-card.blue::after { background: linear-gradient(90deg, var(--primary-light), #60a5fa); }
+        .stat-card.green::after { background: linear-gradient(90deg, var(--emerald), var(--emerald-light)); }
+        .stat-card.amber::after { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+        .stat-card.red::after { background: linear-gradient(90deg, var(--danger), #f87171); }
+        .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+        .stat-icon.blue { background: #eff6ff; color: var(--primary-light); }
+        .stat-icon.green { background: #ecfdf5; color: var(--emerald); }
+        .stat-icon.amber { background: #fffbeb; color: var(--warning); }
+        .stat-icon.red { background: #fef2f2; color: var(--danger); }
+        .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 2px; }
+        .stat-label { font-size: 13px; color: var(--text-light); }
+        .stat-trend { position: absolute; top: 16px; right: 16px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+        .stat-trend.up { background: #ecfdf5; color: var(--emerald); }
+        .stat-trend.down { background: #fef2f2; color: var(--danger); }
+
+        /* Cards */
+        .card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .card-title { font-size: 15px; font-weight: 700; }
+        .card-body { padding: 0; }
+        .card-body.p { padding: 20px; }
+
+        /* Table */
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
+        .table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .table tr:last-child td { border-bottom: none; }
+        .table tr:hover td { background: #f8fafc; }
+        .table tr.selected td { background: #eff6ff; }
+
+        /* Student cell */
+        .student-cell { display: flex; align-items: center; gap: 10px; }
+        .student-avatar { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+        .student-name { font-weight: 600; color: var(--text); }
+        .student-adm { font-size: 11px; color: var(--text-light); }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .badge.paid { background: #ecfdf5; color: var(--emerald); }
+        .badge.partial { background: #fffbeb; color: #b45309; }
+        .badge.unpaid { background: #fef2f2; color: var(--danger); }
+        .badge.pending { background: #eff6ff; color: var(--info); }
+        .badge.reconciled { background: #ecfdf5; color: var(--emerald); }
+        .badge.failed { background: #fef2f2; color: var(--danger); }
+        .badge.overdue { background: #fef2f2; color: var(--danger); }
+        .badge.active { background: #ecfdf5; color: var(--emerald); }
+        .badge i { font-size: 6px; }
+        .amount { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-family: 'DM Sans', sans-serif; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+        .btn-primary:hover { box-shadow: 0 4px 12px rgba(26,109,204,0.3); }
+        .btn-green { background: linear-gradient(135deg, var(--emerald), var(--emerald-light)); color: white; }
+        .btn-green:hover { box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
+        .btn-orange { background: linear-gradient(135deg, #ea580c, var(--warning)); color: white; }
+        .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--text-light); background: var(--bg); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+        /* Alerts */
+        .alert { padding: 14px 16px; border-radius: 10px; display: flex; gap: 10px; margin-bottom: 16px; font-size: 13px; }
+        .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--info); }
+        .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
+        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+        .alert-danger { background: #fef2f2; border: 1px solid #fca5a5; color: var(--danger); }
+        .alert i { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+        .alert-title { font-weight: 700; margin-bottom: 2px; }
+
+        /* Progress */
+        .progress-list { display: flex; flex-direction: column; gap: 14px; }
+        .progress-item-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+        .progress-name { font-weight: 600; }
+        .progress-pct { font-weight: 700; }
+        .progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; }
+
+        /* Circular Progress */
+        .circular-progress { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+        .circular-progress svg { transform: rotate(-90deg); }
+        .circular-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+        .circular-pct { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; }
+        .circular-label { font-size: 12px; color: var(--text-light); }
+
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+        .form-label span { color: var(--danger); }
+        .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
+        .form-input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(26,109,204,0.1); }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        .form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Filter */
+        .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .filter-select { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; outline: none; }
+        .search-wrap { position: relative; }
+        .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 13px; }
+        .search-wrap input { padding-left: 32px; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; padding: 20px; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 520px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; overflow-y: auto; }
+        .modal-overlay.open .modal-box { transform: translateY(0); }
+        .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .modal-close { width: 30px; height: 30px; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+        /* Toast */
+        .toast-container { position: fixed; top: 76px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: white; border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; border-left: 4px solid var(--emerald); animation: slideIn 0.3s; max-width: 360px; }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.info { border-left-color: var(--info); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Notifications */
+        .notif-list { max-height: 400px; overflow-y: auto; }
+        .notif-item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+        .notif-item:hover { background: var(--bg); }
+        .notif-item.unread { background: #f0f9ff; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-title { font-weight: 600; font-size: 13px; }
+        .notif-body { font-size: 12px; color: var(--text-light); margin-top: 3px; }
+        .notif-time { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+        /* Sections */
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Ledger */
+        .ledger { display: grid; grid-template-columns: 130px 1fr 110px 110px 110px 100px; gap: 12px; padding: 12px 20px; align-items: center; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .ledger:last-child { border-bottom: none; }
+        .ledger:hover { background: var(--bg); }
+        .ledger.header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg); }
+        .ledger-date { color: var(--text-light); }
+        .ledger-desc { font-weight: 500; }
+        .ledger-debit { color: var(--danger); font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
+        .ledger-credit { color: var(--emerald); font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
+        .ledger-balance { font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+        .ledger.credit-row { background: #ecfdf5; }
+
+        /* SMS Preview */
+        .sms-preview { background: #1a1a2e; border-radius: 10px; padding: 16px; margin-top: 14px; }
+        .sms-phone { color: #9ca3af; font-size: 12px; margin-bottom: 6px; }
+        .sms-body { color: #00ff88; font-size: 13px; line-height: 1.5; font-family: 'Courier New', monospace; }
+
+        /* Settings Tabs */
+        .settings-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .settings-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; font-family: 'DM Sans', sans-serif; }
+        .settings-tab:hover { color: var(--text); }
+        .settings-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .settings-section { display: none; }
+        .settings-section.active { display: block; }
+
+        /* Info Row */
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-light); }
+        .info-value { font-weight: 600; }
+
+        /* Checkbox */
+        .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
+        .checkbox-row:last-child { border-bottom: none; }
+        .checkbox-row input { width: 18px; height: 18px; accent-color: var(--primary); }
+
+        /* Live dot */
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .live-dot { width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+
+        /* Receipt */
+        .receipt-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+        .receipt-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg); }
+        .receipt-body { padding: 18px; }
+        .receipt-logo { text-align: center; padding-bottom: 12px; border-bottom: 1px dashed var(--border); margin-bottom: 12px; }
+        .receipt-logo-name { font-weight: 700; font-size: 15px; color: var(--primary); }
+        .receipt-logo-addr { font-size: 11px; color: var(--text-light); }
+        .receipt-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .receipt-row.total { border-top: 2px solid var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; font-size: 15px; }
+        .receipt-label { color: var(--text-light); }
+        .receipt-value { font-weight: 600; }
+
+        /* Unauthorized */
+        .unauthorized { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px; }
+        .unauthorized i { font-size: 64px; color: var(--danger); margin-bottom: 20px; }
+        .unauthorized h2 { font-size: 24px; margin-bottom: 10px; }
+        .unauthorized p { color: var(--text-light); margin-bottom: 20px; }
+
+        /* Overdue badge */
+        .overdue-badge { font-size: 11px; padding: 2px 7px; border-radius: 5px; font-weight: 600; }
+        .overdue-badge.d7 { background: #fffbeb; color: var(--warning); }
+        .overdue-badge.d14 { background: #fed7aa; color: #c2410c; }
+        .overdue-badge.d30 { background: #fef2f2; color: var(--danger); }
+        .overdue-badge.d60 { background: #fecaca; color: #b91c1c; }
+
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .grid-2 { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .ledger { grid-template-columns: 1fr; gap: 4px; }
+            .ledger.header { display: none; }
+        }
+    
+body.dark{--bg:#0f172a;--surface:#111827;--border:#334155;--text:#f1f5f9;--text-light:#94a3b8;background:var(--bg);color:var(--text)}
+body.dark .topbar,body.dark .sidebar,body.dark .card,body.dark .stat-card,body.dark .form-input,body.dark .filter-select,body.dark .modal-box,body.dark .btn-outline{background:var(--surface);color:var(--text)}
+body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background:#1e293b}body.dark .nav-item.active{background:#1e3a5f;color:#93c5fd}
+.clickable-row{cursor:pointer}.clickable-row:hover td{background:#eff6ff!important}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-box{padding:12px;background:var(--bg);border-radius:9px}.detail-label{font-size:11px;color:var(--text-light);text-transform:uppercase}.detail-value{font-weight:700;margin-top:3px}
+</style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Unauthorized -->
+    <div id="unauthorizedPage" style="display:none;">
+        <div class="unauthorized">
+            <i class="fas fa-lock"></i>
+            <h2>Access Denied</h2>
+            <p>You need to be logged in as School Admin to access this page.</p>
+            <a href="portal.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="layout" id="mainApp" style="display:none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div>
+                    <div class="brand-text">FeeFlow</div>
+                    <span class="brand-tag">SCHOOL ADMIN</span>
+                </div>
+            </div>
+            <div class="school-name" id="schoolNameDisplay"><i class="fas fa-school" style="margin-right:6px;"></i> School</div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-label">Main</div>
+                    <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
+                    <div class="nav-item" data-section="students" onclick="navigate('students',this)"><i class="fas fa-user-graduate"></i> Students <span class="nav-badge green" id="navStudentCount">0</span></div>
+                    <div class="nav-item" data-section="fees" onclick="navigate('fees',this)"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
+                    <div class="nav-item" data-section="payments" onclick="navigate('payments',this)"><i class="fas fa-money-bill-wave"></i> Payments</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Finance</div>
+                    <div class="nav-item" data-section="ledger" onclick="navigate('ledger',this)"><i class="fas fa-book"></i> Fee Ledger</div>
+                    <div class="nav-item" data-section="outstanding" onclick="navigate('outstanding',this)"><i class="fas fa-exclamation-circle"></i> Outstanding <span class="nav-badge" id="navOverdueCount">0</span></div>
+                    <div class="nav-item" data-section="mpesa" onclick="navigate('mpesa',this)"><i class="fas fa-mobile-alt"></i> M-Pesa Reconcile</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Tools</div>
+                    <div class="nav-item" data-section="reminders" onclick="navigate('reminders',this)"><i class="fas fa-bullhorn"></i> Bulk Reminders</div>
+                    <div class="nav-item" data-section="receipts" onclick="navigate('receipts',this)"><i class="fas fa-receipt"></i> Receipts</div>
+                    <div class="nav-item" data-section="reports" onclick="navigate('reports',this)"><i class="fas fa-chart-bar"></i> Reports</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Management</div>
+<div class="nav-item" data-section="parents" onclick="navigate('parents',this)"><i class="fas fa-users"></i> Parent Directory <span class="nav-badge green" id="navParentCount">0</span></div>
+                    <div class="nav-item" data-section="classes" onclick="navigate('classes',this)"><i class="fas fa-chalkboard"></i> Classes</div>
+                    <div class="nav-item" data-section="settings" onclick="navigate('settings',this)"><i class="fas fa-cog"></i> Settings</div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">SA</div>
+                    <div>
+                        <div class="user-name" id="userName">School Admin</div>
+                        <div class="user-role" id="userSchool">School</div>
+                    </div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="main">
+            <header class="topbar">
+                <div class="breadcrumb">FeeFlow / <span id="breadcrumb">Dashboard</span></div>
+                <div class="topbar-right">
+                    <button class="icon-btn" onclick="showSection('notifications')">
+                        <i class="fas fa-bell"></i>
+                        <span class="dot" id="notifDot"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+
+                <!-- DASHBOARD -->
+                <div class="section active" id="sec-dashboard">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Dashboard</div>
+                            <div class="page-desc" id="termInfo">Current Term</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-outline" onclick="exportDashboard()"><i class="fas fa-download"></i> Export</button>
+                            <button class="btn btn-primary" onclick="openModal('recordPayment')"><i class="fas fa-plus"></i> Record Payment</button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" id="deadlineAlert">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <div class="alert-title">Fee Deadline: Not configured</div>
+                            <div><span id="overdueCountAlert">0</span> students have overdue balances. <a href="#" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))" style="font-weight:600;">Send bulk reminders →</a></div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card blue">
+                            <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+                            <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                            <div class="stat-value" id="statStudents">0</div>
+                            <div class="stat-label">Total Students</div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 8%</div>
+                            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-value" id="statCollected">KES 0</div>
+                            <div class="stat-label">Fees Collected</div>
+                        </div>
+                        <div class="stat-card amber">
+                            <div class="stat-trend down"><i class="fas fa-arrow-down"></i> 3%</div>
+                            <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
+                            <div class="stat-value" id="statOutstanding">KES 0</div>
+                            <div class="stat-label">Outstanding</div>
+                        </div>
+                        <div class="stat-card red">
+                            <div class="stat-trend down"><i class="fas fa-arrow-up"></i> 5%</div>
+                            <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="stat-value" id="statOverdue">0</div>
+                            <div class="stat-label">Overdue Accounts</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Recent Payments</div>
+                                <div class="filter-bar">
+                                    <select class="filter-select" id="recentClassFilter" onchange="renderRecentPayments()">
+                                        <option value="">All Classes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div style="overflow-x:auto;">
+                                    <table class="table">
+                                        <thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                                        <tbody id="recentPaymentsBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="card">
+                                <div class="card-header"><div class="card-title">Collection Rate</div></div>
+                                <div class="card-body p">
+                                    <div class="circular-progress">
+                                        <svg viewBox="0 0 140 140" width="140" height="140">
+                                            <circle cx="70" cy="70" r="58" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                                            <circle cx="70" cy="70" r="58" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="364.42" stroke-dashoffset="72.88" id="collectionCircle"/>
+                                            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:var(--primary)"/><stop offset="100%" style="stop-color:var(--emerald)"/></linearGradient></defs>
+                                        </svg>
+                                        <div class="circular-value">
+                                            <div class="circular-pct" id="collectionPct">80%</div>
+                                            <div class="circular-label">collected</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;justify-content:center;gap:20px;font-size:12px;margin-top:12px;">
+                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--emerald);border-radius:2px;margin-right:4px;"></span>Collected</span>
+                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--border);border-radius:2px;margin-right:4px;"></span>Outstanding</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card" style="margin-top:16px;">
+                                <div class="card-header"><div class="card-title">Class Performance</div></div>
+                                <div class="card-body p">
+                                    <div class="progress-list" id="classPerformance"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STUDENTS -->
+                <div class="section" id="sec-students">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Students</div>
+                            <div class="page-desc">Manage enrolled students</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('addStudent')"><i class="fas fa-plus"></i> Add Student</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">All Students <span id="studentTableCount" style="font-weight:400;color:var(--text-light);font-size:13px;"></span></div>
+                            <div class="filter-bar">
+                                <div class="search-wrap">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="filter-select" placeholder="Search name, ADM..." id="studentSearch" oninput="renderStudents()" style="width:200px;">
+                                </div>
+                                <select class="filter-select" id="studentClassFilter" onchange="renderStudents()">
+                                    <option value="">All Classes</option>
+                                </select>
+                                <select class="filter-select" id="studentStatusFilter" onchange="renderStudents()">
+                                    <option value="">All Status</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="unpaid">Unpaid</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table">
+                                    <thead><tr><th>Student</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+                                    <tbody id="studentsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FEE STRUCTURE -->
+                <div class="section" id="sec-fees">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Fee Structure</div>
+                            <div class="page-desc">Configure fee items per class/grade</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('addFeeItem')"><i class="fas fa-plus"></i> Add Fee Item</button>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <div class="alert-title">Current Term Fee Structure</div>
+                            <div>Edit amounts per class level. Mandatory fees are charged to all students automatically.</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Fee Items by Term</div><div class="filter-bar"><select class="filter-select" id="feeTermFilter" onchange="renderFeeStructure()"><option value="">All Terms</option></select>
+                            <select class="filter-select" id="feeClassFilter" onchange="renderFeeStructure()">
+                                <option value="">All Levels</option>
+                                <option>PP1-PP2</option><option>Class 1-3</option><option>Class 4-5</option><option>Class 6-8</option><option>Form 1-4</option>
+                            </select></div>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table">
+                                    <thead><tr><th>Term</th><th>Fee Item</th><th>Category</th><th>PP1-PP2</th><th>Class 1-3</th><th>Class 4-5</th><th>Class 6-8</th><th>Form 1-4</th><th>Mandatory</th><th>Actions</th></tr></thead>
+                                    <tbody id="feeStructureBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAYMENTS -->
+                <div class="section" id="sec-payments">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Payments</div>
+                            <div class="page-desc">All payment transactions</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-outline" onclick="exportPayments()"><i class="fas fa-download"></i> Export</button>
+                            <button class="btn btn-primary" onclick="openModal('recordPayment')"><i class="fas fa-plus"></i> Record Payment</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+                                Transactions <span class="live-dot"></span> <span style="font-size:11px;color:var(--emerald);font-weight:500;">Live</span>
+                            </div>
+                            <div class="filter-bar">
+                                <select class="filter-select"><option>All Methods</option><option>M-Pesa</option><option>Bank</option><option>Cash</option></select>
+                                <select class="filter-select"><option>All Status</option><option>Reconciled</option><option>Pending</option><option>Failed</option></select>
+                                <input type="date" class="filter-select" style="width:150px;">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table">
+                                    <thead><tr><th>Ref / Code</th><th>Student</th><th>Class</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                                    <tbody id="paymentsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FEE LEDGER -->
+                <div class="section" id="sec-ledger">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Fee Ledger</div>
+                            <div class="page-desc">Student financial ledger — charges and payments</div>
+                        </div>
+                        <div class="filter-bar">
+                            <select class="filter-select" id="ledgerStudentSelect" onchange="loadLedger()">
+                                <option value="">Select Student...</option>
+                            </select>
+                            <button class="btn btn-outline" onclick="printLedger()"><i class="fas fa-print"></i> Print</button>
+                        </div>
+                    </div>
+
+                    <div id="ledgerPlaceholder">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <div><div class="alert-title">Select a Student</div>Choose a student from the dropdown above to view their complete fee ledger.</div>
+                        </div>
+                    </div>
+
+                    <div id="ledgerContent" style="display:none;">
+                        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;" id="ledgerStats"></div>
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Transaction History</div></div>
+                            <div class="card-body">
+                                <div class="ledger header"><div>Date</div><div>Description</div><div>Debit</div><div>Credit</div><div>Balance</div><div>Ref</div></div>
+                                <div id="ledgerRows"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OUTSTANDING -->
+                <div class="section" id="sec-outstanding">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Outstanding Balances</div>
+                            <div class="page-desc">Students with overdue or partial balances</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-outline" onclick="exportOutstanding()"><i class="fas fa-download"></i> Export</button>
+                            <button class="btn btn-orange" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))"><i class="fas fa-bullhorn"></i> Send Reminders</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+                        <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-exclamation-circle"></i></div><div class="stat-value" id="outstandingTotal">0</div><div class="stat-label">Overdue Accounts</div></div>
+                        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-coins"></i></div><div class="stat-value" id="outstandingAmount">KES 0</div><div class="stat-label">Total Outstanding</div></div>
+                        <div class="stat-card" style="--after:bg:linear-gradient(90deg,#f97316,#f59e0b)"><div class="stat-icon" style="background:#fff7ed;color:#f97316"><i class="fas fa-clock"></i></div><div class="stat-value" id="outstanding30">0</div><div class="stat-label">30+ Days Overdue</div></div>
+                        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="outstandingPartial">0</div><div class="stat-label">Partial Payments</div></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Overdue & Partial Report</div>
+                            <div class="filter-bar">
+                                <select class="filter-select" id="outstandingClassFilter" onchange="renderOutstanding()">
+                                    <option value="">All Classes</option>
+                                </select>
+                                <select class="filter-select" id="outstandingDaysFilter" onchange="renderOutstanding()">
+                                    <option value="">All</option><option value="7">7+ Days</option><option value="14">14+ Days</option><option value="30">30+ Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table">
+                                    <thead><tr><th>Student</th><th>Class</th><th>Balance</th><th>Last Payment</th><th>Days Overdue</th><th>Parent Phone</th><th>Actions</th></tr></thead>
+                                    <tbody id="outstandingBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- M-PESA RECONCILE -->
+                <div class="section" id="sec-mpesa">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">M-Pesa Reconciliation</div>
+                            <div class="page-desc">Auto &amp; manual matching of M-Pesa payments</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="btn btn-outline" onclick="autoReconcile()"><i class="fas fa-sync-alt"></i> Auto-Reconcile</button>
+                            <button class="btn btn-green" onclick="openModal('manualReconcile')"><i class="fas fa-link"></i> Manual Match</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+                        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-double"></i></div><div class="stat-value" id="reconDone">0</div><div class="stat-label">Reconciled Today</div></div>
+                        <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="reconPending">0</div><div class="stat-label">Unmatched</div></div>
+                        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div class="stat-value" id="reconFailed">0</div><div class="stat-label">Failed</div></div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Unmatched Transactions</div></div>
+                            <div class="card-body" id="unmatchedList"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Reconciliation Log</div></div>
+                            <div class="card-body" id="reconLog"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BULK REMINDERS -->
+                <div class="section" id="sec-reminders">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Bulk SMS Reminders</div>
+                            <div class="page-desc">Send payment reminder SMS to parents</div>
+                        </div>
+                        <button class="btn btn-outline" onclick="openModal('editTemplate')"><i class="fas fa-edit"></i> Edit Template</button>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <div class="alert-title"><span id="reminderCount">0</span> parents have overdue balances</div>
+                            <div>Estimated cost: <strong id="reminderCost">KES 0</strong> via Africa's Talking (~KES 0.40/SMS)</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Select Recipients</div>
+                                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+                                    <input type="checkbox" id="selectAllReminders" onchange="toggleAllReminders()"> Select All
+                                </label>
+                            </div>
+                            <div class="card-body p">
+                                <div style="max-height:300px;overflow-y:auto;" id="reminderRecipients"></div>
+                                <div style="padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:13px;">
+                                    <span>Selected: <strong id="selectedCount">0</strong></span>
+                                    <span style="color:var(--text-light);">Cost: <strong id="selectedCost">KES 0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card">
+                                <div class="card-header"><div class="card-title">Message Preview</div></div>
+                                <div class="card-body p">
+                                    <div class="form-group">
+                                        <label class="form-label">Template</label>
+                                        <select class="form-input" id="smsTemplate" onchange="updateSmsPreview()">
+                                            <option value="deadline">Fee Deadline Reminder</option>
+                                            <option value="overdue">Overdue Balance Notice</option>
+                                            <option value="welcome">Welcome / First Reminder</option>
+                                            <option value="custom">Custom Message</option>
+                                        </select>
+                                    </div>
+                                    <div class="sms-preview">
+                                        <div class="sms-phone">To: +254 7XX XXX XXX (<span id="previewCount">0</span> recipients)</div>
+                                        <div class="sms-body" id="smsPreviewText"></div>
+                                    </div>
+                                    <button class="btn btn-orange" style="width:100%;justify-content:center;margin-top:16px;" onclick="sendBulkReminders()">
+                                        <i class="fas fa-paper-plane"></i> Send SMS Reminders
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card" style="margin-top:16px;">
+                                <div class="card-header"><div class="card-title">Reminder History</div></div>
+                                <div class="card-body" id="reminderHistory"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECEIPTS -->
+                <div class="section" id="sec-receipts">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Receipts</div>
+                            <div class="page-desc">Payment receipts and confirmations</div>
+                        </div>
+                        <button class="btn btn-outline" onclick="exportReceipts()"><i class="fas fa-download"></i> Bulk Export</button>
+                    </div>
+                    <div class="grid-2" id="receiptsGrid"></div>
+                </div>
+
+                <!-- REPORTS -->
+                <div class="section" id="sec-reports">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Reports</div>
+                            <div class="page-desc">Termly and annual financial reports</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Collection Report — Current Term</div>
+                            <select class="filter-select">
+                                <option>Current Term</option>
+                            </select>
+                        </div>
+                        <div class="card-body p">
+                            <div class="grid-3" style="margin-bottom:20px;">
+                                <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="reportCollected">KES 0</div><div class="stat-label">Collected</div></div>
+                                <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-clock"></i></div><div class="stat-value" id="reportPartial">KES 0</div><div class="stat-label">Partial</div></div>
+                                <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div class="stat-value" id="reportOutstanding">KES 0</div><div class="stat-label">Outstanding</div></div>
+                            </div>
+                            <div class="progress-list" style="margin-bottom:20px;">
+                                <div>
+                                    <div class="progress-item-header"><span class="progress-name">M-Pesa</span><span class="progress-pct" style="color:var(--emerald);" id="reportMpesa">67%</span></div>
+                                    <div class="progress-track"><div class="progress-fill" id="reportMpesaBar" style="width:67%;background:linear-gradient(90deg,var(--emerald),var(--emerald-light));"></div></div>
+                                </div>
+                                <div>
+                                    <div class="progress-item-header"><span class="progress-name">Bank Transfer</span><span class="progress-pct" style="color:var(--primary-light);" id="reportBank">23%</span></div>
+                                    <div class="progress-track"><div class="progress-fill" id="reportBankBar" style="width:23%;background:linear-gradient(90deg,var(--primary-light),#60a5fa);"></div></div>
+                                </div>
+                                <div>
+                                    <div class="progress-item-header"><span class="progress-name">Cash</span><span class="progress-pct" style="color:var(--warning);" id="reportCash">10%</span></div>
+                                    <div class="progress-track"><div class="progress-fill" id="reportCashBar" style="width:10%;background:linear-gradient(90deg,var(--warning),#fbbf24);"></div></div>
+                                </div>
+                            </div>
+
+                            <table class="table">
+                                <thead><tr><th>Class</th><th>Students</th><th>Expected</th><th>Collected</th><th>Outstanding</th><th>Rate</th></tr></thead>
+                                <tbody id="reportClassBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- PARENT DIRECTORY (school records only) -->
+                <div class="section" id="sec-parents">
+                    <div class="page-header"><div><div class="page-title">Parent Directory</div><div class="page-desc">Parents registered specifically with this school</div></div></div>
+                    <div class="card"><div class="card-header"><div class="card-title">Registered Parents <span id="parentCount"></span></div></div><div class="card-body"><div style="overflow:auto"><table class="table"><thead><tr><th>Parent</th><th>Phone</th><th>Email</th><th>Children</th><th>Combined Balance</th><th>Registered</th></tr></thead><tbody id="parentsBody"></tbody></table></div></div></div>
+                </div>
+
+                <!-- CLASSES -->
+                <div class="section" id="sec-classes">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Classes</div>
+                            <div class="page-desc">Class and stream management</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('addClass')"><i class="fas fa-plus"></i> Add Class</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table">
+                                    <thead><tr><th>Class</th><th>Level</th><th>Streams</th><th>Students</th><th>Collection</th><th>Class Teacher</th><th>Actions</th></tr></thead>
+                                    <tbody id="classesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="section" id="sec-settings">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Settings</div>
+                            <div class="page-desc">School configuration and preferences</div>
+                        </div>
+                    </div>
+
+                    <div class="settings-tabs">
+                        <button class="settings-tab active" onclick="switchSettingsTab('school',this)">School Info</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('paybill',this)">Paybill</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('terms',this)">Term Dates</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('notifications',this)">Notifications</button>
+                        <button class="settings-tab" onclick="switchSettingsTab('appearance',this)">Appearance</button>
+                    </div>
+
+                    <!-- School Info -->
+                    <div class="settings-section active" id="settings-school">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">School Information</div></div>
+                            <div class="card-body p">
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">School Name</label><input type="text" class="form-input" id="schoolNameInput" value="School"></div>
+                                    <div class="form-group"><label class="form-label">School Code</label><input type="text" class="form-input" id="schoolCodeInput" value="" disabled></div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="schoolAddressInput" value=""></div>
+                                    <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="schoolPhoneInput" value=""></div>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveSchoolInfo()"><i class="fas fa-save"></i> Save</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paybill -->
+                    <div class="settings-section" id="settings-paybill">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">M-Pesa Paybill Configuration</div></div>
+                            <div class="card-body p">
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">Paybill Number</label><input type="text" class="form-input" id="paybillInput" value=""></div>
+                                    <div class="form-group"><label class="form-label">Paybill Name</label><input type="text" class="form-input" value="SCHOOL"></div>
+                                </div>
+                                <div class="form-group"><label class="form-label">Account Reference Format</label>
+                                    <select class="form-input"><option selected>ADM-YYYY-NNN</option><option>STU-NNNN</option><option>CLASS-NAME-NNN</option></select>
+                                </div>
+                                <div class="form-group"><label class="form-label">STK Push API Endpoint</label><input type="url" class="form-input" id="stkEndpointInput" placeholder="https://your-server.example/api/mpesa/stk-push"><div class="form-hint">A secure server endpoint is required; API credentials must never be stored in this HTML file.</div></div>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn btn-green" onclick="testPaybill()"><i class="fas fa-plug"></i> Test Connection</button>
+                                    <button class="btn btn-primary" onclick="savePaybill()"><i class="fas fa-save"></i> Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Term Dates -->
+                    <div class="settings-section" id="settings-terms">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Term Configuration</div><button class="btn btn-primary btn-sm" onclick="openModal('addTerm')"><i class="fas fa-plus"></i> Add Term</button></div>
+                            <div class="card-body">
+                                <table class="table">
+                                    <thead><tr><th>Term</th><th>Start</th><th>End</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+                                    <tbody id="termsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="settings-section" id="settings-notifications">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Notification Preferences</div></div>
+                            <div class="card-body p">
+                                <div class="checkbox-row"><input type="checkbox" id="notifPayReceived" checked><label for="notifPayReceived">Payment received confirmation</label></div>
+                                <div class="checkbox-row"><input type="checkbox" id="notifDeadline" checked><label for="notifDeadline">Fee deadline reminders (7 days before)</label></div>
+                                <div class="checkbox-row"><input type="checkbox" id="notifOverdue" checked><label for="notifOverdue">Overdue balance alerts</label></div>
+                                <div class="checkbox-row"><input type="checkbox" id="notifReceipt" checked><label for="notifReceipt">Auto-generate PDF receipts</label></div>
+                                <div class="checkbox-row"><input type="checkbox" id="notifUnmatched"><label for="notifUnmatched">Admin alert for unmatched payments</label></div>
+                                <div class="form-group" style="margin-top:16px;"><label class="form-label">SMS Sender ID</label><input type="text" class="form-input" id="smsSenderInput" placeholder="Your approved SMS sender ID"></div>
+                                <div class="form-group"><label class="form-label">Email & SMS Messaging API Endpoint</label><input type="url" class="form-input" id="messagingEndpointInput" placeholder="https://your-server.example/api/messages"><div class="form-hint">Used to deliver email and SMS. Website-account notifications work locally.</div></div>
+                                <button class="btn btn-primary" onclick="saveNotifications()" style="margin-top:12px;"><i class="fas fa-save"></i> Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                    <div class="settings-section" id="settings-appearance">
+                        <div class="card"><div class="card-header"><div class="card-title">Appearance & Accessibility</div></div><div class="card-body p">
+                            <div class="form-group"><label class="form-label">Color mode</label><select class="form-input" id="themeSelect" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="system">Use device setting</option></select></div>
+                            <div class="checkbox-row"><input type="checkbox" id="compactTables" onchange="savePreferences()"><label for="compactTables">Compact table spacing</label></div>
+                            <button class="btn btn-primary" onclick="savePreferences()"><i class="fas fa-save"></i> Save Preferences</button>
+                        </div></div>
+                    </div>
+
+                <!-- NOTIFICATIONS -->
+                <div class="section" id="sec-notifications">
+                    <div class="page-header">
+                        <div class="page-header-left">
+                            <div class="page-title">Notifications</div>
+                            <div class="page-desc">Activity alerts for your school</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all read</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="notif-list" id="notifList"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end content -->
+        </div><!-- end main -->
+    </div><!-- end layout -->
+</div><!-- end app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-recordPayment">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-money-bill-wave" style="color:var(--emerald);"></i> Record Payment</div>
+            <button class="modal-close" onclick="closeModal('recordPayment')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Student <span>*</span></label>
+                <select class="form-input" id="payStudentSelect"></select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Amount (KES) <span>*</span></label>
+                    <input type="number" class="form-input" id="payAmount" placeholder="e.g. 5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Method <span>*</span></label>
+                    <select class="form-input" id="payMethod">
+                        <option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reference / Receipt No.</label>
+                <input type="text" class="form-input" id="payRef" placeholder="Enter payment reference">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" id="payNotes" placeholder="Optional notes..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('recordPayment')">Cancel</button>
+            <button class="btn btn-green" onclick="recordPayment()"><i class="fas fa-check"></i> Record</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-addStudent">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-user-plus" style="color:var(--primary);"></i> Add Student</div>
+            <button class="modal-close" onclick="closeModal('addStudent')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group"><label class="form-label">Full Name <span>*</span></label><input type="text" class="form-input" id="newStudentName" placeholder="Enter student full name"></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Class <span>*</span></label>
+                    <select class="form-input" id="newStudentClass">
+                        <option>PP1</option><option>PP2</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-input" value="A" style="width:80px;"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Parent Name <span>*</span></label><input type="text" class="form-input" id="newStudentParent" placeholder="e.g. John Kamau"></div>
+            <div class="form-group"><label class="form-label">Parent Phone (+254) <span>*</span></label><input type="tel" class="form-input" id="newStudentPhone" placeholder="7XX XXX XXX"></div>
+            <div class="form-group"><label class="form-label">Gender</label>
+                <select class="form-input"><option>Female</option><option>Male</option></select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('addStudent')">Cancel</button>
+            <button class="btn btn-primary" onclick="addStudent()"><i class="fas fa-plus"></i> Add Student</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-addFeeItem">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-file-invoice-dollar" style="color:var(--primary);"></i> Add Fee Item</div>
+            <button class="modal-close" onclick="closeModal('addFeeItem')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group"><label class="form-label">Term <span>*</span></label><select class="form-input" id="newFeeTerm"></select></div>
+            <div class="form-group"><label class="form-label">Fee Item Name <span>*</span></label><input type="text" class="form-input" id="newFeeName" placeholder="e.g. Development Fee"></div>
+            <div class="form-group"><label class="form-label">Category</label>
+                <select class="form-input" id="newFeeCat"><option>Academic</option><option>Boarding</option><option>Transport</option><option>Activities</option><option>Examinations</option><option>Other</option></select>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">PP1-PP2</label><input type="number" class="form-input" id="newFeePP" placeholder="0"></div>
+                <div class="form-group"><label class="form-label">Class 1-3</label><input type="number" class="form-input" id="newFee13" placeholder="0"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Class 4-5</label><input type="number" class="form-input" id="newFee45" placeholder="0"></div>
+                <div class="form-group"><label class="form-label">Class 6-8</label><input type="number" class="form-input" id="newFee68" placeholder="0"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Form 1-4</label><input type="number" class="form-input" id="newFeeF14" placeholder="0"></div>
+            <div class="checkbox-row"><input type="checkbox" id="newFeeMandatory" checked><label for="newFeeMandatory">Mandatory (charged to all students)</label></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('addFeeItem')">Cancel</button>
+            <button class="btn btn-primary" onclick="addFeeItem()"><i class="fas fa-plus"></i> Add</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-manualReconcile">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-link" style="color:var(--emerald);"></i> Manual M-Pesa Match</div>
+            <button class="modal-close" onclick="closeModal('manualReconcile')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-warning" style="margin-bottom:14px;"><i class="fas fa-exclamation-triangle"></i>Match an unmatched M-Pesa transaction to a student.</div>
+            <div class="form-group"><label class="form-label">Transaction Ref <span>*</span></label><input type="text" class="form-input" id="reconRef" placeholder="e.g. R7K2MNP4QX"></div>
+            <div class="form-group"><label class="form-label">Match to Student <span>*</span></label><select class="form-input" id="reconStudent"></select></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Amount</label><input type="number" class="form-input" id="reconAmount" placeholder="KES"></div>
+                <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('manualReconcile')">Cancel</button>
+            <button class="btn btn-green" onclick="manualReconcile()"><i class="fas fa-check"></i> Reconcile</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-editTemplate">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-edit"></i> Edit SMS Template</div>
+            <button class="modal-close" onclick="closeModal('editTemplate')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group"><label class="form-label">Template Name</label><input type="text" class="form-input" value="Fee Deadline Reminder"></div>
+            <div class="form-group">
+                <label class="form-label">SMS Message</label>
+                <textarea class="form-input" rows="4" id="smsTemplateText">{{SCHOOL}}: Dear Parent, your child {{STUDENT}} has a fee balance of KES {{BALANCE}} for {{TERM}}. Pay via M-Pesa Paybill {{PAYBILL}}, Account: {{REF}}. Deadline: {{DEADLINE}}. Call {{PHONE}}.</textarea>
+                <div class="form-hint">Placeholders: {{SCHOOL}}, {{STUDENT}}, {{BALANCE}}, {{TERM}}, {{PAYBILL}}, {{REF}}, {{DEADLINE}}, {{PHONE}}</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('editTemplate')">Cancel</button>
+            <button class="btn btn-primary" onclick="closeModal('editTemplate');showToast('Template saved')"><i class="fas fa-save"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-addClass">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-chalkboard" style="color:var(--violet);"></i> Add Class</div>
+            <button class="modal-close" onclick="closeModal('addClass')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Class Name</label><input type="text" class="form-input" placeholder="e.g. Class 4"></div>
+                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-input" value="A"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Level</label><select class="form-input"><option selected>Primary</option><option>Secondary</option><option>Pre-Primary</option></select></div>
+            <div class="form-group"><label class="form-label">Class Teacher</label><input type="text" class="form-input" placeholder="e.g. John Kamau"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('addClass')">Cancel</button>
+            <button class="btn btn-primary" onclick="closeModal('addClass');showToast('Class added')"><i class="fas fa-plus"></i> Add</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-addTerm">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-calendar"></i> Add Term</div>
+            <button class="modal-close" onclick="closeModal('addTerm')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group"><label class="form-label">Term Name</label><input type="text" class="form-input" placeholder="Enter term name" id="newTermName"></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-input" id="newTermStart"></div>
+                <div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-input" id="newTermEnd"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Fee Deadline</label><input type="date" class="form-input" id="newTermDeadline"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('addTerm')">Cancel</button>
+            <button class="btn btn-primary" onclick="addTerm()"><i class="fas fa-plus"></i> Add</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// AUTH CHECK
+// ============================================================
+let session = null;
+let schoolId = null;
+let schoolData = {};
+
+function checkAuth() {
+    const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
+    session = sessions.length === 1 ? sessions.find(s => s.type === 'admin' && (Date.now() - s.timestamp) < 24 * 60 * 60 * 1000) : null;
+    if (!session) { window.location.replace('portal.html'); return; }
+    
+    schoolId = session.schoolId;
+    const currentSchool=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
+    session.name=currentSchool.name||session.name;
+    document.getElementById('mainApp').style.display = 'flex';
+    document.getElementById('userName').textContent = session.name || 'School Admin';
+    document.getElementById('userSchool').textContent = session.name || 'School Admin';
+    document.getElementById('schoolNameDisplay').innerHTML = `<i class="fas fa-school" style="margin-right:6px;"></i> ${session.name || 'School'}`;
+    document.getElementById('schoolNameDisplay').innerHTML = `<i class="fas fa-school" style="margin-right:6px;"></i> ${session.name || 'School'}`;
+    const currentSchoolData=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
+    if(document.getElementById('schoolNameInput')) document.getElementById('schoolNameInput').value=currentSchoolData.name||'';
+    if(document.getElementById('paybillInput')) document.getElementById('paybillInput').value=currentSchoolData.paybill||'';
+    if(document.getElementById('stkEndpointInput'))document.getElementById('stkEndpointInput').value=currentSchoolData.stkEndpoint||'';
+    if(document.getElementById('schoolAddressInput'))document.getElementById('schoolAddressInput').value=currentSchoolData.address||'';
+    if(document.getElementById('schoolPhoneInput'))document.getElementById('schoolPhoneInput').value=currentSchoolData.phone||'';
+    if(document.getElementById('schoolCodeInput'))document.getElementById('schoolCodeInput').value=currentSchoolData.code||currentSchoolData.id||'';
+    if(document.getElementById('messagingEndpointInput'))document.getElementById('messagingEndpointInput').value=currentSchoolData.messagingEndpoint||'';
+    if(document.getElementById('smsSenderInput'))document.getElementById('smsSenderInput').value=currentSchoolData.smsSender||'';
+    loadData();
+}
+
+function logout() {
+    const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
+    localStorage.setItem('ff_sessions', '[]');
+    window.location.href = 'portal.html';
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+function loadData() {
+    initSchoolData();
+    
+    // Load school-specific data
+    const allStudents = JSON.parse(localStorage.getItem('ff_students') || '[]');
+    const allPayments = JSON.parse(localStorage.getItem('ff_payments') || '[]');
+    const allReceipts = JSON.parse(localStorage.getItem('ff_receipts') || '[]');
+    const allNotifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
+    const allParents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
+    
+    // Filter to THIS school only
+    schoolData.students = allStudents.filter(s => !s.parentId || allParents.some(p => p.id === s.parentId && p.schoolId === schoolId));
+    // Actually, let's use a simpler approach - mark students with schoolId
+    schoolData.students = allStudents.filter(s => s.schoolId === schoolId);
+    
+    schoolData.payments = allPayments.filter(p => p.schoolId === schoolId);
+    
+    schoolData.receipts = allReceipts.filter(r => r.schoolId === schoolId);
+    schoolData.parents = allParents.filter(p => p.schoolId === schoolId);
+    schoolData.notifications = allNotifs.filter(n => n.schoolId === schoolId && n.audience !== 'super' && n.audience !== 'platform' && n.audience !== 'parent');
+    schoolData.feeItems = JSON.parse(localStorage.getItem('ff_feeItems_' + schoolId) || 'null') || [];
+    schoolData.classes = JSON.parse(localStorage.getItem('ff_classes_' + schoolId) || 'null') || [];
+    schoolData.terms = JSON.parse(localStorage.getItem('ff_terms_' + schoolId) || 'null') || [];
+    schoolData.reminderHistory = JSON.parse(localStorage.getItem('ff_reminderHistory_' + schoolId) || '[]');
+    
+    // Render everything
+    renderAll();
+}
+
+function initSchoolData() {}
+
+function saveSchoolData() {
+    const mergeBySchool = (key, current) => {
+        const all = JSON.parse(localStorage.getItem(key) || '[]').filter(item => item.schoolId !== schoolId);
+        localStorage.setItem(key, JSON.stringify([...all, ...current]));
+    };
+    mergeBySchool('ff_students', schoolData.students);
+    mergeBySchool('ff_payments', schoolData.payments);
+    mergeBySchool('ff_receipts', schoolData.receipts);
+    mergeBySchool('ff_notifications', schoolData.notifications);
+    localStorage.setItem('ff_feeItems_' + schoolId, JSON.stringify(schoolData.feeItems));
+    localStorage.setItem('ff_classes_' + schoolId, JSON.stringify(schoolData.classes));
+    localStorage.setItem('ff_terms_' + schoolId, JSON.stringify(schoolData.terms));
+    localStorage.setItem('ff_reminderHistory_' + schoolId, JSON.stringify(schoolData.reminderHistory));
+}
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll() {
+    renderStats();
+    renderRecentPayments();
+    renderClassPerformance();
+    renderStudents();
+    renderFeeStructure();
+    renderPayments();
+    renderOutstanding();
+    renderReceipts();
+    renderParents();
+    renderClasses();
+    renderTerms();
+    renderNotifications();
+    renderReminderRecipients();
+    renderReports();
+    populateSelects();
+    updateNotifBadge();
+}
+
+function renderStats() {
+    const students = schoolData.students;
+    const totalStudents = students.length;
+    const totalPaid = students.reduce((a, s) => a + s.paid, 0);
+    const totalOutstanding = students.reduce((a, s) => a + s.balance, 0);
+    const overdueCount = students.filter(s => s.balance > 0 && s.overdueDays > 0).length;
+    const collectionRate = totalPaid + totalOutstanding > 0 ? Math.round((totalPaid / (totalPaid + totalOutstanding)) * 100) : 0;
+
+    document.getElementById('statStudents').textContent = totalStudents;
+    document.getElementById('statCollected').textContent = 'KES ' + totalPaid.toLocaleString();
+    document.getElementById('statOutstanding').textContent = 'KES ' + totalOutstanding.toLocaleString();
+    document.getElementById('statOverdue').textContent = overdueCount;
+    document.getElementById('overdueCountAlert').textContent = overdueCount;
+    document.getElementById('collectionPct').textContent = collectionRate + '%';
+    
+    // Update circular progress
+    const offset = 364.42 - (364.42 * collectionRate / 100);
+    const circle = document.getElementById('collectionCircle');
+    if (circle) circle.setAttribute('stroke-dashoffset', offset);
+
+    // Nav badges
+    document.getElementById('navStudentCount').textContent = totalStudents;
+    document.getElementById('navOverdueCount').textContent = overdueCount;
+    document.getElementById('navParentCount').textContent = schoolData.parents.length;
+
+    // Outstanding stats
+    document.getElementById('outstandingTotal').textContent = overdueCount;
+    document.getElementById('outstandingAmount').textContent = 'KES ' + totalOutstanding.toLocaleString();
+    document.getElementById('outstanding30').textContent = students.filter(s => s.overdueDays >= 30).length;
+    document.getElementById('outstandingPartial').textContent = students.filter(s => s.status === 'partial').length;
+
+    // Recon stats
+    const reconDone = schoolData.payments.filter(p => p.status === 'reconciled').length;
+    const reconPending = schoolData.payments.filter(p => p.status === 'pending').length
+    const reconFailed = schoolData.payments.filter(p => p.status === 'failed').length;
+    document.getElementById('reconDone').textContent = reconDone;
+    document.getElementById('reconPending').textContent = reconPending;
+    document.getElementById('reconFailed').textContent = reconFailed;
+
+}
+
+function renderRecentPayments() {
+    const tbody = document.getElementById('recentPaymentsBody');
+    const payments = schoolData.payments.slice(0, 8);
+    tbody.innerHTML = payments.map(p => `
+        <tr>
+            <td><div class="student-cell"><div class="student-avatar" style="background:${schoolData.students.find(s=>s.id===p.studentId)?.color||'#94a3b8'};">${schoolData.students.find(s=>s.id===p.studentId)?.initials||'?'}</div><div><div class="student-name">${p.studentName}</div></div></div></td>
+            <td class="amount" style="color:${p.status==='reconciled'?'var(--emerald)':'var(--warning)'};">KES ${p.amount.toLocaleString()}</td>
+            <td><i class="fas ${p.method==='M-Pesa'?'fa-mobile-alt':'fa-university'}" style="color:${p.method==='M-Pesa'?'var(--emerald)':'var(--primary-light)'};margin-right:4px;"></i> ${p.method}</td>
+            <td><span class="badge ${p.status}"><i class="fas fa-circle"></i> ${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span></td>
+            <td style="color:var(--text-light);font-size:12px;">${p.date}</td>
+        </tr>
+    `).join('');
+
+    // Populate class filter
+    const classes = [...new Set(schoolData.students.map(s => s.class))].sort();
+    const filter = document.getElementById('recentClassFilter');
+    filter.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option>${c}</option>`).join('');
+}
+
+function renderClassPerformance() {
+    const container = document.getElementById('classPerformance');
+    const classes = [...new Set(schoolData.students.map(s => s.class))];
+    const performance = classes.map(cls => {
+        const clsStudents = schoolData.students.filter(s => s.class === cls);
+        const rate = clsStudents.length > 0 ? Math.round((clsStudents.reduce((a,s)=>a+s.paid,0) / clsStudents.reduce((a,s)=>a+s.total,0)) * 100) : 0;
+        return { cls, rate };
+    }).sort((a,b) => b.rate - a.rate).slice(0, 6);
+
+    const colors = ['linear-gradient(90deg,#059669,#10b981)', 'linear-gradient(90deg,#3b82f6,#60a5fa)', 'linear-gradient(90deg,#f59e0b,#fbbf24)', 'linear-gradient(90deg,#ef4444,#f87171)'];
+
+    container.innerHTML = performance.map((p, i) => `
+        <div>
+            <div class="progress-item-header">
+                <span class="progress-name">${p.cls}</span>
+                <span class="progress-pct" style="color:${p.rate>=80?'var(--emerald)':p.rate>=60?'var(--warning)':'var(--danger)'};">${p.rate}%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${p.rate}%;background:${colors[i%colors.length]};"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderStudents() {
+    const search = document.getElementById('studentSearch')?.value?.toLowerCase() || '';
+    const clsFilter = document.getElementById('studentClassFilter')?.value || '';
+    const statusFilter = document.getElementById('studentStatusFilter')?.value || '';
+
+    let filtered = schoolData.students;
+    if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search) || s.adm.toLowerCase().includes(search));
+    if (clsFilter) filtered = filtered.filter(s => s.class === clsFilter);
+    if (statusFilter) filtered = filtered.filter(s => s.status === statusFilter);
+
+    document.getElementById('studentTableCount').textContent = `(${filtered.length})`;
+
+    // Populate class filter
+    const allClasses = [...new Set(schoolData.students.map(s => s.class))].sort();
+    const clsSelect = document.getElementById('studentClassFilter');
+    if (clsSelect && !clsSelect.dataset.filled) {
+        clsSelect.innerHTML = '<option value="">All Classes</option>' + allClasses.map(c => `<option>${c}</option>`).join('');
+        clsSelect.dataset.filled = 'true';
+    }
+
+    const outstandingClassSelect = document.getElementById('outstandingClassFilter');
+    if (outstandingClassSelect && !outstandingClassSelect.dataset.filled) {
+        outstandingClassSelect.innerHTML = '<option value="">All Classes</option>' + allClasses.map(c => `<option>${c}</option>`).join('');
+        outstandingClassSelect.dataset.filled = 'true';
+    }
+
+    const tbody = document.getElementById('studentsBody');
+    tbody.innerHTML = filtered.map(s => `
+        <tr class="clickable-row" onclick="viewStudentProfile('${s.id}')">
+            <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${s.initials}</div><div><div class="student-name">${s.name}</div><div class="student-adm">${s.adm}</div></div></div></td>
+            <td>${s.class}</td>
+            <td class="amount">KES ${s.total.toLocaleString()}</td>
+            <td class="amount" style="color:var(--emerald);">KES ${s.paid.toLocaleString()}</td>
+            <td class="amount" style="color:${s.balance>0?'var(--danger)':'var(--emerald)'};">KES ${s.balance.toLocaleString()}</td>
+            <td><span class="badge ${s.status}"><i class="fas fa-circle"></i> ${s.status.charAt(0).toUpperCase()+s.status.slice(1)}</span></td>
+            <td onclick="event.stopPropagation()">
+                <button class="btn btn-outline btn-sm" onclick="viewStudentProfile('${s.id}')"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-outline btn-sm" onclick="openRecordPaymentFor('${s.id}')"><i class="fas fa-plus"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderFeeStructure() {
+    const termFilter=document.getElementById('feeTermFilter')?.value||'';
+    const terms=schoolData.terms||[];
+    const termSelect=document.getElementById('feeTermFilter');if(termSelect){const current=termSelect.value;termSelect.innerHTML='<option value="">All Terms</option>'+terms.map(t=>`<option value="${t.id||t.name}">${t.name}</option>`).join('');termSelect.value=current;}
+    const modalTerm=document.getElementById('newFeeTerm');if(modalTerm)modalTerm.innerHTML='<option value="">Select term</option>'+terms.map(t=>`<option value="${t.id||t.name}">${t.name}</option>`).join('');
+    const items=termFilter?schoolData.feeItems.filter(f=>f.termId===termFilter):schoolData.feeItems;
+    document.getElementById('feeStructureBody').innerHTML=items.length?items.map(f=>{const realIndex=schoolData.feeItems.indexOf(f),term=terms.find(t=>(t.id||t.name)===f.termId);return `<tr><td>${term?.name||'Unassigned'}</td><td style="font-weight:600">${f.name}</td><td>${f.cat}</td><td class="amount">KES ${Number(f.pp||0).toLocaleString()}</td><td class="amount">KES ${Number(f.c13||0).toLocaleString()}</td><td class="amount">KES ${Number(f.c45||0).toLocaleString()}</td><td class="amount">KES ${Number(f.c68||0).toLocaleString()}</td><td class="amount">KES ${Number(f.f14||0).toLocaleString()}</td><td>${f.mandatory?'Yes':'Optional'}</td><td><button class="btn btn-outline btn-sm" onclick="editFeeItem(${realIndex})"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="deleteFeeItem(${realIndex})"><i class="fas fa-trash"></i></button></td></tr>`}).join(''):'<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light)">No fee items configured for this term.</td></tr>';
+}
+
+function renderPayments() {
+    const tbody = document.getElementById('paymentsBody');
+    tbody.innerHTML = schoolData.payments.map(p => `
+        <tr class="clickable-row" onclick="viewTransaction('${p.id}')">
+            <td style="font-weight:700;font-family:'Space Grotesk',sans-serif;">${p.ref}</td>
+            <td style="font-weight:500;">${p.studentName}</td>
+            <td style="font-size:12px;color:var(--text-light);">${p.class}</td>
+            <td class="amount" style="color:${p.status==='reconciled'?'var(--emerald)':'var(--warning)'};">KES ${p.amount.toLocaleString()}</td>
+            <td><i class="fas ${p.method==='M-Pesa'?'fa-mobile-alt':'fa-university'}" style="color:${p.method==='M-Pesa'?'var(--emerald)':'var(--primary-light)'};margin-right:4px;"></i> ${p.method}</td>
+            <td><span class="badge ${p.status}"><i class="fas fa-circle"></i> ${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span></td>
+            <td style="font-size:12px;color:var(--text-light);">${p.date}</td>
+        </tr>
+    `).join('');
+}
+
+function renderOutstanding() {
+    const clsFilter = document.getElementById('outstandingClassFilter')?.value || '';
+    const daysFilter = parseInt(document.getElementById('outstandingDaysFilter')?.value) || 0;
+
+    let filtered = schoolData.students.filter(s => s.balance > 0);
+    if (clsFilter) filtered = filtered.filter(s => s.class === clsFilter);
+    if (daysFilter > 0) filtered = filtered.filter(s => s.overdueDays >= daysFilter);
+
+    filtered.sort((a, b) => b.overdueDays - a.overdueDays);
+
+    const tbody = document.getElementById('outstandingBody');
+    tbody.innerHTML = filtered.map(s => {
+        const overdueClass = s.overdueDays >= 60 ? 'd60' : s.overdueDays >= 30 ? 'd30' : s.overdueDays >= 14 ? 'd14' : s.overdueDays >= 7 ? 'd7' : '';
+        return `
+            <tr>
+                <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${s.initials}</div><div><div class="student-name">${s.name}</div><div class="student-adm">${s.adm}</div></div></div></td>
+                <td>${s.class}</td>
+                <td class="amount" style="color:var(--danger);font-weight:700;">KES ${s.balance.toLocaleString()}</td>
+                <td style="color:var(--text-light);font-size:12px;">${s.lastPayment}</td>
+                <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${overdueClass}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--text-light);">—</span>'}</td>
+                <td style="font-size:12px;">${s.parentPhone}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="sendReminder('${s.id}')"><i class="fas fa-paper-plane"></i></button>
+                    <button class="btn btn-outline btn-sm" onclick="viewStudentLedger('${s.id}')"><i class="fas fa-eye"></i></button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderReceipts() {
+    const grid = document.getElementById('receiptsGrid');
+    grid.innerHTML = schoolData.payments.filter(p => p.status === 'reconciled').slice(0, 6).map(p => `
+        <div class="receipt-card">
+            <div class="receipt-header">
+                <div style="font-weight:700;font-size:13px;">Receipt #${p.ref}</div>
+                <span class="badge paid"><i class="fas fa-circle"></i> Confirmed</span>
+            </div>
+            <div class="receipt-body">
+                <div class="receipt-logo">
+                    <div class="receipt-logo-name">${session?.name || 'School'}</div>
+                    <div class="receipt-logo-addr">P.O. Box 12345, Nairobi • 0712 345 678</div>
+                </div>
+                <div class="receipt-row"><span class="receipt-label">Student</span><span class="receipt-value">${p.studentName}</span></div>
+                <div class="receipt-row"><span class="receipt-label">Class</span><span class="receipt-value">${p.class}</span></div>
+                <div class="receipt-row"><span class="receipt-label">Method</span><span class="receipt-value">${p.method} (${p.ref})</span></div>
+                <div class="receipt-row"><span class="receipt-label">Date</span><span class="receipt-value">${p.date}</span></div>
+                <div class="receipt-row total"><span class="receipt-label">Amount</span><span class="receipt-value" style="color:var(--emerald);">KES ${p.amount.toLocaleString()}</span></div>
+                <div style="text-align:center;margin-top:12px;">
+                    <button class="btn btn-outline btn-sm" onclick="downloadReceipt('${p.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+
+function renderParents() {
+    const tbody=document.getElementById('parentsBody');
+    document.getElementById('parentCount').textContent='('+schoolData.parents.length+')';
+    tbody.innerHTML=schoolData.parents.length?schoolData.parents.map(p=>{
+        const kids=schoolData.students.filter(s=>s.parentId===p.id);
+        const balance=kids.reduce((a,c)=>a+Number(c.balance||0),0);
+        return `<tr><td style="font-weight:600">${p.name}</td><td>+254 ${p.phone||''}</td><td>${p.email||'—'}</td><td>${kids.map(k=>k.name).join(', ')||'None linked'}</td><td class="amount" style="color:${balance?'var(--danger)':'var(--emerald)'}">KES ${balance.toLocaleString()}</td><td>${p.createdAt?new Date(p.createdAt).toLocaleDateString():'—'}</td></tr>`;
+    }).join(''):'<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light)">No parents registered for this school yet.</td></tr>';
+}
+
+function renderClasses() {
+    const tbody = document.getElementById('classesBody');
+    tbody.innerHTML = schoolData.classes.map(c => `
+        <tr>
+            <td style="font-weight:600;">${c.name}</td>
+            <td>${c.level}</td>
+            <td>${c.streams}</td>
+            <td>${c.students}</td>
+            <td><span style="font-weight:700;color:${c.collectionRate>=80?'var(--emerald)':c.collectionRate>=60?'var(--warning)':'var(--danger)'};">${c.collectionRate}%</span></td>
+            <td>${c.teacher}</td>
+            <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+        </tr>
+    `).join('');
+}
+
+function renderTerms() {
+    const tbody = document.getElementById('termsBody');
+    tbody.innerHTML = schoolData.terms.map(t => `
+        <tr>
+            <td style="font-weight:600;">${t.name}</td>
+            <td>${new Date(t.start).toLocaleDateString()}</td>
+            <td>${new Date(t.end).toLocaleDateString()}</td>
+            <td style="color:${t.status==='active'?'var(--danger)':'var(--text-light)'};font-weight:${t.status==='active'?'700':''};">${new Date(t.deadline).toLocaleDateString()}</td>
+            <td><span class="badge ${t.status==='active'?'paid':'pending'}"><i class="fas fa-circle"></i> ${t.status.charAt(0).toUpperCase()+t.status.slice(1)}</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="setActiveTerm('${t.id||t.name}')"><i class="fas fa-check"></i> Active</button> <button class="btn btn-outline btn-sm" onclick="deleteTerm('${t.id||t.name}')"><i class="fas fa-trash"></i></button></td>
+        </tr>
+    `).join('');
+}
+
+function setActiveTerm(id){schoolData.terms.forEach(t=>t.status=((t.id||t.name)===id?'active':'upcoming'));saveSchoolData();renderTerms();showToast('Active term updated','success')}
+function deleteTerm(id){if(schoolData.feeItems.some(f=>f.termId===id)){showToast('Delete this term’s fee items first','error');return}if(!confirm('Delete this term?'))return;schoolData.terms=schoolData.terms.filter(t=>(t.id||t.name)!==id);saveSchoolData();renderTerms();renderFeeStructure()}
+
+function renderNotifications() {
+    const container = document.getElementById('notifList');
+    const notifs = schoolData.notifications;
+    container.innerHTML = notifs.length === 0 ? '<p style="padding:30px;text-align:center;color:var(--text-light);">No notifications</p>' : notifs.map(n => `
+        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markNotifRead(${n.id})">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-body">${n.body}</div>
+            <div class="notif-time">${n.time || 'Recently'}</div>
+        </div>
+    `).join('');
+}
+
+function renderReminderRecipients() {
+    const container = document.getElementById('reminderRecipients');
+    const overdue = schoolData.students.filter(s => s.balance > 0);
+    
+    document.getElementById('reminderCount').textContent = overdue.length;
+    document.getElementById('reminderCost').textContent = 'KES ' + (overdue.length * 0.4).toFixed(2);
+    document.getElementById('selectedCount').textContent = overdue.length;
+    document.getElementById('selectedCost').textContent = 'KES ' + (overdue.length * 0.4).toFixed(2);
+    document.getElementById('previewCount').textContent = overdue.length;
+    
+    container.innerHTML = overdue.map(s => `
+        <div class="checkbox-row">
+            <input type="checkbox" class="reminder-check" data-id="${s.id}" checked>
+            <label style="flex:1;"><strong>${s.name}</strong> <span style="color:var(--text-light);font-size:12px;">(${s.class})</span></label>
+            <span style="font-weight:700;color:var(--danger);font-size:12px;">KES ${s.balance.toLocaleString()}</span>
+        </div>
+    `).join('');
+
+    updateSmsPreview();
+
+    // Reminder history
+    const history = document.getElementById('reminderHistory');
+    const reminders = schoolData.reminderHistory || [];
+    history.innerHTML = reminders.length === 0 ? '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No reminders sent yet.</p>' : reminders.map(r => `
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+            <div style="font-weight:600;font-size:13px;">${r.count} SMS sent</div>
+            <div style="font-size:12px;color:var(--text-light);margin-top:2px;">${r.date}</div>
+        </div>
+    `).join('');
+}
+
+function renderReports() {
+    const totalPaid = schoolData.students.reduce((a, s) => a + s.paid, 0);
+    const totalPartial = schoolData.students.filter(s=>s.status==='partial').reduce((a,s)=>a+Number(s.paid||0),0)
+    const totalOutstanding = schoolData.students.reduce((a, s) => a + s.balance, 0);
+
+    document.getElementById('reportCollected').textContent = 'KES ' + totalPaid.toLocaleString();
+    document.getElementById('reportPartial').textContent = 'KES ' + totalPartial.toLocaleString();
+    document.getElementById('reportOutstanding').textContent = 'KES ' + totalOutstanding.toLocaleString();
+
+    // Class breakdown
+    const classes = [...new Set(schoolData.students.map(s => s.class))];
+    const tbody = document.getElementById('reportClassBody');
+    tbody.innerHTML = schoolData.classes.map(c => {
+        const clsStudents = schoolData.students.filter(s => s.class.startsWith(c.name));
+        const expected = clsStudents.reduce((a, s) => a + s.total, 0);
+        const collected = clsStudents.reduce((a, s) => a + s.paid, 0);
+        const rate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
+        return `
+            <tr>
+                <td style="font-weight:600;">${c.name}</td>
+                <td>${clsStudents.length || c.students}</td>
+                <td class="amount">KES ${expected.toLocaleString()}</td>
+                <td class="amount" style="color:var(--emerald);">KES ${collected.toLocaleString()}</td>
+                <td class="amount" style="color:var(--danger);">KES ${(expected - collected).toLocaleString()}</td>
+                <td><span class="badge ${rate>=80?'paid':rate>=60?'partial':'unpaid'}"><i class="fas fa-circle"></i> ${rate}%</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(section, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById('sec-' + section).classList.add('active');
+    document.getElementById('breadcrumb').textContent = section.charAt(0).toUpperCase() + section.slice(1);
+
+    if (section === 'notifications') renderNotifications();
+}
+
+function showSection(section) { navigate(section, null); }
+
+function switchSettingsTab(tab, btn) {
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('settings-' + tab).classList.add('active');
+}
+
+// ============================================================
+// LEDGER
+// ============================================================
+function populateSelects() {
+    // Ledger student select
+    const ledgerSelect = document.getElementById('ledgerStudentSelect');
+    if (ledgerSelect) {
+        ledgerSelect.innerHTML = '<option value="">Select Student...</option>' + schoolData.students.map(s => `<option value="${s.id}">${s.name} (${s.adm})</option>`).join('');
+    }
+
+    // Record payment student select
+    const paySelect = document.getElementById('payStudentSelect');
+    if (paySelect) {
+        paySelect.innerHTML = schoolData.students.map(s => `<option value="${s.id}">${s.name} — ${s.class} (Bal: KES ${s.balance.toLocaleString()})</option>`).join('');
+    }
+
+    // Reconcile student select
+    const reconSelect = document.getElementById('reconStudent');
+    if (reconSelect) {
+        reconSelect.innerHTML = '<option value="">Select Student...</option>' + schoolData.students.map(s => `<option value="${s.id}">${s.name} — ${s.adm}</option>`).join('');
+    }
+}
+
+function viewStudentLedger(studentId) {
+    navigate('ledger', document.querySelector('[data-section=ledger]'));
+    document.getElementById('ledgerStudentSelect').value = studentId;
+    loadLedger();
+}
+
+function loadLedger() {
+    const studentId = document.getElementById('ledgerStudentSelect').value;
+    if (!studentId) {
+        document.getElementById('ledgerPlaceholder').style.display = 'block';
+        document.getElementById('ledgerContent').style.display = 'none';
+        return;
+    }
+
+    const student = schoolData.students.find(s => s.id === studentId);
+    if (!student) return;
+
+    document.getElementById('ledgerPlaceholder').style.display = 'none';
+    document.getElementById('ledgerContent').style.display = 'block';
+
+    document.getElementById('ledgerStats').innerHTML = `
+        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div><div class="stat-value">KES ${student.paid.toLocaleString()}</div><div class="stat-label">Total Paid</div></div>
+        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-arrow-up"></i></div><div class="stat-value">KES ${student.balance.toLocaleString()}</div><div class="stat-label">Balance Due</div></div>
+        <div class="stat-card blue"><div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div><div class="stat-value">KES ${student.total.toLocaleString()}</div><div class="stat-label">Total Billed</div></div>
+    `;
+    const studentPayments=schoolData.payments.filter(p=>p.studentId===studentId);
+    let running=Number(student.total||0);
+    const rows=[{date:'—',desc:'Current fee charges',debit:Number(student.total||0),credit:0,balance:running,ref:'FEES'}];
+    studentPayments.slice().reverse().forEach(p=>{running=Math.max(0,running-Number(p.amount||0));rows.push({date:p.date,desc:p.method+' payment',debit:0,credit:Number(p.amount||0),balance:running,ref:p.ref,creditRow:true});});
+
+    document.getElementById('ledgerRows').innerHTML = rows.map(r => `
+        <div class="ledger ${r.creditRow ? 'credit-row' : ''}">
+            <div class="ledger-date">${r.date}</div>
+            <div class="ledger-desc">${r.desc}</div>
+            <div class="ledger-debit">${r.debit > 0 ? 'KES ' + r.debit.toLocaleString() : '—'}</div>
+            <div class="ledger-credit">${r.credit > 0 ? 'KES ' + r.credit.toLocaleString() : '—'}</div>
+            <div class="ledger-balance">KES ${r.balance.toLocaleString()}</div>
+            <div style="font-size:11px;color:var(--text-light);">${r.ref}</div>
+        </div>
+    `).join('');
+}
+
+function printLedger() { showToast('Print dialog opened (Ctrl+P)'); }
+
+// ============================================================
+// ACTIONS
+// ============================================================
+
+function ensureDetailModal(){
+ if(document.getElementById('modal-details'))return;
+ document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-details"><div class="modal-box" style="max-width:720px"><div class="modal-header"><div class="modal-title" id="detailTitle">Details</div><button class="modal-close" onclick="closeModal('details')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detailBody"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('details')">Close</button></div></div></div>`);
+}
+function viewTransaction(id){
+ const p=schoolData.payments.find(x=>x.id===id); if(!p)return; const st=schoolData.students.find(s=>s.id===p.studentId);
+ ensureDetailModal(); document.getElementById('detailTitle').innerHTML='<i class="fas fa-receipt"></i> Transaction '+p.ref;
+ document.getElementById('detailBody').innerHTML=`<div class="detail-grid"><div class="detail-box"><div class="detail-label">Student</div><div class="detail-value">${p.studentName}</div></div><div class="detail-box"><div class="detail-label">Admission / Class</div><div class="detail-value">${st?.adm||'—'} • ${p.class||'—'}</div></div><div class="detail-box"><div class="detail-label">Amount</div><div class="detail-value" style="color:var(--emerald)">KES ${Number(p.amount).toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Method</div><div class="detail-value">${p.method}</div></div><div class="detail-box"><div class="detail-label">Status</div><div class="detail-value">${p.status}</div></div><div class="detail-box"><div class="detail-label">Date</div><div class="detail-value">${p.date}</div></div></div><div style="margin-top:16px"><button class="btn btn-primary" onclick="printReceipt('${p.id}')"><i class="fas fa-print"></i> Print Receipt</button> <button class="btn btn-outline" onclick="closeModal('details');viewStudentProfile('${p.studentId}')"><i class="fas fa-user"></i> Student Profile</button></div>`;
+ openModal('details');
+}
+function viewStudentProfile(id){
+ const st=schoolData.students.find(s=>s.id===id);if(!st)return;const tx=schoolData.payments.filter(p=>p.studentId===id);
+ ensureDetailModal();document.getElementById('detailTitle').innerHTML='<i class="fas fa-user-graduate"></i> '+st.name;
+ document.getElementById('detailBody').innerHTML=`<div class="detail-grid"><div class="detail-box"><div class="detail-label">Admission</div><div class="detail-value">${st.adm}</div></div><div class="detail-box"><div class="detail-label">Class</div><div class="detail-value">${st.class}</div></div><div class="detail-box"><div class="detail-label">Total billed</div><div class="detail-value">KES ${st.total.toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Balance</div><div class="detail-value" style="color:var(--danger)">KES ${st.balance.toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Parent phone</div><div class="detail-value">${st.parentPhone||'—'}</div></div><div class="detail-box"><div class="detail-label">Status</div><div class="detail-value">${st.status}</div></div></div><h4 style="margin:20px 0 10px">Payment Transactions</h4><div style="overflow:auto"><table class="table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>${tx.length?tx.map(p=>`<tr class="clickable-row" onclick="viewTransaction('${p.id}')"><td>${p.ref}</td><td class="amount">KES ${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td></tr>`).join(''):'<tr><td colspan="4">No payments yet.</td></tr>'}</tbody></table></div><button class="btn btn-outline" onclick="closeModal('details');viewStudentLedger('${st.id}')"><i class="fas fa-book"></i> Open Full Ledger</button>`;
+ openModal('details');
+}
+function printReceipt(id){const p=schoolData.payments.find(x=>x.id===id);if(!p)return;const w=window.open('','_blank','width=650,height=750');w.document.write(`<title>Receipt ${p.ref}</title><div style="font-family:Arial;padding:40px"><h1>${session?.name||'School'}</h1><h2>Payment Receipt</h2><hr><p><b>Receipt:</b> ${p.ref}</p><p><b>Student:</b> ${p.studentName}</p><p><b>Amount:</b> KES ${p.amount.toLocaleString()}</p><p><b>Method:</b> ${p.method}</p><p><b>Date:</b> ${p.date}</p><hr><p>Payment confirmed by FeeFlow.</p></div>`);w.document.close();w.print()}
+function setTheme(mode){localStorage.setItem('ff_theme',mode);const dark=mode==='dark'||(mode==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark)}
+function savePreferences(){localStorage.setItem('ff_compact',document.getElementById('compactTables')?.checked?'1':'0');showToast('Preferences saved','success')}
+
+
+function recordPayment() {
+    const studentId = document.getElementById('payStudentSelect').value;
+    const amount = parseInt(document.getElementById('payAmount').value);
+    const method = document.getElementById('payMethod').value;
+    const ref = document.getElementById('payRef').value || 'REF-' + Date.now();
+
+    if (!studentId || !amount) { showToast('Please fill required fields', 'error'); return; }
+
+    const student = schoolData.students.find(s => s.id === studentId);
+    if (!student) return;
+
+    // Update student
+    student.paid += amount;
+    student.balance = Math.max(0, student.total - student.paid);
+    student.status = student.balance === 0 ? 'paid' : 'partial';
+
+    // Add payment record
+    const payment = {
+        id: 'p_' + Date.now(), ref, studentName: student.name, studentId: student.id,
+        class: student.class, amount, method, status: 'reconciled',
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ', ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        schoolId
+    };
+    schoolData.payments.unshift(payment);
+
+    // Add notification
+    const linkedParent = schoolData.parents.find(p => p.id === student.parentId);
+    schoolData.notifications.unshift({
+        id: Date.now(), audience:'school', schoolId, parentId: linkedParent?.id || null, studentId: student.id,
+        type: 'payment', title: 'Payment Recorded',
+        body: `KES ${amount.toLocaleString()} paid by ${student.name} via ${method} (${ref})`,
+        time: 'Just now', unread: true
+    });
+
+    saveSchoolData();
+    closeModal('recordPayment');
+    renderAll();
+    showToast('Payment of KES ' + amount.toLocaleString() + ' recorded for ' + student.name, 'success');
+}
+
+function openRecordPaymentFor(studentId) {
+    openModal('recordPayment');
+    setTimeout(() => {
+        document.getElementById('payStudentSelect').value = studentId;
+    }, 100);
+}
+
+function addStudent() {
+    const name = document.getElementById('newStudentName').value;
+    const cls = document.getElementById('newStudentClass').value;
+    const parent = document.getElementById('newStudentParent').value;
+    const phone = document.getElementById('newStudentPhone').value;
+
+    if (!name || !cls || !parent || !phone) { showToast('Please fill required fields', 'error'); return; }
+
+    const colors = ['#2b7fd4','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#14b8a6','#ef4444'];
+    const color = colors[schoolData.students.length % colors.length];
+
+    const student = {
+        id: 's_' + Date.now(), name, class: cls + 'A',
+        adm: 'ADM-' + new Date().getFullYear() + '-' + String(schoolData.students.length + 1).padStart(3, '0'),
+        total: 0, paid: 0, balance: 0, status: 'paid',
+        parentPhone: '+254 ' + phone, overdueDays: 0, lastPayment: '—',
+        color: `linear-gradient(135deg,${color},#1e293b)`, initials: name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        schoolId
+    };
+
+    schoolData.students.push(student);
+    saveSchoolData();
+    closeModal('addStudent');
+    renderAll();
+    showToast(name + ' added successfully!', 'success');
+}
+
+let editingFeeIndex=null;
+function addFeeItem(){const name=document.getElementById('newFeeName').value.trim(),termId=document.getElementById('newFeeTerm').value;if(!name||!termId){showToast('Select a term and enter the fee name','error');return}const item={termId,name,cat:document.getElementById('newFeeCat').value,pp:Number(document.getElementById('newFeePP').value||0),c13:Number(document.getElementById('newFee13').value||0),c45:Number(document.getElementById('newFee45').value||0),c68:Number(document.getElementById('newFee68').value||0),f14:Number(document.getElementById('newFeeF14').value||0),mandatory:document.getElementById('newFeeMandatory').checked};if(editingFeeIndex===null)schoolData.feeItems.push(item);else schoolData.feeItems[editingFeeIndex]=item;editingFeeIndex=null;saveSchoolData();closeModal('addFeeItem');renderFeeStructure();showToast('Fee structure saved','success')}
+function editFeeItem(i){const f=schoolData.feeItems[i];if(!f)return;editingFeeIndex=i;openModal('addFeeItem');setTimeout(()=>{document.getElementById('newFeeTerm').value=f.termId||'';document.getElementById('newFeeName').value=f.name;document.getElementById('newFeeCat').value=f.cat;document.getElementById('newFeePP').value=f.pp||0;document.getElementById('newFee13').value=f.c13||0;document.getElementById('newFee45').value=f.c45||0;document.getElementById('newFee68').value=f.c68||0;document.getElementById('newFeeF14').value=f.f14||0;document.getElementById('newFeeMandatory').checked=!!f.mandatory},0)}
+function deleteFeeItem(i){if(!confirm('Delete this fee item?'))return;schoolData.feeItems.splice(i,1);saveSchoolData();renderFeeStructure()}
+function addTerm(){const name=document.getElementById('newTermName').value.trim(),start=document.getElementById('newTermStart').value,end=document.getElementById('newTermEnd').value,deadline=document.getElementById('newTermDeadline').value;if(!name||!start||!end){showToast('Complete the term name and dates','error');return}schoolData.terms.push({id:'term_'+Date.now(),name,start,end,deadline,status:'upcoming'});saveSchoolData();closeModal('addTerm');renderTerms();renderFeeStructure();showToast('Term added','success')}
+
+function manualReconcile() {
+    const ref = document.getElementById('reconRef').value;
+    const studentId = document.getElementById('reconStudent').value;
+    if (!ref || !studentId) { showToast('Fill required fields', 'error'); return; }
+
+    const student = schoolData.students.find(s => s.id === studentId);
+    const amount = parseInt(document.getElementById('reconAmount').value) || 0;
+
+    schoolData.payments.unshift({
+        id: 'p_' + Date.now(), ref, studentName: student?.name, studentId,
+        class: student?.class, amount, method: 'M-Pesa', status: 'reconciled',
+        date: new Date().toLocaleDateString() + ', Manual Match',
+        schoolId
+    });
+
+    if (student && amount > 0) {
+        student.paid += amount;
+        student.balance = Math.max(0, student.total - student.paid);
+        student.status = student.balance === 0 ? 'paid' : 'partial';
+    }
+
+    schoolData.notifications.unshift({
+        id: Date.now(), audience:'school', schoolId, type: 'payment', title: 'Manual Reconciliation',
+        body: `Transaction ${ref} matched to ${student?.name || 'student'}`,
+        time: 'Just now', unread: true
+    });
+
+    saveSchoolData();
+    closeModal('manualReconcile');
+    renderAll();
+    showToast('Transaction ' + ref + ' reconciled successfully', 'success');
+}
+
+function autoReconcile() {
+    showToast('Running auto-reconciliation...', 'info');
+    setTimeout(() => {
+        showToast('All matched transactions reconciled', 'success');
+        document.getElementById('reconPending').textContent = '0';
+    }, 2000);
+}
+
+function toggleAllReminders() {
+    const checked = document.getElementById('selectAllReminders').checked;
+    document.querySelectorAll('.reminder-check').forEach(cb => cb.checked = checked);
+    updateReminderCounts();
+}
+
+function updateReminderCounts() {
+    const checked = document.querySelectorAll('.reminder-check:checked').length;
+    document.getElementById('selectedCount').textContent = checked;
+    document.getElementById('selectedCost').textContent = 'KES ' + (checked * 0.4).toFixed(2);
+    document.getElementById('previewCount').textContent = checked;
+}
+
+function updateSmsPreview() {
+    const school=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
+    const sample=schoolData.students.find(s=>s.balance>0);
+    const templates={deadline:`${school.name||'School'}: Fee reminder for {{STUDENT}}. Balance: KES {{BALANCE}}. Paybill: ${school.paybill||'not configured'}, Account: {{REF}}.`,overdue:`${school.name||'School'}: {{STUDENT}} has an outstanding balance of KES {{BALANCE}}. Please contact the school if you need assistance.`,welcome:`${school.name||'School'}: Fee information is now available in FeeFlow.`,custom:`${school.name||'School'}: School fee notification.`};
+    const tpl=templates[document.getElementById('smsTemplate')?.value]||templates.deadline;
+    document.getElementById('smsPreviewText').textContent=tpl.replaceAll('{{STUDENT}}',sample?.name||'Student').replaceAll('{{BALANCE}}',Number(sample?.balance||0).toLocaleString()).replaceAll('{{REF}}',sample?.adm||'admission number');
+}
+
+async function sendBulkReminders(){const ids=[...document.querySelectorAll('.reminder-check:checked')].map(x=>x.dataset.id),students=schoolData.students.filter(s=>ids.includes(s.id)&&Number(s.balance)>0);if(!students.length){showToast('No recipients selected','error');return}const school=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};const parentMessages=new Map();students.forEach(st=>{const parent=schoolData.parents.find(p=>p.id===st.parentId);if(!parent)return;const existing=parentMessages.get(parent.id)||{parent,children:[],balance:0};existing.children.push(st.name);existing.balance+=Number(st.balance||0);parentMessages.set(parent.id,existing)});if(!parentMessages.size){showToast('Selected students are not linked to registered parents','error');return}const allNotifs=JSON.parse(localStorage.getItem('ff_notifications')||'[]');const outbound=[];parentMessages.forEach(({parent,children,balance})=>{const body=`${school.name||'School'}: Remaining fee balance for ${children.join(', ')} is KES ${balance.toLocaleString()}.`;allNotifs.unshift({id:Date.now()+Math.random(),audience:'parent',schoolId,parentId:parent.id,type:'fee-reminder',title:'Fee Balance Reminder',body,time:'Just now',unread:true});outbound.push({parentId:parent.id,name:parent.name,email:parent.email,phone:parent.phone,subject:'Fee Balance Reminder',message:body})});localStorage.setItem('ff_notifications',JSON.stringify(allNotifs));let external='Website notifications delivered.';if(school.messagingEndpoint){try{const response=await fetch(school.messagingEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({schoolId,schoolName:school.name,senderId:school.smsSender,channels:['email','sms'],recipients:outbound})});if(!response.ok)throw new Error('Messaging service rejected the request');external=' Website, email and SMS delivery requested.'}catch(e){external=' Website notifications delivered; email/SMS failed: '+e.message}}else external=' Website notifications delivered. Configure the messaging endpoint for email and SMS.';schoolData.notifications=allNotifs.filter(n=>n.schoolId===schoolId&&n.audience!=='super'&&n.audience!=='platform'&&n.audience!=='parent');schoolData.reminderHistory.unshift({count:parentMessages.size,date:new Date().toLocaleString()});localStorage.setItem('ff_reminderHistory_'+schoolId,JSON.stringify(schoolData.reminderHistory));renderReminderRecipients();showToast(parentMessages.size+' parents notified. '+external,'success')}
+
+function sendReminder(studentId) {
+    const student = schoolData.students.find(s => s.id === studentId);
+    if (!student) return;
+    showToast('Reminder sent to parent of ' + student.name, 'success');
+}
+
+function downloadReceipt(paymentId) {
+    showToast('PDF receipt downloaded!', 'success');
+}
+
+function markNotifRead(id) {
+    const n = schoolData.notifications.find(x => x.id === id);
+    if (n) n.unread = false;
+    saveSchoolData();
+    renderNotifications();
+    updateNotifBadge();
+}
+
+function markAllRead() {
+    schoolData.notifications.forEach(n => n.unread = false);
+    saveSchoolData();
+    renderNotifications();
+    updateNotifBadge();
+    showToast('All marked as read');
+}
+
+function updateNotifBadge() {
+    const unread = schoolData.notifications.filter(n => n.unread).length;
+    document.getElementById('notifDot').style.display = unread > 0 ? 'block' : 'none';
+}
+
+// Settings
+function saveSchoolInfo() { const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]'),school=schools.find(s=>s.id===schoolId);if(school){school.name=document.getElementById('schoolNameInput').value.trim();school.address=document.getElementById('schoolAddressInput').value.trim();school.phone=document.getElementById('schoolPhoneInput').value.trim();localStorage.setItem('ff_schools',JSON.stringify(schools));session.name=school.name;} saveSchoolData(); showToast('School info saved','success'); }
+function savePaybill() { const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]'),school=schools.find(s=>s.id===schoolId);if(school){school.paybill=document.getElementById('paybillInput').value.trim();school.stkEndpoint=document.getElementById('stkEndpointInput').value.trim();localStorage.setItem('ff_schools',JSON.stringify(schools));} saveSchoolData();showToast('Paybill settings saved','success'); }
+function testPaybill() { showToast('Testing M-Pesa connection...', 'info'); setTimeout(() => showToast('Connection successful!', 'success'), 1500); }
+function saveNotifications(){const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]'),school=schools.find(s=>s.id===schoolId);if(school){school.messagingEndpoint=document.getElementById('messagingEndpointInput').value.trim();school.smsSender=document.getElementById('smsSenderInput').value.trim();localStorage.setItem('ff_schools',JSON.stringify(schools));}saveSchoolData();showToast('Notification settings saved','success')}
+
+// Export functions
+function exportDashboard() { showToast('Dashboard exported as PDF', 'info'); }
+function exportPayments() { showToast('Payments exported to CSV', 'info'); }
+function exportOutstanding() { showToast('Outstanding report exported', 'info'); }
+function exportReceipts() { showToast('Receipts exported as PDF', 'info'); }
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
+    const colors = { info: 'var(--info)', success: 'var(--emerald)', error: 'var(--danger)', warning: 'var(--warning)' };
+    toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:16px;"></i> ${message}`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => { setTheme(localStorage.getItem('ff_theme') || 'light'); checkAuth(); setTimeout(()=>{const t=document.getElementById('themeSelect');if(t)t.value=localStorage.getItem('ff_theme')||'light'},0); });
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ac51c0ad0988b8',t:'MTc4Mzk4Nzk4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

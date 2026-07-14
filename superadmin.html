@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FeeFlow — Super Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0c2d57; --primary-light: #1a6dcc; --emerald: #059669; --emerald-light: #10b981;
+            --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --text: #1e293b; --text-light: #64748b;
+            --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --violet: #7c3aed;
+            --sidebar: 260px; --topbar: 64px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        h1,h2,h3,h4,h5 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* Layout */
+        .layout { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border);
+            position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100;
+        }
+        .brand { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+        .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg,var(--primary),var(--emerald)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: var(--text); }
+        .brand-tag { font-size: 9px; font-weight: 700; color: var(--emerald); background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
+        
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .nav-section { padding: 8px 0; }
+        .nav-label { padding: 4px 20px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; margin: 1px 10px; border-radius: 10px; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 500; color: var(--text-light); position: relative; }
+        .nav-item i { width: 20px; text-align: center; font-size: 15px; }
+        .nav-item:hover { background: var(--bg); color: var(--text); }
+        .nav-item.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
+        .nav-item.active::before { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--primary); border-radius: 0 3px 3px 0; }
+        
+        .sidebar-footer { padding: 14px; border-top: 1px solid var(--border); }
+        .user-info { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border-radius: 10px; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--violet),var(--primary)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; }
+        .user-name { font-weight: 600; font-size: 13px; }
+        .user-role { font-size: 11px; color: var(--text-light); }
+        
+        /* Main */
+        .main { flex: 1; margin-left: var(--sidebar); }
+        .topbar { height: var(--topbar); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+        .breadcrumb { font-size: 13px; color: var(--text-light); }
+        .breadcrumb span { color: var(--text); font-weight: 600; }
+        .topbar-right { margin-left: auto; display: flex; gap: 8px; }
+        .icon-btn { width: 38px; height: 38px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-size: 16px; color: var(--text-light); display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.2s; }
+        .icon-btn:hover { background: var(--bg); color: var(--text); }
+        .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
+        
+        .content { padding: 24px; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .page-title { font-size: 26px; font-weight: 700; }
+        .page-desc { font-size: 14px; color: var(--text-light); margin-top: 2px; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border-radius: 14px; padding: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
+        .stat-card.blue::after { background: linear-gradient(90deg, var(--primary-light), #60a5fa); }
+        .stat-card.green::after { background: linear-gradient(90deg, var(--emerald), var(--emerald-light)); }
+        .stat-card.amber::after { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+        .stat-card.red::after { background: linear-gradient(90deg, var(--danger), #f87171); }
+        .stat-card.violet::after { background: linear-gradient(90deg, var(--violet), #a78bfa); }
+        .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+        .stat-icon.blue { background: #eff6ff; color: var(--primary-light); }
+        .stat-icon.green { background: #ecfdf5; color: var(--emerald); }
+        .stat-icon.amber { background: #fffbeb; color: var(--warning); }
+        .stat-icon.red { background: #fef2f2; color: var(--danger); }
+        .stat-icon.violet { background: #f5f3ff; color: var(--violet); }
+        .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 2px; }
+        .stat-label { font-size: 13px; color: var(--text-light); }
+        
+        /* Cards */
+        .card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .card-title { font-size: 15px; font-weight: 700; }
+        .card-body { padding: 0; }
+        .card-body.p { padding: 20px; }
+
+        /* Schools */
+        .school-card { padding: 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+        .school-card:last-child { border-bottom: none; }
+        .school-card:hover { background: var(--bg); }
+        .school-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .school-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+        .school-name { font-weight: 700; font-size: 15px; }
+        .school-meta { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+        .school-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .school-stat { background: var(--bg); padding: 8px 12px; border-radius: 8px; }
+        .school-stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); }
+        .school-stat-value { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
+
+        /* Table */
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
+        .table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .table tr:last-child td { border-bottom: none; }
+        .table tr:hover td { background: #f8fafc; }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .badge.active { background: #ecfdf5; color: var(--emerald); }
+        .badge.trial { background: #fffbeb; color: var(--warning); }
+        .badge.inactive { background: var(--bg); color: var(--text-light); }
+        .badge.paid { background: #ecfdf5; color: var(--emerald); }
+        .badge.pending { background: #eff6ff; color: var(--info); }
+        .badge i { font-size: 6px; }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-family: 'DM Sans', sans-serif; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+        .btn-primary:hover { box-shadow: 0 4px 12px rgba(26,109,204,0.3); }
+        .btn-green { background: linear-gradient(135deg, var(--emerald), var(--emerald-light)); color: white; }
+        .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--text-light); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+        /* Alerts */
+        .alert { padding: 14px 16px; border-radius: 10px; display: flex; gap: 10px; margin-bottom: 16px; font-size: 13px; }
+        .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--info); }
+        .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: var(--emerald); }
+        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+        .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); }
+
+        /* Notifications */
+        .notif-list { max-height: 400px; overflow-y: auto; }
+        .notif-item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+        .notif-item:hover { background: var(--bg); }
+        .notif-item.unread { background: #f0f9ff; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+        .notif-body { font-size: 12px; color: var(--text-light); }
+        .notif-time { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+        /* Form */
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
+        .form-input:focus { border-color: var(--primary-light); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; padding: 20px; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; overflow-y: auto; }
+        .modal-overlay.open .modal-box { transform: translateY(0); }
+        .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 16px; font-weight: 700; }
+        .modal-close { width: 30px; height: 30px; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+        /* Toast */
+        .toast-container { position: fixed; top: 76px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: white; border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; border-left: 4px solid var(--emerald); animation: slideIn 0.3s; }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.info { border-left-color: var(--info); }
+        .toast.warning { border-left-color: var(--warning); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Progress */
+        .progress-list { display: flex; flex-direction: column; gap: 12px; }
+        .progress-item-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+        .progress-name { font-weight: 600; }
+        .progress-pct { font-weight: 700; }
+        .progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; }
+
+        /* Sections */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Filter */
+        .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .filter-select { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; outline: none; }
+
+        /* Unauthorized */
+        .unauthorized { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px; }
+        .unauthorized i { font-size: 64px; color: var(--danger); margin-bottom: 20px; }
+        .unauthorized h2 { font-size: 24px; margin-bottom: 10px; }
+        .unauthorized p { color: var(--text-light); margin-bottom: 20px; }
+
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Auth Check -->
+<div id="authCheck" style="display:none;">
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div>
+                    <div class="brand-text">FeeFlow</div>
+                    <span class="brand-tag">SUPER ADMIN</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-label">Platform</div>
+                    <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard', this)">
+                        <i class="fas fa-chart-pie"></i> Dashboard
+                    </div>
+                    <div class="nav-item" data-section="schools" onclick="navigate('schools', this)">
+                        <i class="fas fa-school"></i> Schools
+                    </div>
+                    <div class="nav-item" data-section="parents" onclick="navigate('parents', this)">
+                        <i class="fas fa-users"></i> Parents
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Finance</div>
+                    <div class="nav-item" data-section="revenue" onclick="navigate('revenue', this)">
+                        <i class="fas fa-coins"></i> Revenue
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-label">Management</div>
+                    <div class="nav-item" data-section="settings" onclick="navigate('settings', this)">
+                        <i class="fas fa-cog"></i> Settings
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">SA</div>
+                    <div>
+                        <div class="user-name" id="userName">Super Admin</div>
+                        <div class="user-role">Platform Administrator</div>
+                    </div>
+                </div>
+                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="main">
+            <header class="topbar">
+                <div class="breadcrumb">FeeFlow / <span id="pageTitle">Dashboard</span></div>
+                <div class="topbar-right">
+                    <button class="icon-btn" onclick="showSection('notifications')">
+                        <i class="fas fa-bell"></i>
+                        <span class="dot" id="notifDot"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+
+                <!-- Dashboard -->
+                <div class="section active" id="sec-dashboard">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Platform Dashboard</div>
+                            <div class="page-desc">Overview of all schools and platform activity</div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card blue">
+                            <div class="stat-icon blue"><i class="fas fa-school"></i></div>
+                            <div class="stat-value" id="statSchools">0</div>
+                            <div class="stat-label">Active Schools</div>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="stat-icon green"><i class="fas fa-users"></i></div>
+                            <div class="stat-value" id="statStudents">0</div>
+                            <div class="stat-label">Total Students</div>
+                        </div>
+                        <div class="stat-card violet">
+                            <div class="stat-icon violet"><i class="fas fa-coins"></i></div>
+                            <div class="stat-value" id="statRevenue">KES 0</div>
+                            <div class="stat-label">Monthly Hosting Revenue</div>
+                        </div>
+                        <div class="stat-card amber">
+                            <div class="stat-icon amber"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="stat-value" id="statMonthly">KES 0</div>
+                            <div class="stat-label">Annual Hosting Projection</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle" style="font-size:18px;margin-top:1px;"></i>
+                        <div><strong>System Status:</strong> All services operational. M-Pesa callbacks: 99.8% success rate. Last sync: 2 minutes ago.</div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Schools Overview</div>
+                                <button class="btn btn-primary btn-sm" onclick="openModal('addSchool')"><i class="fas fa-plus"></i> Add School</button>
+                            </div>
+                            <div class="card-body" id="schoolsOverview"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Recent Activity</div>
+                            </div>
+                            <div class="card-body" id="recentActivity"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Collection Performance</div>
+                            <select class="filter-select">
+                                <option>This Month</option><option>Last Month</option><option>Last 3 Months</option>
+                            </select>
+                        </div>
+                        <div class="card-body p">
+                            <div class="progress-list" id="collectionProgress"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schools -->
+                <div class="section" id="sec-schools">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Schools Management</div>
+                            <div class="page-desc">Manage all schools on the platform</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('addSchool')"><i class="fas fa-plus"></i> Add School</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">All Schools <span id="schoolCount" style="color:var(--text-light);font-weight:400;font-size:13px;"></span></div>
+                            <div class="filter-bar">
+                                <select class="filter-select" onchange="filterSchools(this.value)">
+                                    <option value="">All Status</option><option value="active">Active</option><option value="trial">Trial</option><option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table" id="schoolsTable"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parents -->
+                <div class="section" id="sec-parents">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Parent Accounts</div>
+                            <div class="page-desc">All parent registrations across schools</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle" style="font-size:18px;margin-top:1px;"></i>
+                        <div><strong id="parentCount">0</strong> parent accounts registered across all schools.</div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Parent List</div>
+                            <div class="filter-bar">
+                                <select class="filter-select" id="parentSchoolFilter" onchange="filterParents()">
+                                    <option value="">All Schools</option>
+                                </select>
+                                <select class="filter-select" id="parentSearchType" onchange="filterParents()">
+                                    <option value="">All Status</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="table" id="parentsTable">
+                                    <thead><tr><th>Parent Name</th><th>Phone</th><th>School</th><th>Children</th><th>Registered</th></tr></thead>
+                                    <tbody id="parentsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Revenue -->
+                <div class="section" id="sec-revenue">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Revenue Report</div>
+                            <div class="page-desc">Revenue from school hosting subscriptions only</div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+                        <div class="stat-card violet"><div class="stat-icon violet"><i class="fas fa-calendar-check"></i></div><div class="stat-value" id="revenueGross">KES 0</div><div class="stat-label">Monthly Hosting Fees</div></div>
+                        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="revenueCollected">KES 0</div><div class="stat-label">Active Subscription Revenue</div></div>
+                        <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-clock"></i></div><div class="stat-value" id="revenuePending">KES 0</div><div class="stat-label">Pending</div></div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Subscription Plans</div></div>
+                            <div class="card-body p">
+                                <table class="table" style="width:100%;">
+                                    <thead><tr><th>Plan</th><th>Schools</th><th>Price</th><th>Revenue</th></tr></thead>
+                                    <tbody id="plansBody"><tr><td colspan="4" style="text-align:center;color:var(--text-light)">No subscription data available.</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><div class="card-title">Invoice History</div></div>
+                            <div class="card-body p">
+                                <table class="table" style="width:100%;">
+                                    <thead><tr><th>School</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                                    <tbody id="invoiceBody"><tr><td colspan="4" style="text-align:center;color:var(--text-light)">No invoices recorded.</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="section" id="sec-settings">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Platform Settings</div>
+                            <div class="page-desc">Configure platform-wide settings</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">General Settings</div></div>
+                        <div class="card-body p">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Platform Name</label>
+                                    <input type="text" class="form-input" id="platformName" value="FeeFlow">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Support Email</label>
+                                    <input type="email" class="form-input" value="support@feeflow.co.ke">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Support Phone</label>
+                                    <input type="text" class="form-input" value="0700 123 456">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Default Paybill</label>
+                                    <input type="text" class="form-input" value="247247" disabled>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">API Configuration</div></div>
+                        <div class="card-body p">
+                            <div class="form-group">
+                                <label class="form-label">M-Pesa Consumer Key</label>
+                                <input type="password" class="form-input" value="••••••••••••••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">M-Pesa Consumer Secret</label>
+                                <input type="password" class="form-input" value="••••••••••••••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Callback URL</label>
+                                <input type="text" class="form-input" value="https://api.feeflow.co.ke/webhooks/mpesa">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Africa's Talking API Key</label>
+                                <input type="password" class="form-input" value="••••••••••••••••">
+                            </div>
+                            <button class="btn btn-green" onclick="testAPI()"><i class="fas fa-plug"></i> Test Connection</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="section" id="sec-notifications">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Notifications</div>
+                            <div class="page-desc">Platform-wide activity alerts</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all read</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="notif-list" id="notifList"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end content -->
+        </div><!-- end main -->
+    </div><!-- end layout -->
+</div><!-- end auth check -->
+
+<!-- Add School Modal -->
+<div class="modal-overlay" id="modal-addSchool">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fas fa-school" style="margin-right:8px;color:var(--primary);"></i> Add New School</div>
+            <button class="modal-close" onclick="closeModal('addSchool')"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">School Name <span style="color:var(--danger);">*</span></label>
+                <input type="text" class="form-input" id="newSchoolName" placeholder="Enter school name">
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Paybill Number</label>
+                    <input type="text" class="form-input" id="newSchoolPaybill" placeholder="e.g. 247247">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-input" id="newSchoolLocation" placeholder="e.g. Kisumu">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Admin Username</label><input type="text" class="form-input" id="newSchoolAdminUsername" placeholder="School administrator username"></div>
+                <div class="form-group"><label class="form-label">Admin Password</label><input type="password" class="form-input" id="newSchoolAdminPassword" placeholder="Create a secure password"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">School Level</label>
+                <select class="form-input" id="newSchoolLevel">
+                    <option>Primary Only</option><option>Secondary Only</option><option selected>Primary & Secondary</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Subscription Plan</label>
+                <select class="form-input" id="newSchoolPlan">
+                    <option>Premium (KES 12,000/mo)</option><option selected>Standard (KES 6,000/mo)</option><option>Trial (14 days)</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('addSchool')">Cancel</button>
+            <button class="btn btn-primary" onclick="addSchool()"><i class="fas fa-plus"></i> Add School</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// AUTH CHECK
+// ============================================================
+function checkAuth() {
+    const sessions=JSON.parse(localStorage.getItem('ff_sessions')||'[]');
+    const superSession=sessions.length===1?sessions.find(s=>s.type==='super'&&Date.now()-s.timestamp<86400000):null;
+    if(!superSession){window.location.replace('portal.html');return;}
+    document.getElementById('authCheck').style.display='block';
+    loadData();
+}
+
+function logout() {
+    const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
+    localStorage.setItem('ff_sessions', '[]');
+    window.location.href = 'portal.html';
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+let platformData = {};
+
+function loadData() {
+    // Get all schools
+    const schools = JSON.parse(localStorage.getItem('ff_schools') || '[]');
+    const parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
+    const students = JSON.parse(localStorage.getItem('ff_students') || '[]');
+    const payments = []; // School payment transactions are intentionally private from Super Admin.
+    const receipts = JSON.parse(localStorage.getItem('ff_receipts') || '[]');
+    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]').filter(n => n.audience === 'super' || n.audience === 'platform');
+
+    platformData = { schools, parents, students, payments, receipts, notifs };
+
+    renderSchoolsOverview();
+    renderRecentActivity();
+    renderCollectionProgress();
+    renderSchoolsTable();
+    renderParents();
+    renderNotifications();
+    updateStats();
+}
+
+function updateStats() {
+    const { schools, students, parents } = platformData;
+    const planPrice={Premium:12000,Standard:6000,Trial:0,Unassigned:0};
+    const activeSchools=schools.filter(s=>(s.status||'active')!=='inactive');
+    const monthlyHosting=activeSchools.reduce((a,s)=>a+(planPrice[s.plan]||0),0);
+    document.getElementById('statSchools').textContent=activeSchools.length;
+    document.getElementById('statStudents').textContent=students.length.toLocaleString();
+    document.getElementById('statRevenue').textContent='KES '+monthlyHosting.toLocaleString();
+    document.getElementById('statMonthly').textContent='KES '+(monthlyHosting*12).toLocaleString();
+    if(document.getElementById('revenueGross'))document.getElementById('revenueGross').textContent='KES '+monthlyHosting.toLocaleString();
+    if(document.getElementById('revenueCollected'))document.getElementById('revenueCollected').textContent='KES '+monthlyHosting.toLocaleString();
+    if(document.getElementById('revenuePending'))document.getElementById('revenuePending').textContent='KES 0';
+    document.getElementById('parentCount').textContent=parents.length;
+    const plans=document.getElementById('plansBody');if(plans){const groups={};schools.forEach(s=>groups[s.plan||'Unassigned']=(groups[s.plan||'Unassigned']||0)+1);plans.innerHTML=Object.keys(groups).length?Object.entries(groups).map(([plan,count])=>`<tr><td>${plan}</td><td>${count}</td><td>Configured per school</td><td>—</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No subscription data available.</td></tr>';}
+
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderSchoolsOverview() {
+    const { schools } = platformData;
+    const colors = ['linear-gradient(135deg,#0c2d57,#1a6dcc)', 'linear-gradient(135deg,#f59e0b,#d97706)', 'linear-gradient(135deg,#7c3aed,#8b5cf6)'];
+    const container = document.getElementById('schoolsOverview');
+    container.innerHTML = schools.map((s, i) => `
+        <div class="school-card" onclick="showSection('schools')">
+            <div class="school-card-header">
+                <div class="school-icon" style="background:${colors[i % colors.length]};">
+                    <i class="fas fa-school"></i>
+                </div>
+                <div>
+                    <div class="school-name">${s.name}</div>
+                    <div class="school-meta">${s.location} • ${s.level}</div>
+                </div>
+                <span class="badge ${s.status || 'active'}" style="margin-left:auto;"><i class="fas fa-circle"></i> ${(s.status || 'active').charAt(0).toUpperCase() + (s.status || 'active').slice(1)}</span>
+            </div>
+            <div class="school-stats">
+                <div class="school-stat"><div class="school-stat-label">Students</div><div class="school-stat-value">${s.students?.toLocaleString() || '—'}</div></div>
+                <div class="school-stat"><div class="school-stat-label">Collection</div><div class="school-stat-value" style="color:var(--emerald);">${s.collectionRate || 0}%</div></div>
+                <div class="school-stat"><div class="school-stat-label">Plan</div><div class="school-stat-value">${s.plan || 'Standard'}</div></div>
+                <div class="school-stat"><div class="school-stat-label">Paybill</div><div class="school-stat-value">${s.paybill || '—'}</div></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderRecentActivity() {
+    const { notifs } = platformData;
+    const container = document.getElementById('recentActivity');
+    container.innerHTML = (notifs.slice(0, 6)).map(n => `
+        <div class="notif-item ${n.unread ? 'unread' : ''}" style="border-bottom:1px solid var(--border);padding:12px 16px;">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-body">${n.body}</div>
+            <div class="notif-time">${n.time || 'Recently'}</div>
+        </div>
+    `).join('') || '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No recent activity</p>';
+}
+
+function renderCollectionProgress() {
+    const { schools } = platformData;
+    const container = document.getElementById('collectionProgress');
+    const data = schools;
+    const colors = ['linear-gradient(90deg,#059669,#10b981)', 'linear-gradient(90deg,#3b82f6,#60a5fa)', 'linear-gradient(90deg,#f59e0b,#fbbf24)'];
+    container.innerHTML = data.map((s, i) => `
+        <div>
+            <div class="progress-item-header">
+                <span class="progress-name">${s.name}</span>
+                <span class="progress-pct" style="color:${s.collectionRate >= 80 ? 'var(--emerald)' : s.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'}">${s.collectionRate || 0}%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${s.collectionRate || 0}%;background:${colors[i % colors.length]};"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderSchoolsTable(filter = '') {
+    const { schools } = platformData;
+    const data = filter ? schools.filter(s => (s.status || 'active') === filter) : schools;
+    const table = document.getElementById('schoolsTable');
+    document.getElementById('schoolCount').textContent = `(${data.length})`;
+    table.innerHTML = `
+        <thead><tr><th>School</th><th>Location</th><th>Level</th><th>Students</th><th>Collection</th><th>Plan</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+            ${data.map(s => `
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;color:white;font-size:14px;"><i class="fas fa-school"></i></div>
+                            <div><div style="font-weight:600;">${s.name}</div><div style="font-size:11px;color:var(--text-light);">Paybill: ${s.paybill}</div></div>
+                        </div>
+                    </td>
+                    <td>${s.location || '—'}</td>
+                    <td>${s.level || '—'}</td>
+                    <td>${s.students?.toLocaleString() || '—'}</td>
+                    <td><span style="font-weight:600;color:${(s.collectionRate || 0) >= 80 ? 'var(--emerald)' : 'var(--warning)'};">${s.collectionRate || 0}%</span></td>
+                    <td>${s.plan || 'Standard'}</td>
+                    <td><span class="badge ${s.status || 'active'}"><i class="fas fa-circle"></i> ${(s.status || 'active').charAt(0).toUpperCase() + (s.status || 'active').slice(1)}</span></td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="viewSchool('${s.id}')"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-outline btn-sm" onclick="editSchool('${s.id}')"><i class="fas fa-edit"></i></button>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
+}
+
+function renderParents() {
+    const { parents, schools } = platformData;
+    const schoolSelect = document.getElementById('parentSchoolFilter');
+    schoolSelect.innerHTML = '<option value="">All Schools</option>' + schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+    const tbody = document.getElementById('parentsBody');
+    tbody.innerHTML = parents.length === 0 ? '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">No parent accounts registered yet.</td></tr>' : parents.map(p => `
+        <tr>
+            <td style="font-weight:600;">${p.name}</td>
+            <td>+254 ${(p.phone || '').replace(/ /g, '')}</td>
+            <td>${p.schoolName || schools.find(s => s.id === p.schoolId)?.name || '—'}</td>
+            <td>${p.children?.length || 0}</td>
+            <td style="color:var(--text-light);font-size:12px;">${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</td>
+        </tr>
+    `).join('');
+}
+
+function filterParents() {
+    renderParents();
+}
+
+function renderTransactions() {
+    const { payments } = platformData;
+    const tbody = document.getElementById('transactionsBody');
+    tbody.innerHTML = payments.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No transactions yet.</td></tr>' : payments.map(p => `
+        <tr>
+            <td style="font-family:'Space Grotesk',sans-serif;font-weight:600;">${p.ref || p.id}</td>
+            <td>${p.schoolName || platformData.schools.find(s=>s.id===p.schoolId)?.name || '—'}</td>
+            <td>${p.studentName || '—'}</td>
+            <td style="font-weight:700;">KES ${(p.amount || 0).toLocaleString()}</td>
+            <td><i class="fas fa-mobile-alt" style="color:var(--emerald);margin-right:4px;"></i> ${p.method || 'M-Pesa'}</td>
+            <td><span class="badge ${p.status || 'pending'}"><i class="fas fa-circle"></i> ${(p.status || 'pending').charAt(0).toUpperCase() + (p.status || 'pending').slice(1)}</span></td>
+            <td style="color:var(--text-light);font-size:12px;">${p.date || '—'}</td>
+        </tr>
+    `).join('');
+}
+
+function renderNotifications() {
+    const { notifs } = platformData;
+    const container = document.getElementById('notifList');
+    const unread = notifs.filter(n => n.unread);
+    document.getElementById('notifDot').style.display = unread.length > 0 ? 'block' : 'none';
+    
+    container.innerHTML = notifs.length === 0 ? '<p style="padding:30px;text-align:center;color:var(--text-light);font-size:13px;">No notifications</p>' : notifs.map(n => `
+        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markRead(${n.id})">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-body">${n.body}</div>
+            <div class="notif-time">${n.time || 'Recently'}</div>
+        </div>
+    `).join('');
+}
+
+function markRead(id) {
+    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
+    const n = notifs.find(x => x.id === id);
+    if (n) n.unread = false;
+    localStorage.setItem('ff_notifications', JSON.stringify(notifs));
+    platformData.notifs = notifs;
+    renderNotifications();
+}
+
+function markAllRead() {
+    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
+    notifs.forEach(n => n.unread = false);
+    localStorage.setItem('ff_notifications', JSON.stringify(notifs));
+    platformData.notifs = notifs;
+    renderNotifications();
+    showToast('All marked as read');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(section, el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById('sec-' + section).classList.add('active');
+    document.getElementById('pageTitle').textContent = section.charAt(0).toUpperCase() + section.slice(1);
+    
+    if (section === 'notifications') renderNotifications();
+}
+
+function showSection(section) {
+    navigate(section, null);
+}
+
+function filterSchools(filter) {
+    renderSchoolsTable(filter);
+}
+
+// ============================================================
+// MODALS & ACTIONS
+let editingSchoolId = null;
+// ============================================================
+function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+
+function addSchool() {
+    const name=document.getElementById('newSchoolName').value.trim(); if(!name){alert('Please enter school name');return;}
+    const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]');
+    const username=document.getElementById('newSchoolAdminUsername').value.trim(),adminPassword=document.getElementById('newSchoolAdminPassword').value;
+    if(!username||!adminPassword){alert('Create an administrator username and password for this school');return;}
+    const data={name,location:document.getElementById('newSchoolLocation').value.trim(),paybill:document.getElementById('newSchoolPaybill').value.trim(),level:document.getElementById('newSchoolLevel').value,plan:document.getElementById('newSchoolPlan').value.split(' ')[0],adminUsername:username,adminPassword};
+    if(editingSchoolId){const school=schools.find(s=>s.id===editingSchoolId);Object.assign(school,data);editingSchoolId=null;}
+    else schools.push({id:'s_'+Date.now(),...data,students:0,collectionRate:0,status:'active'});
+    localStorage.setItem('ff_schools',JSON.stringify(schools));const ns=JSON.parse(localStorage.getItem('ff_notifications')||'[]');ns.unshift({id:Date.now(),audience:'super',type:'platform',title:'School saved',body:name+' hosting account was saved.',time:'Just now',unread:true});localStorage.setItem('ff_notifications',JSON.stringify(ns));closeModal('addSchool');loadData();showToast('School saved successfully','success');
+}
+function editSchool(id){const s=platformData.schools.find(x=>x.id===id);if(!s)return;editingSchoolId=id;document.getElementById('newSchoolName').value=s.name||'';document.getElementById('newSchoolLocation').value=s.location||'';document.getElementById('newSchoolPaybill').value=s.paybill||'';document.getElementById('newSchoolAdminUsername').value=s.adminUsername||'';document.getElementById('newSchoolAdminPassword').value=s.adminPassword||'';document.getElementById('newSchoolLevel').value=s.level||'Primary & Secondary';openModal('addSchool');}
+function viewSchool(id){const s=platformData.schools.find(x=>x.id===id);if(!s)return;const students=platformData.students.filter(x=>x.schoolId===id),parents=platformData.parents.filter(x=>x.schoolId===id);const price={Premium:12000,Standard:6000,Trial:0}[s.plan]||0;alert(`${s.name}
+Location: ${s.location||'Not set'}
+Students: ${students.length}
+Parents: ${parents.length}
+Hosting plan: ${s.plan||'Unassigned'}
+Monthly hosting fee: KES ${price.toLocaleString()}
+Status: ${s.status||'active'}`);}
+
+function exportTransactions() { showToast('Transactions exported to CSV', 'info'); }
+
+function saveSettings() {
+    showToast('Settings saved successfully', 'success');
+    localStorage.setItem('ff_platformSettings', JSON.stringify({ name: document.getElementById('platformName').value }));
+}
+
+function testAPI() {
+    showToast('Testing API connection...', 'info');
+    setTimeout(() => showToast('Connection successful!', 'success'), 1500);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
+    const colors = { info: 'var(--info)', success: 'var(--emerald)', error: 'var(--danger)', warning: 'var(--warning)' };
+    toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:16px;"></i> ${message}`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', checkAuth);
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ac441a7923497d',t:'MTc4Mzk4NzQyNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
