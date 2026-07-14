@@ -318,7 +318,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                     <div class="nav-label">Main</div>
                     <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
                     <div class="nav-item" data-section="students" onclick="navigate('students',this)"><i class="fas fa-user-graduate"></i> Students <span class="nav-badge green" id="navStudentCount">0</span></div>
-                    <div class="nav-item" data-section="fees" onclick="navigate('fees',this)"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
+                    <div class="nav-item" data-section="fees" onclick="window.location.href='fee-structure-manager.html'"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
                     <div class="nav-item" data-section="payments" onclick="navigate('payments',this)"><i class="fas fa-money-bill-wave"></i> Payments</div>
                 </div>
                 <div class="nav-section">
@@ -1445,7 +1445,7 @@ function renderReceipts() {
             </div>
             <div class="receipt-body">
                 <div class="receipt-logo">
-                    <div class="receipt-logo-name">${session?.name || 'School'}</div>
+                    <div class="receipt-logo-name">${(JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)?.name) || session?.name || 'School'}</div>
                     <div class="receipt-logo-addr">P.O. Box 12345, Nairobi • 0712 345 678</div>
                 </div>
                 <div class="receipt-row"><span class="receipt-label">Student</span><span class="receipt-value">${p.studentName}</span></div>
@@ -1686,7 +1686,7 @@ function viewStudentProfile(id){
  document.getElementById('detailBody').innerHTML=`<div class="detail-grid"><div class="detail-box"><div class="detail-label">Admission</div><div class="detail-value">${st.adm}</div></div><div class="detail-box"><div class="detail-label">Class</div><div class="detail-value">${st.class}</div></div><div class="detail-box"><div class="detail-label">Total billed</div><div class="detail-value">KES ${st.total.toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Balance</div><div class="detail-value" style="color:var(--danger)">KES ${st.balance.toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Parent phone</div><div class="detail-value">${st.parentPhone||'—'}</div></div><div class="detail-box"><div class="detail-label">Status</div><div class="detail-value">${st.status}</div></div></div><h4 style="margin:20px 0 10px">Payment Transactions</h4><div style="overflow:auto"><table class="table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>${tx.length?tx.map(p=>`<tr class="clickable-row" onclick="viewTransaction('${p.id}')"><td>${p.ref}</td><td class="amount">KES ${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td></tr>`).join(''):'<tr><td colspan="4">No payments yet.</td></tr>'}</tbody></table></div><button class="btn btn-outline" onclick="closeModal('details');viewStudentLedger('${st.id}')"><i class="fas fa-book"></i> Open Full Ledger</button>`;
  openModal('details');
 }
-function printReceipt(id){const p=schoolData.payments.find(x=>x.id===id);if(!p)return;const w=window.open('','_blank','width=650,height=750');w.document.write(`<title>Receipt ${p.ref}</title><div style="font-family:Arial;padding:40px"><h1>${session?.name||'School'}</h1><h2>Payment Receipt</h2><hr><p><b>Receipt:</b> ${p.ref}</p><p><b>Student:</b> ${p.studentName}</p><p><b>Amount:</b> KES ${p.amount.toLocaleString()}</p><p><b>Method:</b> ${p.method}</p><p><b>Date:</b> ${p.date}</p><hr><p>Payment confirmed by FeeFlow.</p></div>`);w.document.close();w.print()}
+function printReceipt(id){const p=schoolData.payments.find(x=>x.id===id);if(!p)return;const receiptSchool=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId);const w=window.open('','_blank','width=650,height=750');w.document.write(`<title>Receipt ${p.ref}</title><div style="font-family:Arial;padding:40px"><h1>${receiptSchool?.name||session?.name||'School'}</h1><h2>Payment Receipt</h2><hr><p><b>Receipt:</b> ${p.ref}</p><p><b>Student:</b> ${p.studentName}</p><p><b>Amount:</b> KES ${p.amount.toLocaleString()}</p><p><b>Method:</b> ${p.method}</p><p><b>Date:</b> ${p.date}</p><hr><p>Payment confirmed by FeeFlow.</p></div>`);w.document.close();w.print()}
 function setTheme(mode){localStorage.setItem('ff_theme',mode);const dark=mode==='dark'||(mode==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark)}
 function savePreferences(){localStorage.setItem('ff_compact',document.getElementById('compactTables')?.checked?'1':'0');showToast('Preferences saved','success')}
 
@@ -1720,7 +1720,7 @@ function recordPayment() {
     const linkedParent = schoolData.parents.find(p => p.id === student.parentId);
     schoolData.notifications.unshift({
         id: Date.now(), audience:'school', schoolId, parentId: linkedParent?.id || null, studentId: student.id,
-        type: 'payment', title: 'Payment Recorded',
+        type: 'payment', title: 'Payment Recorded — Receipt Ready',
         body: `KES ${amount.toLocaleString()} paid by ${student.name} via ${method} (${ref})`,
         time: 'Just now', unread: true
     });
@@ -1907,5 +1907,5 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ac51c0ad0988b8',t:'MTc4Mzk4Nzk4Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aea4347baa497d',t:'MTc4NDAxMjMzMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

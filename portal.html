@@ -104,6 +104,8 @@
             cursor: pointer; transition: all 0.3s; font-family: 'DM Sans', sans-serif;
         }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,109,204,0.3); }
+        .btn-demo { width:100%; margin-top:10px; padding:12px; background:white; color:var(--primary); border:1.5px solid var(--border); border-radius:10px; font-weight:700; cursor:pointer; }
+        .btn-demo:hover { border-color:var(--primary-light); background:#eff6ff; }
         
         .otp-group { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
         .otp-input {
@@ -240,6 +242,9 @@
 
                 <button class="btn-primary" onclick="sendOTP()">
                     <i class="fas fa-paper-plane" style="margin-right:8px;"></i> Continue
+                </button>
+                <button class="btn-demo" onclick="launchDemo()" type="button">
+                    <i class="fas fa-play-circle" style="margin-right:8px;"></i> Preview Parent Demo
                 </button>
             </div>
         </div>
@@ -750,6 +755,39 @@ function addNotification(schoolId, type, title, body) {
     localStorage.setItem('ff_notifications', JSON.stringify(notifs));
 }
 
+function launchDemo() {
+    const schoolId = 'demo_school';
+    let schools = JSON.parse(localStorage.getItem('ff_schools') || '[]');
+    let school = schools.find(item => item.id === schoolId);
+    if (!school) {
+        school = { id:schoolId, name:'Greenfield Academy', location:'Nairobi', level:'Primary & Secondary', paybill:'247247', plan:'Standard', status:'active', adminUsername:'demo.admin', adminPassword:'Demo1234!' };
+        schools.push(school);
+        localStorage.setItem('ff_schools', JSON.stringify(schools));
+    }
+    let parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
+    let demoParent = parents.find(item => item.id === 'demo_parent');
+    if (!demoParent) {
+        demoParent = { id:'demo_parent', name:'Grace Wanjiku', phone:'712345678', email:'grace@example.com', schoolId, schoolName:school.name, createdAt:Date.now() };
+        parents.push(demoParent);
+        localStorage.setItem('ff_parents', JSON.stringify(parents));
+    }
+    let students = JSON.parse(localStorage.getItem('ff_students') || '[]');
+    if (!students.some(item => item.id === 'demo_student')) {
+        students.push({ id:'demo_student', parentId:demoParent.id, schoolId, name:'Amani Kamau', class:'Grade 5', adm:'GF-2026-0142', total:54000, paid:32000, balance:22000, status:'partial', initials:'AK', overdueDays:5 });
+        localStorage.setItem('ff_students', JSON.stringify(students));
+    }
+    if (!localStorage.getItem('ff_fee_published_' + schoolId)) {
+        localStorage.setItem('ff_fee_published_' + schoolId, JSON.stringify({ schoolId, schoolName:school.name, paybill:school.paybill, publishedAt:Date.now(), levels:[{ name:'Primary', grades:[{ name:'Grade 5', fees:[{name:'Tuition Fee',category:'Tuition',boarderOnly:false,amounts:[15000,15000,12000]},{name:'Lunch Programme',category:'Lunch / Meals',boarderOnly:false,amounts:[4000,4000,4000]}] }] }] }));
+    }
+    let notifications = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
+    if (!notifications.some(item => item.id === 'demo_notice')) {
+        notifications.unshift({id:'demo_notice',audience:'parent',schoolId,parentId:demoParent.id,title:'Welcome to FeeFlow',body:'Your latest fee statement is ready to view.',time:'Just now',unread:true});
+        localStorage.setItem('ff_notifications', JSON.stringify(notifications));
+    }
+    localStorage.setItem('ff_sessions', JSON.stringify([{id:'demo_session',type:'parent',parentId:demoParent.id,schoolId,name:demoParent.name,timestamp:Date.now()}]));
+    window.location.href = 'parent.html';
+}
+
 // Initialize
 updateLoginFields();
 document.addEventListener('click', e => {
@@ -757,5 +795,5 @@ document.addEventListener('click', e => {
  if (!e.target.closest('#registerSchoolGroup')) document.getElementById('schoolSearchResults')?.classList.remove('show');
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ac552b6a66af03',t:'MTc4Mzk4ODEyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

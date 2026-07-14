@@ -1,75 +1,1710 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FeeFlow — Parent Portal</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--primary:#0c2d57;--blue:#1a6dcc;--green:#059669;--bg:#f1f5f9;--white:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--red:#ef4444;--amber:#f59e0b;--side:250px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text)}h1,h2,h3{font-family:'Space Grotesk',sans-serif}.layout{min-height:100vh;display:flex}.sidebar{position:fixed;inset:0 auto 0 0;width:var(--side);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column}.brand{padding:20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}.brand-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--green));color:white;display:grid;place-items:center}.brand-name{font-family:'Space Grotesk';font-weight:700;font-size:18px}.brand-tag{font-size:9px;font-weight:700;color:var(--green);background:#ecfdf5;padding:2px 6px;border-radius:4px}.nav{padding:16px 10px;flex:1}.nav-label{padding:4px 10px 8px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700}.nav-item{padding:10px;border-radius:10px;margin:2px 0;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;display:flex;gap:10px;align-items:center}.nav-item i{width:20px;text-align:center}.nav-item:hover{background:var(--bg);color:var(--text)}.nav-item.active{background:#eff6ff;color:var(--primary);font-weight:600}.user{margin:14px;padding:10px;background:var(--bg);border-radius:10px}.user strong{display:block;font-size:13px}.user span{font-size:11px;color:var(--muted)}.logout{margin:0 14px 14px;width:calc(100% - 28px)}.main{margin-left:var(--side);flex:1}.topbar{height:64px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:5}.topbar span{font-size:13px;color:var(--muted)}.content{padding:24px}.section{display:none}.section.active{display:block}.page-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:24px}.page-title{font-size:26px;font-weight:700}.page-desc{font-size:14px;color:var(--muted);margin-top:3px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}.stat,.card{background:white;border:1px solid var(--border);border-radius:14px}.stat{padding:20px;position:relative;overflow:hidden}.stat:before{content:'';position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,var(--blue),var(--green))}.stat-icon{width:42px;height:42px;border-radius:10px;background:#eff6ff;color:var(--blue);display:grid;place-items:center;margin-bottom:12px}.stat-value{font-family:'Space Grotesk';font-size:25px;font-weight:700}.stat-label{font-size:13px;color:var(--muted)}.card{overflow:hidden;margin-bottom:20px}.card-head{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;display:flex;justify-content:space-between;align-items:center}.card-body{padding:20px}.child{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--border);border-radius:12px;margin-bottom:12px}.avatar{width:44px;height:44px;border-radius:11px;color:white;display:grid;place-items:center;font-weight:700}.child-name{font-weight:700}.meta{font-size:12px;color:var(--muted);margin-top:2px}.amount{font-family:'Space Grotesk';font-weight:700}.red{color:var(--red)}.green{color:var(--green)}.btn{border:0;border-radius:8px;padding:9px 15px;font:600 13px 'DM Sans';cursor:pointer;display:inline-flex;align-items:center;gap:7px}.btn-primary{color:white;background:linear-gradient(135deg,var(--primary),var(--blue))}.btn-green{color:white;background:linear-gradient(135deg,var(--green),#10b981)}.btn-outline{background:white;border:1.5px solid var(--border);color:var(--text)}table{width:100%;border-collapse:collapse}th{padding:11px 16px;background:var(--bg);color:var(--muted);font-size:11px;text-transform:uppercase;text-align:left}td{padding:12px 16px;border-top:1px solid var(--border);font-size:13px}.badge{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600}.paid{background:#ecfdf5;color:var(--green)}.partial{background:#fffbeb;color:#b45309}.notice{padding:14px 16px;border:1px solid #bfdbfe;background:#eff6ff;color:#2563eb;border-radius:10px;margin-bottom:18px;font-size:13px}.empty{text-align:center;padding:35px;color:var(--muted)}.unauthorized{min-height:100vh;display:grid;place-items:center;text-align:center;padding:30px}.unauthorized i{font-size:60px;color:var(--red);margin-bottom:18px}.unauthorized p{color:var(--muted);margin:8px 0 20px}@media(max-width:800px){.sidebar{display:none}.main{margin:0}.grid{grid-template-columns:1fr}.content{padding:16px}.child{grid-template-columns:auto 1fr}.child>div:last-child{grid-column:2}.page-head{flex-direction:column}}
-body.dark{--bg:#0f172a;--white:#111827;--border:#334155;--text:#f1f5f9;--muted:#94a3b8}body.dark .topbar,body.dark .sidebar,body.dark .card,body.dark .stat{background:#111827}body.dark th,body.dark .user{background:#1e293b}.modal{position:fixed;inset:0;background:#0008;display:none;place-items:center;padding:20px;z-index:20}.modal.open{display:grid}.modal-box{background:var(--white);border-radius:16px;width:100%;max-width:500px;padding:22px}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}.field input,.field select{width:100%;padding:11px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--text)}.notif{padding:14px;border-bottom:1px solid var(--border)}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FeeFlow — Parent Portal</title>
+  <style>
+    :root {
+      --navy: #0c2d57;
+      --blue: #1768b2;
+      --green: #059669;
+      --mint: #10b981;
+      --page: #f1f5f9;
+      --white: #ffffff;
+      --line: #e2e8f0;
+      --text: #172033;
+      --muted: #64748b;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --sidebar-width: 305px;
+      --topbar-height: 78px;
+      --radius: 16px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: var(--page);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: var(--sidebar-width);
+      background: var(--white);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      z-index: 30;
+    }
+
+    .brand {
+      min-height: 122px;
+      padding: 28px 24px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(135deg, var(--navy), var(--green));
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      flex: 0 0 auto;
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-top: 3px;
+    }
+
+    .brand-tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      color: var(--green);
+      background: #ecfdf5;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .navigation {
+      padding: 24px 14px;
+      flex: 1;
+    }
+
+    .nav-label {
+      margin: 0 10px 13px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .nav-button {
+      width: 100%;
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 12px 13px;
+      margin-bottom: 4px;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .nav-button:hover {
+      color: var(--text);
+      background: #f8fafc;
+    }
+
+    .nav-button.active {
+      color: var(--navy);
+      background: #eff6ff;
+      font-weight: 700;
+    }
+
+    .nav-icon {
+      width: 22px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .nav-count {
+      margin-left: auto;
+      min-width: 21px;
+      height: 21px;
+      padding: 0 6px;
+      border-radius: 11px;
+      background: var(--danger);
+      color: white;
+      display: none;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .nav-count.show {
+      display: grid;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+    }
+
+    .account-card {
+      padding: 15px 14px;
+      border-radius: 12px;
+      background: var(--page);
+      margin-bottom: 14px;
+    }
+
+    .account-name {
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .account-school {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 7px;
+    }
+
+    .logout-button {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--text);
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .main-area {
+      margin-left: var(--sidebar-width);
+      min-width: 0;
+      flex: 1;
+    }
+
+    .topbar {
+      height: var(--topbar-height);
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .breadcrumb {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .breadcrumb strong {
+      color: var(--text);
+    }
+
+    .content {
+      padding: 28px 30px 50px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+      animation: fade-in 0.18s ease-out;
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 29px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .page-description {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 15px;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 17px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .button-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+    }
+
+    .button-success {
+      color: white;
+      background: linear-gradient(135deg, var(--green), var(--mint));
+    }
+
+    .button-outline {
+      color: var(--text);
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    .button-danger {
+      color: var(--danger);
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .panel-header {
+      padding: 17px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 800;
+    }
+
+    .panel-body {
+      padding: 22px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+    }
+
+    .stat-value {
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .stat-value.green {
+      color: var(--green);
+    }
+
+    .stat-value.red {
+      color: var(--danger);
+    }
+
+    .stat-label {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .notice {
+      border: 1px solid #bfdbfe;
+      border-radius: 11px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .child-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+
+    .child-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .child-name {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .child-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .balance-block {
+      text-align: right;
+    }
+
+    .balance-value {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .balance-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      text-align: center;
+      padding: 42px 20px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      padding: 12px 15px;
+      text-align: left;
+      color: var(--muted);
+      background: var(--page);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 14px 15px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .money {
+      font-weight: 800;
+    }
+
+    .money.green {
+      color: var(--green);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 7px;
+      color: var(--green);
+      background: #ecfdf5;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .receipt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    .receipt {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 22px;
+      background: #fffefb;
+    }
+
+    .receipt-heading {
+      text-align: center;
+      padding-bottom: 15px;
+      border-bottom: 3px double var(--navy);
+      margin-bottom: 13px;
+    }
+
+    .receipt-school {
+      color: var(--navy);
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .receipt-title {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px dotted var(--line);
+      font-size: 13px;
+    }
+
+    .receipt-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .notification {
+      padding: 17px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .notification:last-child {
+      border-bottom: 0;
+    }
+
+    .notification.unread {
+      background: #f0f9ff;
+    }
+
+    .notification-title {
+      font-weight: 800;
+    }
+
+    .notification-message,
+    .notification-time {
+      color: var(--muted);
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .notification-time {
+      font-size: 11px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 9px;
+      background: white;
+      color: var(--text);
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(23, 104, 178, 0.1);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 16px;
+      background: white;
+      box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+    }
+
+    .modal-header {
+      padding: 19px 21px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .modal-body {
+      padding: 21px;
+    }
+
+    .modal-footer {
+      padding: 15px 21px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .mobile-menu {
+      display: none;
+      border: 0;
+      background: transparent;
+      font-size: 24px;
+    }
+
+    .access-page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .access-card {
+      width: 100%;
+      max-width: 470px;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      :root {
+        --sidebar-width: 270px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-area {
+        margin-left: 0;
+      }
+
+      .mobile-menu {
+        display: block;
+        margin-right: 12px;
+      }
+
+      .content {
+        padding: 22px 16px 40px;
+      }
+
+      .topbar { padding: 0 16px; }
+      .desktop-status { display:none; }
+      .topbar .button { padding:8px 10px !important; }
+
+      .page-heading {
+        flex-direction: column;
+      }
+
+      .child-card {
+        grid-template-columns: auto 1fr;
+      }
+
+      .balance-block {
+        grid-column: 2;
+        text-align: left;
+      }
+    }
+  </style>
 </head>
 <body>
-<div id="app"></div>
-<script>
-let session, parent, school, children=[], payments=[], notifications=[];
-const money=n=>'KES '+Number(n||0).toLocaleString();
-function init(){
- const sessions=JSON.parse(localStorage.getItem('ff_sessions')||'[]');
- session=sessions.length===1?sessions.find(s=>s.type==='parent'&&Date.now()-s.timestamp<86400000):null;
- const parents=JSON.parse(localStorage.getItem('ff_parents')||'[]');
- if(!session){location.replace('portal.html');return}
- parent=parents.find(p=>p.id===session.parentId);
- if(!parent){localStorage.setItem('ff_sessions','[]');location.replace('portal.html');return}
- school=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===parent.schoolId)||{};
- children=JSON.parse(localStorage.getItem('ff_students')||'[]').filter(s=>s.parentId===parent.id);
- const ids=new Set(children.map(c=>c.id));
- payments=JSON.parse(localStorage.getItem('ff_payments')||'[]').filter(p=>ids.has(p.studentId));
- notifications=JSON.parse(localStorage.getItem('ff_notifications')||'[]').filter(n=>n.parentId===parent.id||(ids.has(n.studentId)&&n.audience!=='admin')); 
- setTheme(localStorage.getItem('ff_theme')||'light');
- renderShell(); renderAll();
-}
-function renderShell(){document.getElementById('app').innerHTML=`<div class="layout"><aside class="sidebar"><div class="brand"><div class="brand-icon"><i class="fas fa-graduation-cap"></i></div><div><div class="brand-name">FeeFlow</div><span class="brand-tag">PARENT PORTAL</span></div></div><nav class="nav"><div class="nav-label">My account</div><div class="nav-item active" data-page="dashboard" onclick="go('dashboard',this)"><i class="fas fa-chart-pie"></i>Dashboard</div><div class="nav-item" data-page="children" onclick="go('children',this)"><i class="fas fa-user-graduate"></i>My Children</div><div class="nav-item" data-page="payments" onclick="go('payments',this)"><i class="fas fa-receipt"></i>Payments & Receipts</div><div class="nav-item" data-page="notifications" onclick="go('notifications',this)"><i class="fas fa-bell"></i>Notifications <span id="notifCount"></span></div><div class="nav-item" data-page="profile" onclick="go('profile',this)"><i class="fas fa-user-cog"></i>Profile</div></nav><div class="user"><strong>${parent.name}</strong><span>${school.name||'School parent'}</span></div><button class="btn btn-outline logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i>Logout</button></aside><main class="main"><header class="topbar"><span>FeeFlow / <strong id="crumb">Dashboard</strong></span></header><div class="content"><section class="section active" id="dashboard"></section><section class="section" id="children"></section><section class="section" id="payments"></section><section class="section" id="notifications"></section><section class="section" id="profile"></section></div></main></div>`}
-function renderAll(){
- const total=children.reduce((a,c)=>a+Number(c.total||0),0),paid=children.reduce((a,c)=>a+Number(c.paid||0),0),balance=children.reduce((a,c)=>a+Number(c.balance||0),0);
- document.getElementById('dashboard').innerHTML=`<div class="page-head"><div><h1 class="page-title">Welcome, ${parent.name.split(' ')[0]}</h1><p class="page-desc">View your children's fees and payment activity at ${school.name||'your school'}.</p></div><button class="btn btn-green" onclick="openPay()"><i class="fas fa-mobile-alt"></i> Make Payment</button></div><div class="notice"><i class="fas fa-circle-info"></i> Pay school fees using M-Pesa Paybill <strong>${school.paybill||'—'}</strong> and your child's admission number as the account.</div><div class="grid"><div class="stat"><div class="stat-icon"><i class="fas fa-user-graduate"></i></div><div class="stat-value">${children.length}</div><div class="stat-label">Children linked</div></div><div class="stat"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value green">${money(paid)}</div><div class="stat-label">Fees paid</div></div><div class="stat"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value red">${money(balance)}</div><div class="stat-label">Outstanding balance</div></div></div><div class="card"><div class="card-head">Fee summary</div><div class="card-body">${childCards()}</div></div>`;
- document.getElementById('children').innerHTML=`<div class="page-head"><div><h1 class="page-title">My Children</h1><p class="page-desc">Students linked to your verified parent account</p></div><button class="btn btn-primary" onclick="openAddChild()"><i class="fas fa-plus"></i>Add Child</button></div><div class="card"><div class="card-body">${childCards()}</div></div>`;
- document.getElementById('payments').innerHTML=`<div class="page-head"><div><h1 class="page-title">Payments & Receipts</h1><p class="page-desc">Your children's fee-payment history</p></div></div><div class="card"><div style="overflow:auto"><table><thead><tr><th>Reference</th><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Receipt</th></tr></thead><tbody>${payments.length?payments.map(p=>`<tr><td><strong>${p.ref||p.id}</strong></td><td>${p.studentName||'—'}</td><td class="amount green">${money(p.amount)}</td><td>${p.method||'M-Pesa'}</td><td><span class="badge paid">${p.status||'Paid'}</span></td><td>${p.date||'—'}</td><td><button class="btn btn-outline" onclick="receipt('${p.id}')"><i class="fas fa-print"></i></button></td></tr>`).join(''):`<tr><td colspan="7" class="empty">No payments recorded yet.</td></tr>`}</tbody></table></div></div>`;
- document.getElementById('notifications').innerHTML=`<div class="page-head"><div><h1 class="page-title">Notifications</h1><p class="page-desc">Payment confirmations and school account updates</p></div><button class="btn btn-outline" onclick="markRead()">Mark all read</button></div><div class="card">${notifications.length?notifications.map(n=>`<div class="notif"><strong>${n.title}</strong><div class="meta">${n.body}</div><div class="meta">${n.time||'Recently'}</div></div>`).join(''):'<div class="empty">No notifications yet.</div>'}</div>`;
- const badge=document.getElementById('notifCount');if(badge)badge.textContent=notifications.filter(n=>n.unread).length||'';
- document.getElementById('profile').innerHTML=`<div class="page-head"><div><h1 class="page-title">Profile</h1><p class="page-desc">Your verified FeeFlow account</p></div></div><div class="card"><div class="card-head">Account information</div><div class="card-body"><div class="field"><label>Full name</label><input id="profileName" value="${parent.name}"></div><div class="field"><label>Phone</label><input id="profilePhone" value="${parent.phone||''}"></div><div class="field"><label>Email</label><input id="profileEmail" type="email" value="${parent.email||''}"></div><p><strong>School</strong><br><span class="meta">${school.name||parent.schoolName||'—'}</span></p><br><button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i>Save Profile</button><br><div class="field"><label>Appearance</label><select onchange="setTheme(this.value)"><option value="light">Light mode</option><option value="dark">Dark mode</option><option value="system">Use device setting</option></select></div></div></div>`;
-}
-function childCards(){return children.length?children.map(c=>`<div class="child"><div class="avatar" style="background:${c.color||'linear-gradient(135deg,#1a6dcc,#059669)'}">${c.initials||c.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</div><div><div class="child-name">${c.name}</div><div class="meta">${c.class||'—'} • ${c.adm||'No admission number'}</div></div><div><div class="amount ${Number(c.balance)>0?'red':'green'}">${money(c.balance)}</div><div class="meta">Balance</div></div></div>`).join(''):`<div class="empty"><i class="fas fa-user-plus"></i><p>No children are linked to this account yet. Contact your school administrator.</p></div>`}
-function go(page,el){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));document.getElementById(page).classList.add('active');el.classList.add('active');document.getElementById('crumb').textContent=el.textContent.trim()}
+  <div id="app"></div>
 
-function openPay(){if(!children.length){alert('No child is linked to this account.');return}document.body.insertAdjacentHTML('beforeend',`<div class="modal open" id="payModal"><div class="modal-box"><h2>M-Pesa STK Push</h2><p class="meta">Paybill: ${school.paybill||'Not configured'}</p><div class="field"><label>Student</label><select id="payChild">${children.map(c=>`<option value="${c.id}">${c.name} — Balance ${money(c.balance)}</option>`).join('')}</select></div><div class="field"><label>Amount (KES)</label><input id="payAmount" type="number" min="1"></div><div class="field"><label>M-Pesa phone number</label><input id="payPhone" value="${parent.phone||''}" placeholder="7XX XXX XXX"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="document.getElementById('payModal').remove()">Cancel</button><button class="btn btn-green" onclick="makePayment()">Confirm Payment</button></div></div></div>`)}
-async function makePayment(){
- const id=document.getElementById('payChild').value,amount=Number(document.getElementById('payAmount').value),phone=document.getElementById('payPhone').value.trim();
- if(!amount||phone.length<9){alert('Enter a valid amount and M-Pesa phone number.');return}
- if(!school.paybill){alert('The school has not configured its original paybill.');return}
- if(!school.stkEndpoint){alert('STK Push is not yet connected by the school administrator.');return}
- const st=children.find(x=>x.id===id);if(!st)return;
- try{
-  const response=await fetch(school.stkEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,amount,paybill:school.paybill,accountReference:st.adm,studentId:st.id,schoolId:parent.schoolId})});
-  const result=await response.json().catch(()=>({}));if(!response.ok||result.success===false)throw new Error(result.message||'STK request failed');
-  const ref=result.reference||result.checkoutRequestId;if(!ref)throw new Error('The payment service did not return a transaction reference.');
-  const allStudents=JSON.parse(localStorage.getItem('ff_students')||'[]'),record=allStudents.find(x=>x.id===id);record.paid=Number(record.paid||0)+amount;record.balance=Math.max(0,Number(record.total||0)-record.paid);record.status=record.balance===0?'paid':'partial';localStorage.setItem('ff_students',JSON.stringify(allStudents));
-  const allPayments=JSON.parse(localStorage.getItem('ff_payments')||'[]');allPayments.unshift({id:'p_'+Date.now(),ref,studentId:record.id,studentName:record.name,class:record.class,amount,method:'M-Pesa STK',status:'reconciled',date:new Date().toLocaleString(),schoolId:parent.schoolId,schoolName:school.name,paybill:school.paybill,stkPhone:phone});localStorage.setItem('ff_payments',JSON.stringify(allPayments));
-  const allNotifs=JSON.parse(localStorage.getItem('ff_notifications')||'[]');allNotifs.unshift({id:Date.now(),audience:'school',schoolId:parent.schoolId,parentId:parent.id,studentId:record.id,type:'payment',title:'Payment Received',body:`${money(amount)} received for ${record.name} via M-Pesa (${ref}).`,time:'Just now',unread:true});localStorage.setItem('ff_notifications',JSON.stringify(allNotifs));
-  document.getElementById('payModal').remove();alert('Payment confirmed.');init();
- }catch(error){alert(error.message||'Unable to initiate STK Push.');}
-}
-function receipt(id){const p=payments.find(x=>x.id===id);if(!p)return;const w=open('','_blank','width=650,height=750');w.document.write(`<title>Receipt ${p.ref}</title><div style="font-family:Arial;padding:40px"><h1>${school.name||'School'}</h1><h2>Official Fee Receipt</h2><hr><p><b>Receipt:</b> ${p.ref}</p><p><b>Student:</b> ${p.studentName}</p><p><b>Amount:</b> ${money(p.amount)}</p><p><b>Method:</b> ${p.method}</p><p><b>Date:</b> ${p.date}</p><hr><p>Confirmed through FeeFlow.</p></div>`);w.document.close();w.print()}
-function openAddChild(){document.body.insertAdjacentHTML('beforeend',`<div class="modal open" id="childModal"><div class="modal-box"><h2>Add Child</h2><div class="field"><label>Full name</label><input id="newChildName"></div><div class="field"><label>Admission number</label><input id="newChildAdm"></div><div class="field"><label>Class</label><input id="newChildClass"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-outline" onclick="document.getElementById('childModal').remove()">Cancel</button><button class="btn btn-primary" onclick="saveChild()">Add Child</button></div></div></div>`)}
-function saveChild(){const name=document.getElementById('newChildName').value.trim(),adm=document.getElementById('newChildAdm').value.trim(),cls=document.getElementById('newChildClass').value.trim();if(!name||!adm||!cls){alert('Complete all child details.');return}const all=JSON.parse(localStorage.getItem('ff_students')||'[]');if(all.some(s=>s.schoolId===parent.schoolId&&s.adm.toLowerCase()===adm.toLowerCase())){alert('That admission number already exists at this school.');return}all.push({id:'c_'+Date.now(),parentId:parent.id,schoolId:parent.schoolId,name,adm,class:cls,total:0,paid:0,balance:0,status:'paid',lastPayment:'—',initials:name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(),color:'linear-gradient(135deg,#1a6dcc,#059669)'});localStorage.setItem('ff_students',JSON.stringify(all));document.getElementById('childModal').remove();init()}
-function saveProfile(){const name=document.getElementById('profileName').value.trim(),phone=document.getElementById('profilePhone').value.trim(),email=document.getElementById('profileEmail').value.trim();if(!name||phone.length<9){alert('Enter a valid name and phone number.');return}const all=JSON.parse(localStorage.getItem('ff_parents')||'[]');const record=all.find(p=>p.id===parent.id);if(!record)return;record.name=name;record.phone=phone;record.email=email;localStorage.setItem('ff_parents',JSON.stringify(all));session.name=name;localStorage.setItem('ff_sessions',JSON.stringify([session]));alert('Profile updated.');init()}
-function markRead(){const all=JSON.parse(localStorage.getItem('ff_notifications')||'[]');all.forEach(n=>{if(n.parentId===parent.id)n.unread=false});localStorage.setItem('ff_notifications',JSON.stringify(all));notifications.forEach(n=>n.unread=false);renderAll()}
-function setTheme(mode){localStorage.setItem('ff_theme',mode);const dark=mode==='dark'||(mode==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark)}
+  <div class="modal-backdrop" id="childModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Add Child</div>
+        <button class="button button-outline" onclick="closeModal('childModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="childName">Child's full name</label>
+          <input class="form-input" id="childName" placeholder="Enter full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="childAdm">Admission number</label>
+          <input class="form-input" id="childAdm" placeholder="Enter admission number">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="childClass">Class / grade / form</label>
+          <input class="form-input" id="childClass" placeholder="Enter class or grade">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="button button-outline" onclick="closeModal('childModal')">Cancel</button>
+        <button class="button button-primary" onclick="saveChild()">Add Child</button>
+      </div>
+    </div>
+  </div>
 
-function logout(){localStorage.setItem('ff_sessions','[]');location.href='portal.html'}
-document.addEventListener('DOMContentLoaded',init);
-</script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ac43640f13497d',t:'MTc4Mzk4NzM5NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">M-Pesa STK Push</div>
+        <button class="button button-outline" onclick="closeModal('paymentModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="notice" id="paybillNotice"></div>
+        <div class="form-group">
+          <label class="form-label" for="paymentStudent">Student</label>
+          <select class="form-input" id="paymentStudent"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="paymentAmount">Amount (KES)</label>
+          <input class="form-input" id="paymentAmount" type="number" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="paymentPhone">M-Pesa phone number</label>
+          <input class="form-input" id="paymentPhone" placeholder="7XX XXX XXX">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="button button-outline" onclick="closeModal('paymentModal')">Cancel</button>
+        <button class="button button-success" id="payButton" onclick="makePayment()">Send STK Push</button>
+      </div>
+    </div>
+  </div>
+
+    <script>
+    let session = null;
+    let parent = null;
+    let school = null;
+    let children = [];
+    let payments = [];
+    let notifications = [];
+
+    function safeArray(key) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(value) ? value : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[character]));
+    }
+
+    function money(value) {
+      return "KES " + Number(value || 0).toLocaleString("en-KE");
+    }
+
+    // Accepts 07XXXXXXXX, 01XXXXXXXX, 7XXXXXXXX, 2547XXXXXXXX, +2547XXXXXXXX
+    // Returns the normalized 2547XXXXXXXX / 2541XXXXXXXX format M-Pesa expects, or null if invalid.
+    function normalizeKenyanPhone(raw) {
+      const digits = String(raw || "").replace(/\D/g, "");
+      if (/^254(7|1)\d{8}$/.test(digits)) return digits;
+      if (/^0(7|1)\d{8}$/.test(digits)) return "254" + digits.slice(1);
+      if (/^(7|1)\d{8}$/.test(digits)) return "254" + digits;
+      return null;
+    }
+
+    function initialize() {
+      const parents = safeArray("ff_parents");
+      const schools = safeArray("ff_schools");
+      const sessions = safeArray("ff_sessions");
+      const existingSession = sessions.length === 1
+        ? sessions.find(item => item.type === "parent" && Date.now() - Number(item.timestamp || 0) < 86400000)
+        : null;
+
+      parent = existingSession
+        ? parents.find(item => item.id === existingSession.parentId && item.schoolId === existingSession.schoolId)
+        : null;
+
+      // Require a valid, current parent session. Never silently reopen an account
+      // after logout or manufacture a local account.
+      if (!parent) {
+        localStorage.setItem("ff_sessions", "[]");
+        renderSignedOutPage();
+        return;
+      }
+
+      session = existingSession;
+
+      school = schools.find(item => item.id === parent.schoolId) || {
+        id: parent.schoolId,
+        name: parent.schoolName || "School not assigned",
+        paybill: ""
+      };
+
+      children = safeArray("ff_students").filter(item => item.parentId === parent.id);
+      const childIds = new Set(children.map(item => item.id));
+      payments = safeArray("ff_payments").filter(item => childIds.has(item.studentId));
+      notifications = safeArray("ff_notifications").filter(item => item.parentId === parent.id);
+
+      renderShell();
+      renderAllViews();
+    }
+
+    function renderSignedOutPage() {
+      document.getElementById("app").innerHTML = `
+        <div class="access-page">
+          <div class="access-card">
+            <div style="font-size:48px">✓</div>
+            <h1 style="margin-top:12px">You’re signed out</h1>
+            <p class="page-description" style="margin-bottom:20px">Your FeeFlow parent session has ended securely.</p>
+            <a class="button button-primary" style="text-decoration:none;width:100%" href="portal.html">Return to login</a>
+          </div>
+        </div>`;
+    }
+
+    function renderAccessPage(parents) {
+      const accountButtons = parents.map(item => {
+        const accountSchool = safeArray("ff_schools").find(value => value.id === item.schoolId);
+        return `
+          <button class="button button-outline" style="width:100%;margin-top:9px" onclick="enterParent('${item.id}')">
+            ${escapeHtml(item.name)} — ${escapeHtml(accountSchool?.name || item.schoolName || "School")}
+          </button>
+        `;
+      }).join("");
+
+      document.getElementById("app").innerHTML = `
+        <div class="access-page">
+          <div class="access-card">
+            <div style="font-size:48px">🎓</div>
+            <h1 style="margin-top:12px">FeeFlow Parent Portal</h1>
+            <p class="page-description" style="margin-bottom:18px">More than one parent account was found on this device. Choose which one to open.</p>
+            ${accountButtons || '<div class="notice">No parent accounts have been registered.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function enterParent(parentId) {
+      const account = safeArray("ff_parents").find(item => item.id === parentId);
+      if (!account) return;
+
+      localStorage.setItem("ff_sessions", JSON.stringify([{
+        id: "parent_" + Date.now(),
+        type: "parent",
+        parentId: account.id,
+        schoolId: account.schoolId,
+        name: account.name,
+        timestamp: Date.now()
+      }]));
+
+      location.reload();
+    }
+
+    function renderShell() {
+      const parents = safeArray("ff_parents");
+      const switchAccountButton = parents.length > 1
+        ? `<button class="logout-button" style="margin-bottom:8px" onclick="switchAccount()">⇄ Switch Account</button>`
+        : "";
+
+      document.getElementById("app").innerHTML = `
+        <div class="app-shell">
+          <aside class="sidebar" id="sidebar">
+            <div class="brand">
+              <div class="brand-mark">🎓</div>
+              <div>
+                <div class="brand-name">FeeFlow</div>
+                <span class="brand-tag">PARENT PORTAL</span>
+              </div>
+            </div>
+
+            <nav class="navigation">
+              <div class="nav-label">My Account</div>
+              ${navButton("dashboard", "◔", "Dashboard", true)}
+              ${navButton("children", "♟", "My Children")}
+              ${navButton("payments", "▤", "Payments & Receipts")}
+              ${navButton("reports", "▧", "Fee Reports")}
+              ${navButton("notifications", "◈", "Notifications", false, "notificationCount")}
+              ${navButton("profile", "♣", "Profile")}
+            </nav>
+
+            <div class="sidebar-footer">
+              <div class="account-card">
+                <div class="account-name">${escapeHtml(parent.name)}</div>
+                <div class="account-school">${escapeHtml(school.name || parent.schoolName || "School")}</div>
+              </div>
+              ${switchAccountButton}
+              <button class="logout-button" onclick="requestLogout()" aria-label="Log out of FeeFlow">↪ Logout</button>
+            </div>
+          </aside>
+
+          <main class="main-area">
+            <header class="topbar">
+              <button class="mobile-menu" onclick="toggleSidebar()">☰</button>
+              <div class="breadcrumb">FeeFlow / <strong id="breadcrumb">Dashboard</strong></div>
+              <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+                <span class="desktop-status" style="color:var(--green);font-size:12px;font-weight:800">SECURE PARENT PORTAL</span>
+                <button class="button button-outline" style="padding:8px 12px" onclick="requestLogout()" aria-label="Log out of FeeFlow">↪ Logout</button>
+              </div>
+            </header>
+
+            <div class="content">
+              <section class="view active" id="view-dashboard"></section>
+              <section class="view" id="view-children"></section>
+              <section class="view" id="view-payments"></section>
+              <section class="view" id="view-reports"></section>
+              <section class="view" id="view-notifications"></section>
+              <section class="view" id="view-profile"></section>
+            </div>
+          </main>
+        </div>
+      `;
+    }
+
+    function navButton(page, icon, label, active = false, countId = "") {
+      return `
+        <button class="nav-button ${active ? "active" : ""}" data-page="${page}" onclick="navigate('${page}', this)">
+          <span class="nav-icon">${icon}</span>
+          <span>${label}</span>
+          ${countId ? `<span class="nav-count" id="${countId}"></span>` : ""}
+        </button>
+      `;
+    }
+
+    function renderAllViews() {
+      renderDashboard();
+      renderChildren();
+      renderPayments();
+      renderFeeReports();
+      renderNotifications();
+      renderProfile();
+      updateNotificationBadge();
+    }
+
+    function renderDashboard() {
+      const paid = children.reduce((sum, child) => sum + Number(child.paid || 0), 0);
+      const balance = children.reduce((sum, child) => sum + Number(child.balance || 0), 0);
+
+      document.getElementById("view-dashboard").innerHTML = `
+        <div class="page-heading">
+          <div>
+            <h1 class="page-title">Welcome, ${escapeHtml((parent.name || "Parent").split(" ")[0])}</h1>
+            <p class="page-description">View your children's fees and payment activity.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="button button-outline" onclick="showView('reports')">▧ View Fee Reports</button><button class="button button-success" onclick="openPaymentModal()">▣ Make Payment</button></div>
+        </div>
+
+        <div class="notice">
+          Pay school fees using M-Pesa Paybill <strong>${escapeHtml(school.paybill || "Not configured")}</strong>
+          and your child's admission number as the account reference.
+        </div>
+
+        <div class="stats-grid">
+          ${statCard(children.length, "Children linked")}
+          ${statCard(money(paid), "Fees paid", "green")}
+          ${statCard(money(balance), "Outstanding balance", balance > 0 ? "red" : "green")}
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">Fee Summary</div>
+          <div class="panel-body">${childrenMarkup()}</div>
+        </div>
+      `;
+    }
+
+    function statCard(value, label, className = "") {
+      return `
+        <div class="stat-card">
+          <div class="stat-value ${className}">${value}</div>
+          <div class="stat-label">${label}</div>
+        </div>
+      `;
+    }
+
+    function renderChildren() {
+      document.getElementById("view-children").innerHTML = `
+        <div class="page-heading">
+          <div>
+            <h1 class="page-title">My Children</h1>
+            <p class="page-description">Students linked to your verified parent account</p>
+          </div>
+          <button class="button button-primary" onclick="openModal('childModal')">＋ Add Child</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-body">${childrenMarkup()}</div>
+        </div>
+      `;
+    }
+
+    function childrenMarkup() {
+      if (!children.length) {
+        return '<div class="empty-state">No children are linked to this account yet.</div>';
+      }
+
+      return children.map(child => {
+        const balanceDue = Number(child.balance || 0) > 0;
+        return `
+        <div class="child-card">
+          <div class="avatar">${escapeHtml(child.initials || initials(child.name))}</div>
+          <div>
+            <div class="child-name">${escapeHtml(child.name)}</div>
+            <div class="child-meta">${escapeHtml(child.class || "Class not assigned")} • ${escapeHtml(child.adm || "No admission number")}</div>
+          </div>
+          <div class="balance-block">
+            <div class="balance-value" style="${balanceDue ? "color:var(--danger)" : ""}">${money(child.balance)}</div>
+            <div class="balance-label">${balanceDue ? "Balance due" : "Fully paid"}</div>
+          </div>
+        </div>
+      `;
+      }).join("");
+    }
+
+    function initials(name) {
+      return String(name || "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(part => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    }
+
+    function renderPayments() {
+      const rows = payments.length
+        ? payments.map(payment => `
+            <tr>
+              <td><strong>${escapeHtml(payment.ref || payment.id)}</strong></td>
+              <td>${escapeHtml(payment.studentName || "—")}</td>
+              <td class="money green">${money(payment.amount)}</td>
+              <td>${escapeHtml(payment.method || "M-Pesa")}</td>
+              <td><span class="pill">${escapeHtml(payment.status || "Paid")}</span></td>
+              <td>${escapeHtml(payment.date || "—")}</td>
+            </tr>
+          `).join("")
+        : '<tr><td colspan="6" class="empty-state">No confirmed payments yet.</td></tr>';
+
+      document.getElementById("view-payments").innerHTML = `
+        <div class="page-heading">
+          <div>
+            <h1 class="page-title">Payments & Receipts</h1>
+            <p class="page-description">Confirmed fee payments and official receipts</p>
+          </div>
+          <button class="button button-success" onclick="openPaymentModal()">▣ Make Payment</button>
+        </div>
+
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Student</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="page-heading" style="margin-top:26px">
+          <div>
+            <h2>Receipt Previews</h2>
+            <p class="page-description">Print or download confirmed fee receipts</p>
+          </div>
+        </div>
+
+        <div class="receipt-grid">${receiptsMarkup()}</div>
+      `;
+    }
+
+    function receiptsMarkup() {
+      if (!payments.length) {
+        return '<div class="panel"><div class="empty-state">Receipts appear after a payment is confirmed.</div></div>';
+      }
+
+      return payments.map(payment => `
+        <article class="receipt">
+          <div class="receipt-heading">
+            <div class="receipt-school">${escapeHtml(school.name || "School")}</div>
+            <div class="receipt-title">OFFICIAL FEE RECEIPT</div>
+          </div>
+          ${receiptRow("Receipt", payment.ref || payment.id)}
+          ${receiptRow("Student", payment.studentName || "—")}
+          ${receiptRow("Class", payment.class || "—")}
+          ${receiptRow("Amount", money(payment.amount))}
+          ${receiptRow("Method", payment.method || "M-Pesa")}
+          ${receiptRow("Paybill", payment.paybill || school.paybill || "—")}
+          ${receiptRow("Date", payment.date || "—")}
+          <div class="receipt-actions">
+            <button class="button button-outline" onclick="printReceipt('${payment.id}')">▣ Print</button>
+            <button class="button button-primary" onclick="downloadReceipt('${payment.id}')">↓ Download</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function receiptRow(label, value) {
+      return `
+        <div class="receipt-row">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(value)}</strong>
+        </div>
+      `;
+    }
+
+    function normalizeGrade(value) {
+      return String(value || "")
+        .replace(/[A-Z]$/, "")
+        .replace(/^Class /i, "Grade ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function findPublishedGrade(publication, child) {
+      for (const level of publication?.levels || []) {
+        const grade = (level.grades || []).find(item => normalizeGrade(item.name) === normalizeGrade(child.class));
+        if (grade) return { level: level.name, grade };
+      }
+      return null;
+    }
+
+    function renderFeeReports() {
+      const publication = JSON.parse(localStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
+      const termNames = JSON.parse(localStorage.getItem("ff_fee_term_names_" + parent.schoolId) || "null") || ["Term 1", "Term 2", "Term 3"];
+
+      let body = "";
+      if (!publication) {
+        body = '<div class="panel"><div class="empty-state">Your school has not published a fee structure yet.</div></div>';
+      } else if (!children.length) {
+        body = '<div class="panel"><div class="empty-state">Add a child to view a matching fee report.</div></div>';
+      } else {
+        body = children.map(child => {
+          const match = findPublishedGrade(publication, child);
+          if (!match) {
+            return `<div class="panel"><div class="panel-header">${escapeHtml(child.name)}</div><div class="panel-body"><div class="notice">No published fee structure matches ${escapeHtml(child.class)}. Contact the school administrator.</div>${feeBalanceCards(child)}</div></div>`;
+          }
+
+          const terms = termNames.map((term, termIndex) => {
+            const rows = (match.grade.fees || []).map(fee => `
+              <tr>
+                <td>${escapeHtml(fee.name)}</td>
+                <td>${escapeHtml(fee.category)}</td>
+                <td class="money">${money(fee.amounts?.[termIndex] || 0)}</td>
+              </tr>
+            `).join("");
+            const total = (match.grade.fees || []).reduce((sum, fee) => sum + Number(fee.amounts?.[termIndex] || 0), 0);
+            return `<h3 style="margin:20px 0 8px">${escapeHtml(term)}</h3><div class="table-wrap"><table><thead><tr><th>Fee item</th><th>Category</th><th>Amount</th></tr></thead><tbody>${rows || '<tr><td colspan="3">No fee items configured.</td></tr>'}<tr><td colspan="2"><strong>Total</strong></td><td class="money"><strong>${money(total)}</strong></td></tr></tbody></table></div>`;
+          }).join("");
+
+          return `<div class="panel"><div class="panel-header"><span>${escapeHtml(child.name)} — ${escapeHtml(match.level)} / ${escapeHtml(match.grade.name)}</span><span style="font-size:12px;color:var(--muted)">Published ${publication.publishedAt ? new Date(publication.publishedAt).toLocaleDateString() : "—"}</span></div><div class="panel-body">${feeBalanceCards(child)}${terms}</div></div>`;
+        }).join("");
+      }
+
+      document.getElementById("view-reports").innerHTML = `
+        <div class="page-heading">
+          <div>
+            <h1 class="page-title">Fee Reports</h1>
+            <p class="page-description">Published fee structures, amounts paid and remaining balances</p>
+          </div>
+        </div>
+        ${body}
+      `;
+    }
+
+    function feeBalanceCards(child) {
+      return `<div class="stats-grid">${statCard(money(child.total), "Total fees")}${statCard(money(child.paid), "Paid", "green")}${statCard(money(child.balance), "Remaining", Number(child.balance) > 0 ? "red" : "green")}</div>`;
+    }
+
+    function renderNotifications() {
+      const markup = notifications.length
+        ? notifications.map(notification => `
+            <div class="notification ${notification.unread ? "unread" : ""}" onclick="markNotificationRead('${notification.id}')" style="cursor:pointer">
+              <div class="notification-title">${escapeHtml(notification.title)}</div>
+              <div class="notification-message">${escapeHtml(notification.body)}</div>
+              <div class="notification-time">${escapeHtml(notification.time || "Recently")}</div>
+            </div>
+          `).join("")
+        : '<div class="empty-state">No notifications yet.</div>';
+
+      document.getElementById("view-notifications").innerHTML = `
+        <div class="page-heading">
+          <div>
+            <h1 class="page-title">Notifications</h1>
+            <p class="page-description">Fee reports, payment confirmations and school notices</p>
+          </div>
+          <button class="button button-outline" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="panel">${markup}</div>
+      `;
+    }
+
+    function renderProfile() {
+      document.getElementById("view-profile").innerHTML = `
+        <div class="page-heading">
+          <div>
+            <h1 class="page-title">Profile</h1>
+            <p class="page-description">Manage your verified parent account</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">Account Information</div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="profileName">Full name</label>
+                <input class="form-input" id="profileName" value="${escapeHtml(parent.name)}">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profilePhone">Phone number</label>
+                <input class="form-input" id="profilePhone" placeholder="07XX XXX XXX" value="${escapeHtml(parent.phone || "")}">
+              </div>
+              <div class="form-group full">
+                <label class="form-label" for="profileEmail">Email address</label>
+                <input class="form-input" id="profileEmail" type="email" value="${escapeHtml(parent.email || "")}">
+              </div>
+              <div class="form-group full">
+                <label class="form-label">School</label>
+                <input class="form-input" value="${escapeHtml(school.name || parent.schoolName || "School")}" disabled>
+              </div>
+            </div>
+            <button class="button button-primary" onclick="saveProfile()">Save Profile</button>
+          </div>
+        </div>
+      `;
+    }
+  
+
+    function updateNotificationBadge() {
+      const badge = document.getElementById("notificationCount");
+      if (!badge) return;
+
+      const unread = notifications.filter(item => item.unread).length;
+      badge.textContent = unread;
+      badge.classList.toggle("show", unread > 0);
+    }
+
+    function navigate(page, button) {
+      document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
+      document.querySelectorAll(".nav-button").forEach(item => item.classList.remove("active"));
+
+      document.getElementById("view-" + page).classList.add("active");
+      button.classList.add("active");
+      document.getElementById("breadcrumb").textContent = button.textContent.trim();
+
+      if (window.innerWidth <= 720) {
+        document.getElementById("sidebar").classList.remove("open");
+      }
+    }
+
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("open");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+
+    function saveChild() {
+      const name = document.getElementById("childName").value.trim();
+      const adm = document.getElementById("childAdm").value.trim();
+      const childClass = document.getElementById("childClass").value.trim();
+
+      if (!name || !adm || !childClass) {
+        alert("Complete all child details.");
+        return;
+      }
+
+      const students = safeArray("ff_students");
+
+      if (students.some(item => item.schoolId === parent.schoolId && String(item.adm).toLowerCase() === adm.toLowerCase())) {
+        alert("That admission number is already registered at this school.");
+        return;
+      }
+
+      students.push({
+        id: "child_" + Date.now(),
+        parentId: parent.id,
+        schoolId: parent.schoolId,
+        name,
+        adm,
+        class: childClass,
+        total: 0,
+        paid: 0,
+        balance: 0,
+        status: "paid",
+        initials: initials(name),
+        color: "linear-gradient(135deg,#1768b2,#059669)"
+      });
+
+      localStorage.setItem("ff_students", JSON.stringify(students));
+      document.getElementById("childName").value = "";
+      document.getElementById("childAdm").value = "";
+      document.getElementById("childClass").value = "";
+      closeModal("childModal");
+      initialize();
+      showView("children");
+    }
+
+    function showView(page) {
+      const button = document.querySelector(`[data-page="${page}"]`);
+      if (button) navigate(page, button);
+    }
+
+    function openPaymentModal() {
+      if (!children.length) {
+        alert("Add a child before making a payment.");
+        return;
+      }
+
+      const studentSelect = document.getElementById("paymentStudent");
+      studentSelect.innerHTML = children.map(child => `
+        <option value="${child.id}" data-balance="${Number(child.balance || 0)}">${escapeHtml(child.name)} — Balance ${money(child.balance)}</option>
+      `).join("");
+
+      document.getElementById("paymentPhone").value = parent.phone || "";
+      document.getElementById("paymentAmount").value = "";
+      document.getElementById("paybillNotice").innerHTML = `Original school paybill: <strong>${escapeHtml(school.paybill || "Not configured")}</strong>`;
+      updatePaymentAmountHint();
+      openModal("paymentModal");
+    }
+
+    function updatePaymentAmountHint() {
+      const studentSelect = document.getElementById("paymentStudent");
+      const amountInput = document.getElementById("paymentAmount");
+      if (!studentSelect || !amountInput) return;
+      const selected = studentSelect.options[studentSelect.selectedIndex];
+      const balance = selected ? Number(selected.dataset.balance || 0) : 0;
+      amountInput.placeholder = balance > 0 ? `Up to ${money(balance)}` : "Enter amount";
+    }
+
+    async function makePayment() {
+      const studentId = document.getElementById("paymentStudent").value;
+      const amount = Number(document.getElementById("paymentAmount").value);
+      const rawPhone = document.getElementById("paymentPhone").value.trim();
+      const phone = normalizeKenyanPhone(rawPhone);
+      const button = document.getElementById("payButton");
+
+      if (!studentId || !amount || amount <= 0) {
+        alert("Choose a student and enter a valid amount.");
+        return;
+      }
+
+      if (!phone) {
+        alert("Enter a valid Safaricom number, e.g. 07XX XXX XXX or 7XX XXX XXX.");
+        return;
+      }
+
+      if (!school.paybill) {
+        alert("The school has not configured its official M-Pesa paybill.");
+        return;
+      }
+
+      if (!school.stkEndpoint) {
+        alert("The school has not connected its secure STK Push endpoint.");
+        return;
+      }
+
+      const student = children.find(item => item.id === studentId);
+      if (!student) return;
+      if (Number(student.balance) > 0 && amount > Number(student.balance)) {
+        alert("The payment amount cannot exceed the remaining balance of " + money(student.balance) + ".");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Sending…";
+
+      try {
+        const response = await fetch(school.stkEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone,
+            amount,
+            paybill: school.paybill,
+            accountReference: student.adm,
+            studentId: student.id,
+            schoolId: school.id
+          })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || result.success === false) {
+          throw new Error(result.message || "STK Push request failed.");
+        }
+
+        const reference = result.reference || result.checkoutRequestId;
+        if (!reference) {
+          throw new Error("The payment service did not return a reference.");
+        }
+
+        recordConfirmedPayment(student, amount, phone, reference);
+        closeModal("paymentModal");
+        initialize();
+        showView("payments");
+        alert("Payment confirmed. Your receipt is ready.");
+      } catch (error) {
+        alert(error.message || "Unable to complete the STK Push request.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Send STK Push";
+      }
+    }
+
+    function recordConfirmedPayment(student, amount, phone, reference) {
+      const students = safeArray("ff_students");
+      const studentRecord = students.find(item => item.id === student.id);
+      if (!studentRecord) return;
+
+      studentRecord.paid = Number(studentRecord.paid || 0) + amount;
+      studentRecord.balance = Math.max(0, Number(studentRecord.total || 0) - studentRecord.paid);
+      studentRecord.status = studentRecord.balance === 0 ? "paid" : "partial";
+      localStorage.setItem("ff_students", JSON.stringify(students));
+
+      const payment = {
+        id: "payment_" + Date.now(),
+        ref: reference,
+        studentId: studentRecord.id,
+        studentName: studentRecord.name,
+        class: studentRecord.class,
+        amount,
+        method: "M-Pesa STK",
+        status: "reconciled",
+        date: new Date().toLocaleString(),
+        schoolId: school.id,
+        schoolName: school.name,
+        paybill: school.paybill,
+        stkPhone: phone
+      };
+
+      const allPayments = safeArray("ff_payments");
+      allPayments.unshift(payment);
+      localStorage.setItem("ff_payments", JSON.stringify(allPayments));
+
+      const allNotifications = safeArray("ff_notifications");
+      allNotifications.unshift({
+        id: Date.now(),
+        audience: "school",
+        schoolId: school.id,
+        parentId: parent.id,
+        studentId: studentRecord.id,
+        type: "payment",
+        title: "Payment Received — Receipt Ready",
+        body: `${money(amount)} received for ${studentRecord.name}. Receipt ${reference} is ready.`,
+        time: "Just now",
+        unread: true
+      });
+      localStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+    }
+
+    function printAllReceipts() {
+      const printWindow = window.open("", "_blank", "width=760,height=820");
+      printWindow.document.write(receiptsHtml(payments));
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+
+    function downloadAllReceipts() {
+      const blob = new Blob([receiptsHtml(payments)], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `FeeFlow-Receipts-${Date.now()}.html`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function printReceipt(paymentId) {
+      const payment = payments.find(item => item.id === paymentId);
+      if (!payment) return;
+
+      const printWindow = window.open("", "_blank", "width=760,height=820");
+      printWindow.document.write(receiptHtml(payment));
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+
+    function downloadReceipt(paymentId) {
+      const payment = payments.find(item => item.id === paymentId);
+      if (!payment) return;
+
+      const blob = new Blob([receiptHtml(payment)], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `FeeFlow-Receipt-${payment.ref || payment.id}.html`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function markNotificationRead(notificationId) {
+      const allNotifications = safeArray("ff_notifications");
+      const record = allNotifications.find(item => String(item.id) === String(notificationId));
+      if (record && record.parentId === parent.id) record.unread = false;
+      localStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+      notifications = allNotifications.filter(item => item.parentId === parent.id);
+      renderNotifications();
+      updateNotificationBadge();
+    }
+
+    function markAllRead() {
+      const allNotifications = safeArray("ff_notifications");
+      allNotifications.forEach(item => {
+        if (item.parentId === parent.id) item.unread = false;
+      });
+      localStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+      notifications.forEach(item => item.unread = false);
+      renderNotifications();
+      updateNotificationBadge();
+    }
+
+    function saveProfile() {
+      const name = document.getElementById("profileName").value.trim();
+      const rawPhone = document.getElementById("profilePhone").value.trim();
+      const email = document.getElementById("profileEmail").value.trim();
+      const phone = normalizeKenyanPhone(rawPhone);
+
+      if (!name) {
+        alert("Enter your full name.");
+        return;
+      }
+      if (!phone) {
+        alert("Enter a valid Safaricom number, e.g. 07XX XXX XXX or 7XX XXX XXX.");
+        return;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        alert("Enter a valid email address.");
+        return;
+      }
+
+      const parents = safeArray("ff_parents");
+      if (parents.some(item => item.id !== parent.id && String(item.email || "").toLowerCase() === email.toLowerCase())) {
+        alert("That email address is already used by another parent account.");
+        return;
+      }
+      const parentRecord = parents.find(item => item.id === parent.id);
+      if (!parentRecord) return;
+
+      parentRecord.name = name;
+      parentRecord.phone = phone;
+      parentRecord.email = email;
+      localStorage.setItem("ff_parents", JSON.stringify(parents));
+
+      session.name = name;
+      localStorage.setItem("ff_sessions", JSON.stringify([session]));
+      initialize();
+      showView("profile");
+      alert("Profile updated successfully.");
+    }
+
+    function requestLogout() {
+      if (confirm("Log out of your FeeFlow parent account?")) logout();
+    }
+
+    function logout() {
+      // Clear only authentication state; school records and receipts remain intact.
+      localStorage.setItem("ff_sessions", "[]");
+      session = null;
+      parent = null;
+      window.location.replace("portal.html");
+    }
+
+    function switchAccount() {
+      localStorage.setItem("ff_sessions", "[]");
+      window.location.replace("portal.html");
+    }
+
+    document.addEventListener("change", event => {
+      if (event.target && event.target.id === "paymentStudent") {
+        updatePaymentAmountHint();
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
+        backdrop.addEventListener("click", event => {
+          if (event.target === backdrop) backdrop.classList.remove("open");
+        });
+      });
+    });
+
+    window.addEventListener("error", event => {
+      console.error(event.error || event.message);
+      if (!document.querySelector(".app-shell") && !document.querySelector(".access-page")) {
+        document.getElementById("app").innerHTML = `
+          <div class="access-page">
+            <div class="access-card">
+              <h2>Unable to load Parent Portal</h2>
+              <p class="page-description">${escapeHtml(event.message || "An unexpected error occurred.")}</p>
+              <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
+              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    function bootParentPortal() {
+      try {
+        initialize();
+      } catch (error) {
+        console.error(error);
+        const app = document.getElementById("app");
+        if (!app) return;
+        app.innerHTML = `
+          <div class="access-page">
+            <div class="access-card">
+              <h2>Unable to load Parent Portal</h2>
+              <p class="page-description">${escapeHtml(error.message || "An unexpected error occurred.")}</p>
+              <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
+              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function resetParentPortalData() {
+      localStorage.setItem("ff_sessions", "[]");
+      window.location.replace("portal.html");
+    }
+
+    bootParentPortal();
+  </script>
+</body>
 </html>
