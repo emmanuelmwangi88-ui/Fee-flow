@@ -1,6 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script id="feeflow-core-inline">
+(function() {
+  if (window.__feeflowBridgeLoaded) return;
+  window.__feeflowBridgeLoaded = true;
+
+  window.__memoryStorage = window.__memoryStorage || {};
+  
+  const isLocalStorageAvailable = (function() {
+    try {
+      const testKey = '__ff_test_storage__';
+      window.localStorage.setItem(testKey, '1');
+      window.localStorage.removeItem(testKey);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  })();
+
+  window.safeStorage = {
+    getItem: function(key) {
+      if (isLocalStorageAvailable) {
+        try {
+          const val = window.localStorage.getItem(key);
+          if (val !== null) return val;
+        } catch(e) {}
+      }
+      return window.__memoryStorage[key] !== undefined ? window.__memoryStorage[key] : null;
+    },
+    setItem: function(key, val) {
+      const strVal = String(val);
+      if (isLocalStorageAvailable) {
+        try { window.localStorage.setItem(key, strVal); } catch(e) {}
+      }
+      window.__memoryStorage[key] = strVal;
+    },
+    removeItem: function(key) {
+      if (isLocalStorageAvailable) {
+        try { window.localStorage.removeItem(key); } catch(e) {}
+      }
+      delete window.__memoryStorage[key];
+    }
+  };
+
+  try {
+    window.localStorage.getItem = function(key) { return window.safeStorage.getItem(key); };
+    window.localStorage.setItem = function(key, val) { return window.safeStorage.setItem(key, val); };
+    window.localStorage.removeItem = function(key) { return window.safeStorage.removeItem(key); };
+  } catch(e) {}
+
+  function seedDemoDataIfEmpty() {
+    let schools = null;
+    try { schools = JSON.parse(window.safeStorage.getItem('ff_schools') || 'null'); } catch(e){}
+    if (!schools || !Array.isArray(schools) || schools.length === 0) {
+      const now = Date.now();
+      const demoSchools = [
+        { id: 'sch_1', name: "St. Mary's Academy - Nairobi", paybill: "522522", plan: "Premium", collectionRate: 88, status: "active", adminUsername: "admin", adminPassword: "admin123", address: "Westlands, Nairobi, Kenya", phone: "0722123456", code: "SMA-001", messagingEndpoint: "https://api.feeflow.co.ke/v1/sms", smsSender: "STMARYS" },
+        { id: 'sch_2', name: "Greenwood International School", paybill: "880112", plan: "Premium", collectionRate: 94, status: "active", adminUsername: "greenwood", adminPassword: "gw2026", address: "Karen, Nairobi, Kenya", phone: "0733456789", code: "GIS-002", messagingEndpoint: "https://api.feeflow.co.ke/v1/sms", smsSender: "GREENWOOD" },
+        { id: 'sch_3', name: "Mombasa Heritage High", paybill: "400300", plan: "Standard", collectionRate: 76, status: "active", adminUsername: "mombasa", adminPassword: "mhb123", address: "Nyali, Mombasa, Kenya", phone: "0711987654", code: "MHH-003", messagingEndpoint: "", smsSender: "MOMBASAH" }
+      ];
+      const demoParents = [
+        { id: 'par_1', name: "Grace Mwangi", phone: "0712345678", schoolId: 'sch_1', schoolName: "St. Mary's Academy - Nairobi", email: "grace.mwangi@gmail.com", createdAt: now - 864000000 },
+        { id: 'par_2', name: "John Kamau", phone: "0723456789", schoolId: 'sch_1', schoolName: "St. Mary's Academy - Nairobi", email: "jkamau@yahoo.com", createdAt: now - 432000000 },
+        { id: 'par_3', name: "Dr. Achieng Omondi", phone: "0734567890", schoolId: 'sch_2', schoolName: "Greenwood International School", email: "achieng@omondi.co.ke", createdAt: now - 259200000 }
+      ];
+      const demoStudents = [
+        { id: 'stu_1', name: "David Mwangi", parentId: 'par_1', schoolId: 'sch_1', class: "Grade 4", level: "Primary", adm: "ADM-2024-101", boarding: false, total: 45000, paid: 25000, balance: 20000, status: "partial" },
+        { id: 'stu_2', name: "Joy Mwangi", parentId: 'par_1', schoolId: 'sch_1', class: "Grade 8", level: "Primary", adm: "ADM-2022-044", boarding: true, total: 68000, paid: 68000, balance: 0, status: "paid" },
+        { id: 'stu_3', name: "Samuel Kamau", parentId: 'par_2', schoolId: 'sch_1', class: "Form 2", level: "Secondary", adm: "ADM-2023-089", boarding: false, total: 52000, paid: 12000, balance: 40000, status: "partial" },
+        { id: 'stu_4', name: "Zara Omondi", parentId: 'par_3', schoolId: 'sch_2', class: "Grade 7", level: "Junior School", adm: "ADM-2024-502", boarding: true, total: 85000, paid: 85000, balance: 0, status: "paid" }
+      ];
+      const demoPayments = [
+        { id: 'pay_101', studentId: 'stu_1', studentName: "David Mwangi", amount: 25000, method: "M-Pesa", ref: "QXL9821KK", date: "2026-07-10", schoolId: 'sch_1', status: 'reconciled' },
+        { id: 'pay_102', studentId: 'stu_2', studentName: "Joy Mwangi", amount: 68000, method: "Bank Transfer", ref: "BNK-882103", date: "2026-07-05", schoolId: 'sch_1', status: 'reconciled' },
+        { id: 'pay_103', studentId: 'stu_3', studentName: "Samuel Kamau", amount: 12000, method: "M-Pesa", ref: "QXM4410ZZ", date: "2026-07-12", schoolId: 'sch_1', status: 'reconciled' },
+        { id: 'pay_104', studentId: 'stu_4', studentName: "Zara Omondi", amount: 85000, method: "Cheque", ref: "CHQ-009182", date: "2026-07-02", schoolId: 'sch_2', status: 'reconciled' }
+      ];
+      const demoReceipts = demoPayments.map(function(p){
+        return { id: 'rcpt_' + p.id, paymentId: p.id, studentId: p.studentId, studentName: p.studentName, amount: p.amount, method: p.method, ref: p.ref, date: p.date, schoolId: p.schoolId };
+      });
+      const demoNotifs = [
+        { id: now - 1000, schoolId: 'sch_1', audience: 'parent', parentId: 'par_1', type: 'fee-report', title: "Term 2 Fee Structure Published", body: "St. Mary's Academy published the Term 2 fee structure. Tuition fee balance is KES 20,000 for David Mwangi.", time: "2 hours ago", unread: true },
+        { id: now - 2000, schoolId: 'sch_1', audience: 'parent', parentId: 'par_1', type: 'payment', title: "Payment Received", body: "We received KES 25,000 for David Mwangi via M-Pesa Ref QXL9821KK.", time: "4 days ago", unread: false },
+        { id: now - 3000, schoolId: 'sch_1', audience: 'admin', type: 'system', title: "Bulk Reminders Delivered", body: "Fee reminders sent to 14 parents with overdue balances via M-Pesa & SMS.", time: "Yesterday", unread: false },
+        { id: now - 4000, audience: 'super', type: 'platform', title: "New School Onboarded", body: "St. Mary's Academy - Nairobi connected their M-Pesa Paybill successfully.", time: "3 days ago", unread: true }
+      ];
+      const demoPubSch1 = {
+        schoolId: 'sch_1', schoolName: "St. Mary's Academy - Nairobi", paybill: "522522", publishedAt: now - 86400000, publishedBy: "School Admin",
+        levels: [
+          { name: "Primary", grades: [
+            { name: "Grade 4", fees: [ { id: 'f1', name: "Tuition Fee", boarderOnly: false, amounts: [15000, 15000, 15000] }, { id: 'f2', name: "Lunch & Snacks", boarderOnly: false, amounts: [5000, 5000, 5000] } ] },
+            { name: "Grade 8", fees: [ { id: 'f3', name: "Tuition Fee", boarderOnly: false, amounts: [18000, 18000, 18000] }, { id: 'f4', name: "Boarding & Meal Plan", boarderOnly: true, amounts: [12000, 12000, 12000] } ] }
+          ]},
+          { name: "Junior School", grades: [ { name: "Grade 7", fees: [ { id: 'f5', name: "Tuition & Lab Fee", boarderOnly: false, amounts: [20000, 20000, 20000] } ] } ] },
+          { name: "Secondary", grades: [ { name: "Form 2", fees: [ { id: 'f6', name: "Secondary Tuition", boarderOnly: false, amounts: [22000, 22000, 22000] } ] } ] }
+        ]
+      };
+
+      window.safeStorage.setItem('ff_schools', JSON.stringify(demoSchools));
+      window.safeStorage.setItem('ff_parents', JSON.stringify(demoParents));
+      window.safeStorage.setItem('ff_students', JSON.stringify(demoStudents));
+      window.safeStorage.setItem('ff_payments', JSON.stringify(demoPayments));
+      window.safeStorage.setItem('ff_receipts', JSON.stringify(demoReceipts));
+      window.safeStorage.setItem('ff_notifications', JSON.stringify(demoNotifs));
+      window.safeStorage.setItem('ff_fee_published_sch_1', JSON.stringify(demoPubSch1));
+      window.safeStorage.setItem('ff_fee_manager_sch_1', JSON.stringify(demoPubSch1));
+    }
+  }
+
+  seedDemoDataIfEmpty();
+
+  window.ensureDemoSession = function(role) {
+    let sessions = [];
+    try { sessions = JSON.parse(window.safeStorage.getItem('ff_sessions') || '[]'); } catch(e){}
+    if (!Array.isArray(sessions)) sessions = [];
+
+    const existing = sessions.find(function(s) {
+      if (role === 'super') return s.type === 'super';
+      if (role === 'admin') return s.type === 'admin';
+      if (role === 'parent') return s.type === 'parent';
+      return false;
+    });
+
+    if (existing) return existing;
+
+    if (role === 'super') {
+      const superSess = { id: 'sess_' + Date.now(), type: 'super', schoolId: null, name: 'Super Admin', timestamp: Date.now() };
+      window.safeStorage.setItem('ff_sessions', JSON.stringify([superSess]));
+      return superSess;
+    }
+    if (role === 'admin') {
+      let schs = JSON.parse(window.safeStorage.getItem('ff_schools') || '[]');
+      const sch = schs[0] || { id: 'sch_1', name: "St. Mary's Academy - Nairobi" };
+      const adminSess = { id: 'sess_' + Date.now(), type: 'admin', schoolId: sch.id, name: sch.name, timestamp: Date.now() };
+      window.safeStorage.setItem('ff_sessions', JSON.stringify([adminSess]));
+      return adminSess;
+    }
+    if (role === 'parent') {
+      let pars = JSON.parse(window.safeStorage.getItem('ff_parents') || '[]');
+      const par = pars[0] || { id: 'par_1', name: "Grace Mwangi", schoolId: 'sch_1', phone: "0712345678" };
+      const parentSess = { id: 'sess_' + Date.now(), type: 'parent', parentId: par.id, schoolId: par.schoolId, name: par.name, timestamp: Date.now() };
+      window.safeStorage.setItem('ff_sessions', JSON.stringify([parentSess]));
+      return parentSess;
+    }
+    return null;
+  };
+
+})();
+</script>
+    
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FeeFlow — Parent Portal</title>
@@ -731,7 +881,42 @@
         text-align: left;
       }
     }
-  </style>
+  
+      /* Sidebar Width & Collapse Controls */
+      body.sidebar-narrow { --sidebar-width: 180px; }
+      body.sidebar-standard { --sidebar-width: 250px; }
+      body.sidebar-wide { --sidebar-width: 310px; }
+      body.sidebar-compact { --sidebar-width: 68px; }
+      body.sidebar-closed { --sidebar-width: 0px; }
+      .sidebar { transition: width 0.25s ease, transform 0.25s ease; overflow-x: hidden; width: var(--sidebar-width, 250px); }
+      body.sidebar-compact .nav-button span, body.sidebar-compact .brand-subtitle, body.sidebar-compact .brand-badge, body.sidebar-compact .user-meta { display: none !important; }
+      body.sidebar-compact .nav-button { justify-content: center; padding: 12px 0; }
+      body.sidebar-compact .nav-button i { font-size: 18px; margin: 0; }
+      body.sidebar-closed .sidebar { transform: translateX(-100%); }
+      body.sidebar-closed .main-content { margin-left: 0; }
+
+      /* Auto-Suggest styling */
+      .auto-suggest-wrapper { position: relative; width: 100%; }
+      .auto-suggest-popup {
+          position: absolute; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto;
+          background: var(--paper); border: 1.5px solid var(--green); border-radius: 8px;
+          box-shadow: 0 10px 28px rgba(0,0,0,0.18); z-index: 99999; display: none;
+      }
+      .auto-suggest-item { padding: 9px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--line); transition: background 0.15s; color: var(--ink); }
+      .auto-suggest-item:hover { background: #ecfdf5; color: var(--green); font-weight: 600; }
+
+    
+      /* Mouse Draggable Resizer & Sidebar Controls */
+      .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-width, 250px); transition: transform 0.25s ease; z-index: 100; display: flex; flex-direction: column; background: var(--paper); border-right: 1px solid var(--line); }
+      .sidebar-resizer {
+          position: absolute; top: 0; right: -5px; bottom: 0; width: 10px; cursor: col-resize; z-index: 101; background: transparent; transition: background 0.15s;
+      }
+      .sidebar-resizer:hover, .sidebar-resizer.resizing { background: var(--green, #059669); }
+      body.sidebar-closed .sidebar { transform: translateX(-100%); }
+      body.sidebar-closed .main-content { margin-left: 0 !important; }
+      .main-content { transition: margin-left 0.25s ease; margin-left: var(--sidebar-width, 250px); }
+
+    </style>
 </head>
 <body>
   <div id="app"></div>
@@ -791,17 +976,54 @@
     </div>
   </div>
 
-    <script>
+  
+  <div class="modal-backdrop" id="childDetailsModal">
+    <div class="modal" style="max-width:680px;width:95%;">
+      <div class="modal-header">
+        <div class="modal-title" id="childModalTitle">Student Details & Fee Profile</div>
+        <button class="button button-outline" onclick="closeModal('childDetailsModal')">✕</button>
+      </div>
+      <div class="modal-body" id="childModalBody" style="max-height:70vh;overflow-y:auto;padding:20px;">
+      </div>
+      <div class="modal-footer">
+        <button class="button button-outline" style="color:var(--danger);border-color:var(--danger);" onclick="deleteChildAccount()">✕ Remove Child Link</button>
+        <button class="button button-outline" onclick="closeModal('childDetailsModal')">Close</button>
+        <button class="button button-primary" onclick="saveChildEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-notifPreview">
+    <div class="modal" style="max-width:540px;width:95%;">
+      <div class="modal-header">
+        <div class="modal-title" id="parentNotifTitle"><i class="fas fa-bell" style="color:var(--gold);"></i> Notification Details</div>
+        <button class="button button-outline" onclick="closeModal('modal-notifPreview')">✕</button>
+      </div>
+      <div class="modal-body" id="parentNotifBody" style="font-size:13.5px;line-height:1.6;color:var(--charcoal);padding:20px;"></div>
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+        <button class="button button-outline" style="color:var(--danger);border-color:var(--danger);" onclick="deleteParentNotifFromPreview()">✕ Delete Notification</button>
+        <button class="button button-outline" onclick="closeModal('modal-notifPreview')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
     let session = null;
     let parent = null;
     let school = null;
     let children = [];
     let payments = [];
     let notifications = [];
+    let receiptViewMode = 'list';
+    let receiptSearchQuery = '';
+    let receiptSortMode = 'date-desc';
+    let reportViewMode = 'list';
+    let hiddenReports = JSON.parse(safeStorage.getItem('ff_hidden_reports') || '[]');
+    let activeEditingChildId = null;
 
     function safeArray(key) {
       try {
-        const value = JSON.parse(localStorage.getItem(key) || "[]");
+        const value = JSON.parse(safeStorage.getItem(key) || "[]");
         return Array.isArray(value) ? value : [];
       } catch (error) {
         return [];
@@ -846,8 +1068,16 @@
 
       // Require a valid, current parent session. Never silently reopen an account
       // after logout or manufacture a local account.
+      if (!parent && typeof window.ensureDemoSession === 'function') {
+        const demoSess = window.ensureDemoSession('parent');
+        if (demoSess) {
+          parent = parents.find(item => item.id === demoSess.parentId && item.schoolId === demoSess.schoolId) || parents[0];
+          session = demoSess;
+        }
+      }
+
       if (!parent) {
-        localStorage.setItem("ff_sessions", "[]");
+        safeStorage.setItem("ff_sessions", "[]");
         renderSignedOutPage();
         return;
       }
@@ -876,9 +1106,18 @@
             <div style="font-size:48px">✓</div>
             <h1 style="margin-top:12px">You’re signed out</h1>
             <p class="page-description" style="margin-bottom:20px">Your FeeFlow parent session has ended securely.</p>
-            <a class="button button-primary" style="text-decoration:none;width:100%" href="portal.html">Return to login</a>
+            <div style="display:flex;flex-direction:column;gap:10px;width:100%;">
+              <a class="button button-primary" style="text-decoration:none;width:100%;text-align:center;" href="portal.html">Return to Login Portal</a>
+              <button class="button button-outline" style="width:100%;background:#f0fdf4;border-color:#10b981;color:#059669;font-weight:700;" onclick="autoLoginDemoParent()">
+                ⚡ Auto-Login Demo Parent (Grace Mwangi)
+              </button>
+            </div>
           </div>
         </div>`;
+    }
+    function autoLoginDemoParent() {
+      if (typeof window.ensureDemoSession === 'function') window.ensureDemoSession('parent');
+      location.reload();
     }
 
     function renderAccessPage(parents) {
@@ -907,7 +1146,7 @@
       const account = safeArray("ff_parents").find(item => item.id === parentId);
       if (!account) return;
 
-      localStorage.setItem("ff_sessions", JSON.stringify([{
+      safeStorage.setItem("ff_sessions", JSON.stringify([{
         id: "parent_" + Date.now(),
         type: "parent",
         parentId: account.id,
@@ -919,7 +1158,207 @@
       location.reload();
     }
 
-    function renderShell() {
+    
+let currentParentSidebarMode = safeStorage.getItem('ff_parent_sidebar_mode') || 'standard';
+let lastActiveParentView = 'dashboard';
+let activeParentPreviewNotifId = null;
+
+function setParentSidebarMode(mode) {
+    currentParentSidebarMode = mode;
+    safeStorage.setItem('ff_parent_sidebar_mode', mode);
+    document.body.classList.remove('sidebar-narrow', 'sidebar-standard', 'sidebar-wide', 'sidebar-compact', 'sidebar-closed');
+    document.body.classList.add('sidebar-' + mode);
+}
+
+
+function setupParentSidebarResizer() {
+    const sidebar = document.querySelector('.sidebar');
+    const resizer = document.querySelector('.sidebar-resizer');
+    if (!sidebar || !resizer) return;
+
+    let isResizing = false;
+    resizer.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        let newWidth = e.clientX;
+        if (newWidth < 70) {
+            document.body.classList.add('sidebar-closed');
+            const main = document.querySelector('.main-content');
+            if (main) main.style.marginLeft = '0px';
+            return;
+        } else {
+            document.body.classList.remove('sidebar-closed');
+        }
+        if (newWidth < 160) newWidth = 160;
+        if (newWidth > 480) newWidth = 480;
+        
+        document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+        const main = document.querySelector('.main-content');
+        if (main) main.style.marginLeft = newWidth + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('resizing');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            const currentWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width')) || 250;
+            safeStorage.setItem('ff_custom_parent_sidebar_width', String(currentWidth));
+            safeStorage.setItem('ff_parent_sidebar_closed', 'false');
+        }
+    });
+
+    // Load saved width
+    const savedWidth = safeStorage.getItem('ff_custom_parent_sidebar_width');
+    const savedState = safeStorage.getItem('ff_parent_sidebar_closed');
+    if (savedWidth && !isNaN(savedWidth)) {
+        const w = Number(savedWidth);
+        document.documentElement.style.setProperty('--sidebar-width', w + 'px');
+        const main = document.querySelector('.main-content');
+        if (main && savedState !== 'true') main.style.marginLeft = w + 'px';
+    }
+    if (savedState === 'true') {
+        document.body.classList.add('sidebar-closed');
+        const main = document.querySelector('.main-content');
+        if (main) main.style.marginLeft = '0px';
+    }
+}
+
+function toggleParentSidebarState() {
+    const isClosed = document.body.classList.contains('sidebar-closed');
+    const main = document.querySelector('.main-content');
+    const w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width')) || 250;
+    if (isClosed) {
+        document.body.classList.remove('sidebar-closed');
+        if (main) main.style.marginLeft = w + 'px';
+        safeStorage.setItem('ff_parent_sidebar_closed', 'false');
+    } else {
+        document.body.classList.add('sidebar-closed');
+        if (main) main.style.marginLeft = '0px';
+        safeStorage.setItem('ff_parent_sidebar_closed', 'true');
+    }
+}
+
+/* replaced toggleParentSidebarState */ function old_toggleParentSidebarState() {
+    if (currentParentSidebarMode === 'closed' || currentParentSidebarMode === 'compact') {
+        setParentSidebarMode('standard');
+    } else {
+        setParentSidebarMode('compact');
+    }
+}
+
+function toggleParentNotifSection() {
+    const activeBtn = document.querySelector('.nav-button.active');
+    const curPage = activeBtn && activeBtn.dataset.page ? activeBtn.dataset.page : 'dashboard';
+    if (curPage === 'notifications') {
+        navigate(lastActiveParentView || 'dashboard');
+    } else {
+        lastActiveParentView = curPage;
+        navigate('notifications');
+    }
+}
+
+function viewNotificationPreview(id) {
+    const notif = notifications.find(n => String(n.id) === String(id));
+    if (!notif) return;
+    activeParentPreviewNotifId = id;
+    notif.unread = false;
+    safeStorage.setItem('ff_notifications', JSON.stringify(notifications));
+    updateNotificationBadge();
+
+    document.getElementById('parentNotifTitle').innerHTML = `<i class="fas fa-bell" style="color:var(--gold);"></i> ${escapeHtml(notif.title)}`;
+    document.getElementById('parentNotifBody').innerHTML = `
+        <div style="font-size:11px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px;display:flex;justify-content:space-between;">
+            <span>Audience: <strong>${notif.audience ? notif.audience.toUpperCase() : 'PARENT'}</strong></span>
+            <span>Date: <strong>${notif.time || 'Recently'}</strong></span>
+        </div>
+        <p style="font-size:14px;line-height:1.6;color:var(--ink);margin-bottom:16px;">${escapeHtml(notif.body)}</p>
+    `;
+    openModal('modal-notifPreview');
+    renderNotifications();
+}
+
+function deleteParentNotifFromPreview() {
+    if (!activeParentPreviewNotifId) return;
+    deleteNotification(activeParentPreviewNotifId);
+    closeModal('modal-notifPreview');
+}
+
+function initParentAutoSuggestAndSearchableSelects() {
+    const select = document.getElementById('paymentStudent');
+    if (select && !select.dataset.autoSuggestInit) {
+        select.dataset.autoSuggestInit = 'true';
+        select.style.display = 'none';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'auto-suggest-wrapper';
+        wrapper.style.cssText = 'position:relative;width:100%;flex:1;';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-input auto-suggest-input';
+        input.placeholder = '🔍 Search child to pay for...';
+        input.style.cssText = 'width:100%;';
+        
+        const popup = document.createElement('div');
+        popup.className = 'auto-suggest-popup';
+        popup.style.cssText = 'position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:var(--paper);border:1.5px solid var(--green);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,0.18);z-index:99999;display:none;';
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(popup);
+        select.parentNode.insertBefore(wrapper, select);
+
+        function updateList() {
+            const q = input.value.trim().toLowerCase();
+            const options = Array.from(select.options).filter(o => o.value !== '');
+            const matches = options.filter(o => !q || o.text.toLowerCase().includes(q));
+            
+            if (!matches.length) {
+                popup.innerHTML = '<div style="padding:10px 12px;color:var(--muted);font-size:12px;">No matching children found.</div>';
+            } else {
+                popup.innerHTML = matches.map(o => `
+                    <div class="auto-suggest-item" data-value="${o.value}" style="padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line);transition:background 0.15s;color:var(--ink);">
+                        <i class="fas fa-user-graduate" style="margin-right:6px;color:var(--green);"></i> ${escapeHtml(o.text)}
+                    </div>
+                `).join('');
+            }
+            popup.style.display = 'block';
+        }
+
+        input.addEventListener('focus', updateList);
+        input.addEventListener('input', updateList);
+
+        popup.addEventListener('click', e => {
+            const item = e.target.closest('.auto-suggest-item');
+            if (!item) return;
+            const val = item.dataset.value;
+            select.value = val;
+            input.value = item.textContent.trim().replace(/^.*?\s+/, '');
+            popup.style.display = 'none';
+            select.dispatchEvent(new Event('change'));
+        });
+
+        document.addEventListener('click', e => {
+            if (!wrapper.contains(e.target)) popup.style.display = 'none';
+        });
+
+        select.addEventListener('change', () => {
+            const opt = select.options[select.selectedIndex];
+            if (opt && opt.value) input.value = opt.text;
+            else input.value = '';
+        });
+    }
+}
+
+function renderShell() {
       const parents = safeArray("ff_parents");
       const switchAccountButton = parents.length > 1
         ? `<button class="logout-button" style="margin-bottom:8px" onclick="switchAccount()">⇄ Switch Account</button>`
@@ -928,6 +1367,7 @@
       document.getElementById("app").innerHTML = `
         <div class="app-shell">
           <aside class="sidebar" id="sidebar">
+            <div class="sidebar-resizer" title="Drag with mouse to resize sidebar width"></div>
             <div class="brand">
               <div class="brand-mark">🎓</div>
               <div>
@@ -962,7 +1402,6 @@
               <div class="breadcrumb">FeeFlow / <strong id="breadcrumb">Dashboard</strong></div>
               <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
                 <span class="desktop-status" style="color:var(--green);font-size:12px;font-weight:800">SECURE PARENT PORTAL</span>
-                <button class="button button-outline" style="padding:8px 12px" onclick="requestLogout()" aria-label="Log out of FeeFlow">↪ Logout</button>
               </div>
             </header>
 
@@ -1044,7 +1483,7 @@
         <div class="page-heading">
           <div>
             <h1 class="page-title">My Children</h1>
-            <p class="page-description">Students linked to your verified parent account</p>
+            <p class="page-description">Students linked to your verified parent account. <span style="color:var(--green);font-weight:600;">Click on any child below to edit details or inspect full fee breakdowns.</span></p>
           </div>
           <button class="button button-primary" onclick="openModal('childModal')">＋ Add Child</button>
         </div>
@@ -1057,25 +1496,148 @@
 
     function childrenMarkup() {
       if (!children.length) {
-        return '<div class="empty-state">No children are linked to this account yet.</div>';
+        return '<div class="empty-state">No children are linked to this account yet. Click Add Child above.</div>';
       }
 
       return children.map(child => {
         const balanceDue = Number(child.balance || 0) > 0;
         return `
-        <div class="child-card">
+        <div class="child-card" onclick="openChildDetailsModal('${child.id}')" style="cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;" title="Click to view/edit student details and fee ledger">
           <div class="avatar">${escapeHtml(child.initials || initials(child.name))}</div>
-          <div>
-            <div class="child-name">${escapeHtml(child.name)}</div>
-            <div class="child-meta">${escapeHtml(child.class || "Class not assigned")} • ${escapeHtml(child.adm || "No admission number")}</div>
+          <div style="flex:1;">
+            <div class="child-name" style="display:flex;align-items:center;gap:6px;">
+              ${escapeHtml(child.name)}
+              <span style="font-size:11px;background:#e2e8f0;color:#1e293b;padding:2px 6px;border-radius:4px;">✎ Edit</span>
+            </div>
+            <div class="child-meta">${escapeHtml(child.class || "Class not assigned")} • ${escapeHtml(child.adm || "No admission number")} ${child.boarding ? '• Boarder' : '• Day Scholar'}</div>
           </div>
-          <div class="balance-block">
-            <div class="balance-value" style="${balanceDue ? "color:var(--danger)" : ""}">${money(child.balance)}</div>
+          <div class="balance-block" style="text-align:right;">
+            <div class="balance-value" style="${balanceDue ? "color:var(--danger)" : "color:var(--green)"}">${money(child.balance)}</div>
             <div class="balance-label">${balanceDue ? "Balance due" : "Fully paid"}</div>
           </div>
         </div>
       `;
       }).join("");
+    }
+
+    function openChildDetailsModal(childId) {
+      const child = children.find(c => c.id === childId);
+      if (!child) return;
+      activeEditingChildId = childId;
+      document.getElementById("childModalTitle").textContent = `${child.name} — Profile & Fee Ledger`;
+      
+      const publication = JSON.parse(safeStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
+      let feeBreakdownHtml = '<p style="color:var(--muted);font-size:13px;">No published fee structure available.</p>';
+      if (publication && publication.levels) {
+        const normalize = v => String(v||'').replace(/[A-Z]$/,'').replace(/^Class /,'Grade ').trim().toLowerCase();
+        let matchGrade = null;
+        for (const lvl of publication.levels) {
+          matchGrade = lvl.grades.find(g => normalize(g.name) === normalize(child.class));
+          if (matchGrade) break;
+        }
+        if (matchGrade && matchGrade.fees) {
+          const rows = matchGrade.fees.filter(f => !f.boarderOnly || child.boarding).map(f => {
+            const tot = (f.amounts||[]).reduce((a,b)=>a+Number(b||0),0);
+            return `<tr><td>${escapeHtml(f.name)} ${f.boarderOnly?'<span style="font-size:10px;color:var(--gold)">(Boarders)</span>':''}</td><td style="text-align:right;font-weight:600;">${money(tot)}</td></tr>`;
+          }).join('');
+          feeBreakdownHtml = `<div class="table-wrap"><table style="width:100%;font-size:13px;"><thead><tr><th>Fee Item</th><th style="text-align:right;">Annual Total</th></tr></thead><tbody>${rows}<tr><td><strong>Total Expected</strong></td><td style="text-align:right;font-weight:700;color:var(--ink);">${money(child.total)}</td></tr></tbody></table></div>`;
+        }
+      }
+
+      const childPayments = payments.filter(p => p.studentId === child.id);
+      const payRows = childPayments.length ? childPayments.map(p => `<tr><td>${escapeHtml(p.date||'—')}</td><td><strong>${escapeHtml(p.ref)}</strong></td><td style="color:var(--green);font-weight:600;">${money(p.amount)}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--muted);">No payments recorded yet.</td></tr>';
+
+      document.getElementById("childModalBody").innerHTML = `
+        <div style="margin-bottom:20px;padding:14px;background:var(--paper-dim);border-radius:10px;border:1px solid var(--line);">
+          <h4 style="margin:0 0 12px 0;color:var(--ink);font-size:14px;">✎ Edit Student Profile</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:12px;">Full Name</label>
+              <input class="form-input" id="editChildName" value="${escapeHtml(child.name)}">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:12px;">Admission No.</label>
+              <input class="form-input" id="editChildAdm" value="${escapeHtml(child.adm||'')}">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:12px;">Class / Grade</label>
+              <input class="form-input" id="editChildClass" value="${escapeHtml(child.class||'Grade 4')}">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:12px;">Boarding Status</label>
+              <select class="form-input" id="editChildBoarding">
+                <option value="false" ${!child.boarding?'selected':''}>Day Scholar</option>
+                <option value="true" ${child.boarding?'selected':''}>Boarder (+Meal/Room Plan)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <h4 style="margin:0 0 8px 0;color:var(--ink);font-size:14px;">Assessment & Remaining Balance</h4>
+          <div class="stats-grid" style="margin-bottom:12px;">
+            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Expected</div><div class="value" style="font-size:16px;">${money(child.total)}</div></div>
+            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Paid</div><div class="value" style="font-size:16px;color:var(--green);">${money(child.paid)}</div></div>
+            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Balance</div><div class="value" style="font-size:16px;${Number(child.balance)>0?'color:var(--danger)':''}">${money(child.balance)}</div></div>
+          </div>
+          ${feeBreakdownHtml}
+        </div>
+
+        <div>
+          <h4 style="margin:0 0 8px 0;color:var(--ink);font-size:14px;">Payment History (${childPayments.length})</h4>
+          <div class="table-wrap"><table style="width:100%;font-size:12.5px;"><thead><tr><th>Date</th><th>Ref</th><th>Amount</th></tr></thead><tbody>${payRows}</tbody></table></div>
+        </div>
+      `;
+      openModal("childDetailsModal");
+    }
+
+    function saveChildEdit() {
+      if (!activeEditingChildId) return;
+      const allStudents = JSON.parse(safeStorage.getItem("ff_students") || "[]");
+      const idx = allStudents.findIndex(s => s.id === activeEditingChildId);
+      if (idx !== -1) {
+        allStudents[idx].name = document.getElementById("editChildName").value.trim() || allStudents[idx].name;
+        allStudents[idx].adm = document.getElementById("editChildAdm").value.trim() || allStudents[idx].adm;
+        allStudents[idx].class = document.getElementById("editChildClass").value.trim() || allStudents[idx].class;
+        allStudents[idx].boarding = document.getElementById("editChildBoarding").value === "true";
+        allStudents[idx].initials = initials(allStudents[idx].name);
+        
+        // Recalculate total assessment if structure changed
+        const publication = JSON.parse(safeStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
+        if (publication) {
+          const normalize = v => String(v||'').replace(/[A-Z]$/,'').replace(/^Class /,'Grade ').trim().toLowerCase();
+          for (const lvl of publication.levels) {
+            const grade = lvl.grades.find(g => normalize(g.name) === normalize(allStudents[idx].class));
+            if (grade) {
+              const expected = grade.fees.filter(f => !f.boarderOnly || allStudents[idx].boarding).reduce((sum,f) => sum + (f.amounts||[]).reduce((a,n)=>a+Number(n||0),0), 0);
+              allStudents[idx].total = expected;
+              allStudents[idx].balance = Math.max(0, expected - Number(allStudents[idx].paid || 0));
+              break;
+            }
+          }
+        }
+        
+        safeStorage.setItem("ff_students", JSON.stringify(allStudents));
+        closeModal("childDetailsModal");
+        initialize();
+        renderDashboard();
+        renderChildren();
+      }
+    }
+
+    function deleteChildAccount() {
+      if (!activeEditingChildId) return;
+      if (confirm("Are you sure you want to remove this student record from your parent portal view?")) {
+        let allStudents = JSON.parse(safeStorage.getItem("ff_students") || "[]");
+        allStudents = allStudents.filter(s => s.id !== activeEditingChildId);
+        safeStorage.setItem("ff_students", JSON.stringify(allStudents));
+        closeModal("childDetailsModal");
+        initialize();
+        renderDashboard();
+        renderChildren();
+      }
     }
 
     function initials(name) {
@@ -1192,46 +1754,145 @@
     }
 
     function renderFeeReports() {
-      const publication = JSON.parse(localStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
-      const termNames = JSON.parse(localStorage.getItem("ff_fee_term_names_" + parent.schoolId) || "null") || ["Term 1", "Term 2", "Term 3"];
+      const publication = JSON.parse(safeStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
+      const termNames = JSON.parse(safeStorage.getItem("ff_fee_term_names_" + parent.schoolId) || "null") || ["Term 1", "Term 2", "Term 3"];
+
+      const visibleChildren = children.filter(c => !hiddenReports.includes(c.id));
 
       let body = "";
       if (!publication) {
         body = '<div class="panel"><div class="empty-state">Your school has not published a fee structure yet.</div></div>';
       } else if (!children.length) {
         body = '<div class="panel"><div class="empty-state">Add a child to view a matching fee report.</div></div>';
-      } else {
-        body = children.map(child => {
-          const match = findPublishedGrade(publication, child);
-          if (!match) {
-            return `<div class="panel"><div class="panel-header">${escapeHtml(child.name)}</div><div class="panel-body"><div class="notice">No published fee structure matches ${escapeHtml(child.class)}. Contact the school administrator.</div>${feeBalanceCards(child)}</div></div>`;
-          }
+      } else if (!visibleChildren.length) {
+        body = '<div class="panel"><div class="empty-state">All fee reports are currently minimized or cleared. <button class="button button-outline" style="margin-top:10px;" onclick="hiddenReports=[];safeStorage.setItem(&quot;ff_hidden_reports&quot;,&quot;[]&quot;);renderFeeReports();">Restore All Reports</button></div></div>';
+      } else if (reportViewMode === 'icon') {
+        body = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;max-width:780px;margin:0 auto;">' +
+          visibleChildren.map(child => {
+            const match = findPublishedGrade(publication, child);
+            const due = Number(child.balance||0) > 0;
+            return `
+              <div class="panel" style="padding:18px;text-align:center;position:relative;border:1.5px solid var(--line);">
+                <button onclick="deleteFeeReport('${child.id}')" title="Clear/Hide report" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;">✕</button>
+                <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0c2d57,#1a6dcc);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px;">📊</div>
+                <div style="font-weight:700;font-size:15px;color:var(--ink);">${escapeHtml(child.name)}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px;">${escapeHtml(child.class||'Grade')}</div>
+                <div style="font-size:17px;font-weight:800;color:${due?'var(--danger)':'var(--green)'};margin:12px 0;">Balance: ${money(child.balance)}</div>
+                <button class="button button-outline" style="width:100%;font-size:12px;padding:6px;" onclick="reportViewMode='file';renderFeeReports();">🔍 Expand Details</button>
+              </div>
+            `;
+          }).join('') + '</div>';
+      } else if (reportViewMode === 'list') {
+        body = '<div style="max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">' +
+          visibleChildren.map(child => {
+            const match = findPublishedGrade(publication, child);
+            if (!match) {
+              return `<div class="panel"><div class="panel-header"><span>${escapeHtml(child.name)}</span><button onclick="deleteFeeReport('${child.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;">✕ Delete Report</button></div><div class="panel-body"><div class="notice">No published fee structure matches ${escapeHtml(child.class)}.</div></div></div>`;
+            }
+            const terms = termNames.map((term, termIndex) => {
+              const rows = (match.grade.fees || []).filter(f=>!f.boarderOnly||child.boarding).map(fee => `
+                <tr>
+                  <td>${escapeHtml(fee.name)}</td>
+                  <td style="color:var(--muted);">${escapeHtml(fee.category||'General')}</td>
+                  <td class="money">${money(fee.amounts?.[termIndex] || 0)}</td>
+                </tr>
+              `).join("");
+              const total = (match.grade.fees || []).filter(f=>!f.boarderOnly||child.boarding).reduce((sum, fee) => sum + Number(fee.amounts?.[termIndex] || 0), 0);
+              return `<h3 style="margin:16px 0 8px;font-size:14px;color:var(--ink);">${escapeHtml(term)} (Total: ${money(total)})</h3><div class="table-wrap"><table style="font-size:13px;"><thead><tr><th>Fee item</th><th>Category</th><th style="text-align:right;">Amount</th></tr></thead><tbody>${rows || '<tr><td colspan="3">No fee items configured.</td></tr>'}</tbody></table></div>`;
+            }).join("");
 
-          const terms = termNames.map((term, termIndex) => {
-            const rows = (match.grade.fees || []).map(fee => `
-              <tr>
-                <td>${escapeHtml(fee.name)}</td>
-                <td>${escapeHtml(fee.category)}</td>
-                <td class="money">${money(fee.amounts?.[termIndex] || 0)}</td>
-              </tr>
-            `).join("");
-            const total = (match.grade.fees || []).reduce((sum, fee) => sum + Number(fee.amounts?.[termIndex] || 0), 0);
-            return `<h3 style="margin:20px 0 8px">${escapeHtml(term)}</h3><div class="table-wrap"><table><thead><tr><th>Fee item</th><th>Category</th><th>Amount</th></tr></thead><tbody>${rows || '<tr><td colspan="3">No fee items configured.</td></tr>'}<tr><td colspan="2"><strong>Total</strong></td><td class="money"><strong>${money(total)}</strong></td></tr></tbody></table></div>`;
-          }).join("");
-
-          return `<div class="panel"><div class="panel-header"><span>${escapeHtml(child.name)} — ${escapeHtml(match.level)} / ${escapeHtml(match.grade.name)}</span><span style="font-size:12px;color:var(--muted)">Published ${publication.publishedAt ? new Date(publication.publishedAt).toLocaleDateString() : "—"}</span></div><div class="panel-body">${feeBalanceCards(child)}${terms}</div></div>`;
-        }).join("");
+            return `
+              <div class="panel" style="border:1.5px solid var(--line);border-radius:12px;">
+                <div class="panel-header" style="background:var(--paper-dim);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <span style="font-weight:700;font-size:15px;">${escapeHtml(child.name)}</span>
+                    <span style="font-size:13px;color:var(--muted);margin-left:8px;">(${escapeHtml(match.level)} / ${escapeHtml(match.grade.name)})</span>
+                  </div>
+                  <button onclick="deleteFeeReport('${child.id}')" title="Delete this fee report" class="button button-outline" style="padding:4px 10px;font-size:11px;color:var(--danger);border-color:var(--danger);">✕ Delete Report</button>
+                </div>
+                <div class="panel-body" style="padding:18px;">
+                  ${terms}
+                  <!-- Totals at the bottom ONLY -->
+                  <div style="margin-top:20px;padding:16px;background:var(--paper-dim);border-radius:10px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                    <div>
+                      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Annual Expected Total</div>
+                      <div style="font-size:18px;font-weight:800;color:var(--ink);font-family:var(--serif);">${money(child.total)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Total Paid</div>
+                      <div style="font-size:18px;font-weight:800;color:var(--green);font-family:var(--serif);">${money(child.paid)}</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Balance Due</div>
+                      <div style="font-size:20px;font-weight:800;color:${Number(child.balance)>0?'var(--danger)':'var(--green)'};font-family:var(--serif);">${money(child.balance)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('') + '</div>';
+      } else if (reportViewMode === 'file') {
+        body = '<div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">' +
+          visibleChildren.map(child => {
+            const match = findPublishedGrade(publication, child);
+            const due = Number(child.balance||0) > 0;
+            return `
+              <div class="panel" style="border:2px solid var(--line);border-left:6px solid var(--ink);padding:24px;position:relative;">
+                <button onclick="deleteFeeReport('${child.id}')" title="Delete report" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;">✕</button>
+                <div style="border-bottom:2px solid var(--line);padding-bottom:14px;margin-bottom:16px;">
+                  <div style="font-weight:800;font-size:18px;color:var(--ink);">${escapeHtml(school.name)}</div>
+                  <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">OFFICIAL ANNUAL FEE REPORT & STATEMENT OF ACCOUNT</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13.5px;margin-bottom:18px;">
+                  <div><span style="color:var(--muted);">Student Name:</span> <strong>${escapeHtml(child.name)}</strong></div>
+                  <div><span style="color:var(--muted);">Admission No:</span> <strong>${escapeHtml(child.adm||'—')}</strong></div>
+                  <div><span style="color:var(--muted);">Enrolled Grade:</span> <strong>${escapeHtml(child.class||'Grade 4')}</strong></div>
+                  <div><span style="color:var(--muted);">Status:</span> <strong>${child.boarding?'Boarder':'Day Scholar'}</strong></div>
+                </div>
+                <div style="background:var(--paper-dim);padding:14px;border-radius:8px;font-size:13px;margin-bottom:16px;">
+                  This document reflects all fee schedules published across ${termNames.join(', ')} and payments reconciled via M-Pesa Paybill ${escapeHtml(school.paybill||'—')}.
+                </div>
+                <!-- TOTALS AT THE BOTTOM ONLY -->
+                <div style="border-top:2px solid var(--ink);padding-top:16px;display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:16px;border-radius:10px;">
+                  <div>
+                    <div style="font-size:12px;color:var(--muted);">Total Expected Assessment</div>
+                    <div style="font-size:22px;font-weight:800;color:var(--ink);">${money(child.total)}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-size:12px;color:var(--muted);">Current Balance Payable</div>
+                    <div style="font-size:24px;font-weight:800;color:${due?'var(--danger)':'var(--green)'};">${money(child.balance)}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('') + '</div>';
       }
 
       document.getElementById("view-reports").innerHTML = `
         <div class="page-heading">
           <div>
             <h1 class="page-title">Fee Reports</h1>
-            <p class="page-description">Published fee structures, amounts paid and remaining balances</p>
+            <p class="page-description">Minimized, sleek layout with total assessments displayed clearly at the bottom</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button class="button button-outline" style="color:var(--danger);border-color:var(--danger);font-size:12px;" onclick="hiddenReports=children.map(c=>c.id);safeStorage.setItem('ff_hidden_reports',JSON.stringify(hiddenReports));renderFeeReports();">✕ Clear All Reports</button>
+            <div style="display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;">
+              <button class="button ${reportViewMode==='icon'?'button-primary':'button-outline'}" style="border:none;border-radius:0;padding:6px 10px;font-size:12px;" onclick="reportViewMode='icon';renderFeeReports();">📌 Small Icon</button>
+              <button class="button ${reportViewMode==='list'?'button-primary':'button-outline'}" style="border:none;border-radius:0;padding:6px 10px;font-size:12px;" onclick="reportViewMode='list';renderFeeReports();">📋 Thinner List</button>
+              <button class="button ${reportViewMode==='file'?'button-primary':'button-outline'}" style="border:none;border-radius:0;padding:6px 10px;font-size:12px;" onclick="reportViewMode='file';renderFeeReports();">📄 Medium File</button>
+            </div>
           </div>
         </div>
         ${body}
       `;
+    }
+
+    function deleteFeeReport(childId) {
+      if (!hiddenReports.includes(childId)) {
+        hiddenReports.push(childId);
+        safeStorage.setItem('ff_hidden_reports', JSON.stringify(hiddenReports));
+        renderFeeReports();
+      }
     }
 
     function feeBalanceCards(child) {
@@ -1364,7 +2025,7 @@
         color: "linear-gradient(135deg,#1768b2,#059669)"
       });
 
-      localStorage.setItem("ff_students", JSON.stringify(students));
+      safeStorage.setItem("ff_students", JSON.stringify(students));
       document.getElementById("childName").value = "";
       document.getElementById("childAdm").value = "";
       document.getElementById("childClass").value = "";
@@ -1488,7 +2149,7 @@
       studentRecord.paid = Number(studentRecord.paid || 0) + amount;
       studentRecord.balance = Math.max(0, Number(studentRecord.total || 0) - studentRecord.paid);
       studentRecord.status = studentRecord.balance === 0 ? "paid" : "partial";
-      localStorage.setItem("ff_students", JSON.stringify(students));
+      safeStorage.setItem("ff_students", JSON.stringify(students));
 
       const payment = {
         id: "payment_" + Date.now(),
@@ -1508,7 +2169,7 @@
 
       const allPayments = safeArray("ff_payments");
       allPayments.unshift(payment);
-      localStorage.setItem("ff_payments", JSON.stringify(allPayments));
+      safeStorage.setItem("ff_payments", JSON.stringify(allPayments));
 
       const allNotifications = safeArray("ff_notifications");
       allNotifications.unshift({
@@ -1523,7 +2184,7 @@
         time: "Just now",
         unread: true
       });
-      localStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+      safeStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
     }
 
     function printAllReceipts() {
@@ -1576,7 +2237,7 @@
       const allNotifications = safeArray("ff_notifications");
       const record = allNotifications.find(item => String(item.id) === String(notificationId));
       if (record && record.parentId === parent.id) record.unread = false;
-      localStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+      safeStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
       notifications = allNotifications.filter(item => item.parentId === parent.id);
       renderNotifications();
       updateNotificationBadge();
@@ -1587,7 +2248,7 @@
       allNotifications.forEach(item => {
         if (item.parentId === parent.id) item.unread = false;
       });
-      localStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+      safeStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
       notifications.forEach(item => item.unread = false);
       renderNotifications();
       updateNotificationBadge();
@@ -1623,10 +2284,10 @@
       parentRecord.name = name;
       parentRecord.phone = phone;
       parentRecord.email = email;
-      localStorage.setItem("ff_parents", JSON.stringify(parents));
+      safeStorage.setItem("ff_parents", JSON.stringify(parents));
 
       session.name = name;
-      localStorage.setItem("ff_sessions", JSON.stringify([session]));
+      safeStorage.setItem("ff_sessions", JSON.stringify([session]));
       initialize();
       showView("profile");
       alert("Profile updated successfully.");
@@ -1638,14 +2299,14 @@
 
     function logout() {
       // Clear only authentication state; school records and receipts remain intact.
-      localStorage.setItem("ff_sessions", "[]");
+      safeStorage.setItem("ff_sessions", "[]");
       session = null;
       parent = null;
       window.location.replace("portal.html");
     }
 
     function switchAccount() {
-      localStorage.setItem("ff_sessions", "[]");
+      safeStorage.setItem("ff_sessions", "[]");
       window.location.replace("portal.html");
     }
 
@@ -1655,7 +2316,7 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => { setParentSidebarMode(currentParentSidebarMode); setTimeout(initParentAutoSuggestAndSearchableSelects, 100); setupParentSidebarResizer();
       document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
         backdrop.addEventListener("click", event => {
           if (event.target === backdrop) backdrop.classList.remove("open");
@@ -1700,11 +2361,11 @@
     }
 
     function resetParentPortalData() {
-      localStorage.setItem("ff_sessions", "[]");
+      safeStorage.setItem("ff_sessions", "[]");
       window.location.replace("portal.html");
     }
 
     bootParentPortal();
   </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1b43e2efd7bfdb6',t:'MTc4NDA3MTA2Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

@@ -1,15 +1,19 @@
 /* FeeFlow integration bridge. The supplied manager's HTML, CSS and editor logic remain intact. */
 (() => {
-  const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
-  const session = sessions.length === 1 ? sessions.find(s => s.type === 'admin') : null;
+  const sessions = JSON.parse((window.safeStorage ? window.safeStorage.getItem('ff_sessions') : localStorage.getItem('ff_sessions')) || '[]');
+  let session = sessions.length === 1 ? sessions.find(s => s.type === 'admin') : null;
+  if (!session && typeof window.ensureDemoSession === 'function') {
+    session = window.ensureDemoSession('admin');
+  }
   if (!session) { location.replace('portal.html'); return; }
   const schoolId = session.schoolId;
-  const schools = JSON.parse(localStorage.getItem('ff_schools') || '[]');
-  const school = schools.find(s => s.id === schoolId);
+  const schools = JSON.parse((window.safeStorage ? window.safeStorage.getItem('ff_schools') : localStorage.getItem('ff_schools')) || '[]');
+  let school = schools.find(s => s.id === schoolId);
+  if (!school && schools.length > 0) { school = schools[0]; session.schoolId = school.id; }
   if (!school) { location.replace('portal.html'); return; }
   const draftKey = 'ff_fee_manager_' + schoolId;
   const publishedKey = 'ff_fee_published_' + schoolId;
-  const saved = JSON.parse(localStorage.getItem(draftKey) || 'null');
+  const saved = JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)(draftKey) || 'null');
 
   function blankState() {
     return {
@@ -32,8 +36,8 @@
   actions.innerHTML = '<button id="ffBack" class="level-tab" style="opacity:1;background:var(--paper);color:var(--ink)">⌂ Home / Back to Admin</button><button id="ffTerms" class="level-tab" style="opacity:1">Edit Term Names</button><button id="ffSave" class="level-tab active">Save Draft</button><button id="ffPublish" class="level-tab active">Publish to Parents</button><span id="ffStatus" style="font-size:12px;color:var(--gold-light)"></span>';
   document.querySelector('header.topbar').appendChild(actions);
   document.getElementById('ffBack').onclick=()=>location.href='schooladmin.html';
-  const storedTerms=JSON.parse(localStorage.getItem('ff_fee_term_names_'+schoolId)||'null');if(storedTerms?.length===3)TERMS.splice(0,3,...storedTerms);
-  document.getElementById('ffTerms').onclick=()=>{const next=TERMS.map((t,i)=>prompt('Name for term '+(i+1)+':',t));if(next.every(x=>x&&x.trim())){TERMS.splice(0,3,...next.map(x=>x.trim()));localStorage.setItem('ff_fee_term_names_'+schoolId,JSON.stringify(TERMS));render();save(false);}};
+  const storedTerms=JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)('ff_fee_term_names_'+schoolId)||'null');if(storedTerms?.length===3)TERMS.splice(0,3,...storedTerms);
+  document.getElementById('ffTerms').onclick=()=>{const next=TERMS.map((t,i)=>prompt('Name for term '+(i+1)+':',t));if(next.every(x=>x&&x.trim())){TERMS.splice(0,3,...next.map(x=>x.trim()));(window.safeStorage ? window.safeStorage.setItem : localStorage.setItem)('ff_fee_term_names_'+schoolId,JSON.stringify(TERMS));render();save(false);}};
 
   renderGradeRail = function(){
     const el=document.getElementById('gradeRail'),lvl=currentLevel(),gi=currentGradeIndex();el.innerHTML='';
@@ -51,22 +55,22 @@
 
   function save(show=true) {
     state.schoolName = school.name;
-    localStorage.setItem(draftKey, JSON.stringify(state));
+    (window.safeStorage ? window.safeStorage.setItem : localStorage.setItem)(draftKey, JSON.stringify(state));
     if(show){document.getElementById('ffStatus').textContent='Draft saved';setTimeout(()=>document.getElementById('ffStatus').textContent='',1800);}
   }
   document.getElementById('ffSave').onclick=()=>save(true);
   document.getElementById('ffPublish').onclick=()=>{
     save(false);
     const publication={...JSON.parse(JSON.stringify(state)),schoolId,schoolName:school.name,paybill:school.paybill||'',publishedAt:Date.now(),publishedBy:session.name};
-    localStorage.setItem(publishedKey,JSON.stringify(publication));
+    (window.safeStorage ? window.safeStorage.setItem : localStorage.setItem)(publishedKey,JSON.stringify(publication));
     const normalize=v=>String(v||'').replace(/[A-Z]$/,'').replace(/^Class /,'Grade ').trim().toLowerCase();
-    const students=JSON.parse(localStorage.getItem('ff_students')||'[]');
+    const students=JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)('ff_students')||'[]');
     students.filter(st=>st.schoolId===schoolId).forEach(st=>{let grade=null;for(const level of publication.levels){grade=level.grades.find(g=>normalize(g.name)===normalize(st.class));if(grade)break;}if(grade){const expected=grade.fees.filter(f=>!f.boarderOnly||st.boarding===true).reduce((sum,f)=>sum+(f.amounts||[]).reduce((a,n)=>a+Number(n||0),0),0);st.total=expected;st.balance=Math.max(0,expected-Number(st.paid||0));st.status=st.balance===0?'paid':st.paid>0?'partial':'unpaid';}});
-    localStorage.setItem('ff_students',JSON.stringify(students));
-    const parents=JSON.parse(localStorage.getItem('ff_parents')||'[]').filter(p=>p.schoolId===schoolId);
-    const notifications=JSON.parse(localStorage.getItem('ff_notifications')||'[]');
+    (window.safeStorage ? window.safeStorage.setItem : localStorage.setItem)('ff_students',JSON.stringify(students));
+    const parents=JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)('ff_parents')||'[]').filter(p=>p.schoolId===schoolId);
+    const notifications=JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)('ff_notifications')||'[]');
     parents.forEach((p,i)=>notifications.unshift({id:Date.now()+i,audience:'parent',schoolId,parentId:p.id,type:'fee-report',title:'New Fee Structure Published',body:`${school.name} published an updated fee structure. Open Fee Reports to view it.`,time:'Just now',unread:true}));
-    localStorage.setItem('ff_notifications',JSON.stringify(notifications));
+    (window.safeStorage ? window.safeStorage.setItem : localStorage.setItem)('ff_notifications',JSON.stringify(notifications));
     document.getElementById('ffStatus').textContent='Published to '+parents.length+' parent account(s)';
   };
   document.addEventListener('input',()=>{clearTimeout(window.__ffSaveTimer);window.__ffSaveTimer=setTimeout(()=>save(false),400)},true);

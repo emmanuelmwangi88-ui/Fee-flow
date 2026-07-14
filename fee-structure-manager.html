@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="feeflow-bridge.js"></script>
+<script>
+// Inline bridge fallback for isolated sandboxed iframe
+if (!window.__feeflowBridgeLoaded) {
+  window.__feeflowBridgeLoaded = true;
+  window.__memoryStorage = window.__memoryStorage || {};
+  window.safeStorage = {
+    getItem: function(key) { try { return window.localStorage.getItem(key); } catch(e) { return window.__memoryStorage[key] || null; } },
+    setItem: function(key, val) { try { window.localStorage.setItem(key, val); } catch(e) {} window.__memoryStorage[key] = String(val); },
+    removeItem: function(key) { try { window.localStorage.removeItem(key); } catch(e) {} delete window.__memoryStorage[key]; }
+  };
+}
+</script>
 <meta charset="UTF-8">
 <title>Fee Structure Manager</title>
 <style>
@@ -939,5 +952,5 @@ window.addEventListener('resize', applyMobileView);
 render();
 </script>
 <script src="fee-structure-integration.js"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ae8a1fecfa1b60',t:'MTc4NDAxMTI2Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1b3cf07b924385d',t:'MTc4NDA2NjUxNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

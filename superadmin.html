@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="feeflow-bridge.js"></script>
+<script>
+// Inline bridge fallback for isolated sandboxed iframe
+if (!window.__feeflowBridgeLoaded) {
+  window.__feeflowBridgeLoaded = true;
+  window.__memoryStorage = window.__memoryStorage || {};
+  window.safeStorage = {
+    getItem: function(key) { try { return window.localStorage.getItem(key); } catch(e) { return window.__memoryStorage[key] || null; } },
+    setItem: function(key, val) { try { window.localStorage.setItem(key, val); } catch(e) {} window.__memoryStorage[key] = String(val); },
+    removeItem: function(key) { try { window.localStorage.removeItem(key); } catch(e) {} delete window.__memoryStorage[key]; }
+  };
+}
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FeeFlow — Super Admin</title>
@@ -572,16 +585,19 @@
 // AUTH CHECK
 // ============================================================
 function checkAuth() {
-    const sessions=JSON.parse(localStorage.getItem('ff_sessions')||'[]');
-    const superSession=sessions.length===1?sessions.find(s=>s.type==='super'&&Date.now()-s.timestamp<86400000):null;
+    const sessions=JSON.parse(safeStorage.getItem('ff_sessions')||'[]');
+    let superSession=sessions.length===1?sessions.find(s=>s.type==='super'&&Date.now()-s.timestamp<86400000):null;
+    if(!superSession && typeof window.ensureDemoSession === 'function') {
+        superSession = window.ensureDemoSession('super');
+    }
     if(!superSession){window.location.replace('portal.html');return;}
     document.getElementById('authCheck').style.display='block';
     loadData();
 }
 
 function logout() {
-    const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
-    localStorage.setItem('ff_sessions', '[]');
+    const sessions = JSON.parse(safeStorage.getItem('ff_sessions') || '[]');
+    safeStorage.setItem('ff_sessions', '[]');
     window.location.href = 'portal.html';
 }
 
@@ -592,12 +608,12 @@ let platformData = {};
 
 function loadData() {
     // Get all schools
-    const schools = JSON.parse(localStorage.getItem('ff_schools') || '[]');
-    const parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
-    const students = JSON.parse(localStorage.getItem('ff_students') || '[]');
+    const schools = JSON.parse(safeStorage.getItem('ff_schools') || '[]');
+    const parents = JSON.parse(safeStorage.getItem('ff_parents') || '[]');
+    const students = JSON.parse(safeStorage.getItem('ff_students') || '[]');
     const payments = []; // School payment transactions are intentionally private from Super Admin.
-    const receipts = JSON.parse(localStorage.getItem('ff_receipts') || '[]');
-    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]').filter(n => n.audience === 'super' || n.audience === 'platform');
+    const receipts = JSON.parse(safeStorage.getItem('ff_receipts') || '[]');
+    const notifs = JSON.parse(safeStorage.getItem('ff_notifications') || '[]').filter(n => n.audience === 'super' || n.audience === 'platform');
 
     platformData = { schools, parents, students, payments, receipts, notifs };
 
@@ -771,18 +787,18 @@ function renderNotifications() {
 }
 
 function markRead(id) {
-    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
+    const notifs = JSON.parse(safeStorage.getItem('ff_notifications') || '[]');
     const n = notifs.find(x => x.id === id);
     if (n) n.unread = false;
-    localStorage.setItem('ff_notifications', JSON.stringify(notifs));
+    safeStorage.setItem('ff_notifications', JSON.stringify(notifs));
     platformData.notifs = notifs;
     renderNotifications();
 }
 
 function markAllRead() {
-    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
+    const notifs = JSON.parse(safeStorage.getItem('ff_notifications') || '[]');
     notifs.forEach(n => n.unread = false);
-    localStorage.setItem('ff_notifications', JSON.stringify(notifs));
+    safeStorage.setItem('ff_notifications', JSON.stringify(notifs));
     platformData.notifs = notifs;
     renderNotifications();
     showToast('All marked as read');
@@ -818,13 +834,13 @@ function closeModal(id) { document.getElementById('modal-' + id).classList.remov
 
 function addSchool() {
     const name=document.getElementById('newSchoolName').value.trim(); if(!name){alert('Please enter school name');return;}
-    const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]');
+    const schools=JSON.parse(safeStorage.getItem('ff_schools')||'[]');
     const username=document.getElementById('newSchoolAdminUsername').value.trim(),adminPassword=document.getElementById('newSchoolAdminPassword').value;
     if(!username||!adminPassword){alert('Create an administrator username and password for this school');return;}
     const data={name,location:document.getElementById('newSchoolLocation').value.trim(),paybill:document.getElementById('newSchoolPaybill').value.trim(),level:document.getElementById('newSchoolLevel').value,plan:document.getElementById('newSchoolPlan').value.split(' ')[0],adminUsername:username,adminPassword};
     if(editingSchoolId){const school=schools.find(s=>s.id===editingSchoolId);Object.assign(school,data);editingSchoolId=null;}
     else schools.push({id:'s_'+Date.now(),...data,students:0,collectionRate:0,status:'active'});
-    localStorage.setItem('ff_schools',JSON.stringify(schools));const ns=JSON.parse(localStorage.getItem('ff_notifications')||'[]');ns.unshift({id:Date.now(),audience:'super',type:'platform',title:'School saved',body:name+' hosting account was saved.',time:'Just now',unread:true});localStorage.setItem('ff_notifications',JSON.stringify(ns));closeModal('addSchool');loadData();showToast('School saved successfully','success');
+    safeStorage.setItem('ff_schools',JSON.stringify(schools));const ns=JSON.parse(safeStorage.getItem('ff_notifications')||'[]');ns.unshift({id:Date.now(),audience:'super',type:'platform',title:'School saved',body:name+' hosting account was saved.',time:'Just now',unread:true});safeStorage.setItem('ff_notifications',JSON.stringify(ns));closeModal('addSchool');loadData();showToast('School saved successfully','success');
 }
 function editSchool(id){const s=platformData.schools.find(x=>x.id===id);if(!s)return;editingSchoolId=id;document.getElementById('newSchoolName').value=s.name||'';document.getElementById('newSchoolLocation').value=s.location||'';document.getElementById('newSchoolPaybill').value=s.paybill||'';document.getElementById('newSchoolAdminUsername').value=s.adminUsername||'';document.getElementById('newSchoolAdminPassword').value=s.adminPassword||'';document.getElementById('newSchoolLevel').value=s.level||'Primary & Secondary';openModal('addSchool');}
 function viewSchool(id){const s=platformData.schools.find(x=>x.id===id);if(!s)return;const students=platformData.students.filter(x=>x.schoolId===id),parents=platformData.parents.filter(x=>x.schoolId===id);const price={Premium:12000,Standard:6000,Trial:0}[s.plan]||0;alert(`${s.name}
@@ -839,7 +855,7 @@ function exportTransactions() { showToast('Transactions exported to CSV', 'info'
 
 function saveSettings() {
     showToast('Settings saved successfully', 'success');
-    localStorage.setItem('ff_platformSettings', JSON.stringify({ name: document.getElementById('platformName').value }));
+    safeStorage.setItem('ff_platformSettings', JSON.stringify({ name: document.getElementById('platformName').value }));
 }
 
 function testAPI() {
@@ -870,5 +886,5 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1ac441a7923497d',t:'MTc4Mzk4NzQyNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1b3e2f7f8c135b2',t:'MTc4NDA2NzMzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
