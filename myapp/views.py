@@ -10,7 +10,6 @@ from django.http import JsonResponse
 from .models import School
 from django.views.decorators.csrf import csrf_exempt
 
-
 def portal(request):
     return render(request, 'portal.html')
 
