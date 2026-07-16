@@ -851,6 +851,46 @@ document.addEventListener('click', e => {
     if (!e.target.closest('#schoolSelectGroup')) document.getElementById('loginSchoolResults')?.classList.remove('show');
     if (!e.target.closest('#registerSchoolGroup')) document.getElementById('schoolSearchResults')?.classList.remove('show');
 });
+
+document.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
+    const target = event.target;
+    const activeLogin = document.getElementById('stepLogin').style.display !== 'none';
+    const activeOTP = document.getElementById('stepOTP').style.display !== 'none';
+    const activeRegister = document.getElementById('stepRegister').style.display !== 'none';
+    const activeVerifyReg = document.getElementById('stepVerifyReg').style.display !== 'none';
+    const activeAddChildren = document.getElementById('stepAddChildren').style.display !== 'none';
+
+    if (activeLogin && target && (target.id === 'loginPhone' || target.id === 'loginUsername' || target.id === 'loginPassword' || target.tagName === 'SELECT')) {
+        event.preventDefault();
+        sendOTP();
+        return;
+    }
+
+    if (activeOTP && target && target.classList.contains('otp-input')) {
+        event.preventDefault();
+        verifyLoginOTP();
+        return;
+    }
+
+    if (activeRegister && target && (target.id === 'regName' || target.id === 'regPhone' || target.id === 'regEmail')) {
+        event.preventDefault();
+        sendRegistrationOTP();
+        return;
+    }
+
+    if (activeVerifyReg && target && target.classList.contains('otp-input')) {
+        event.preventDefault();
+        verifyRegistration();
+        return;
+    }
+
+    if (activeAddChildren && target && (target.id === 'childName' || target.id === 'childAdm' || target.id === 'childClass')) {
+        event.preventDefault();
+        addChild();
+        return;
+    }
+});
 </script>
 </body>
 </html>

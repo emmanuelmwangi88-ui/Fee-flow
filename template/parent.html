@@ -2,21 +2,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<a href="{% url 'parent' %}">
-  <script src="{% static 'myapp/js/fee-structure-integration.js' %}"></script>
-</a>
+<script src="{% static 'myapp/js/fee-structure-integration.js' %}"></script>
 <script id="feeflow-core-inline">
 (function() {
   if (window.__feeflowBridgeLoaded) return;
   window.__feeflowBridgeLoaded = true;
 
   window.__memoryStorage = window.__memoryStorage || {};
-  
+
+  // Capture the real, native localStorage methods BEFORE they get overridden
+  // below. safeStorage must always talk to these native references — if it
+  // instead called window.localStorage.getItem/setItem after the override,
+  // it would call right back into itself and blow the call stack on the very
+  // first read or write (this was crashing the page before any data loaded).
+  let nativeGetItem, nativeSetItem, nativeRemoveItem;
   const isLocalStorageAvailable = (function() {
     try {
+      nativeGetItem = window.localStorage.getItem.bind(window.localStorage);
+      nativeSetItem = window.localStorage.setItem.bind(window.localStorage);
+      nativeRemoveItem = window.localStorage.removeItem.bind(window.localStorage);
       const testKey = '__ff_test_storage__';
-      window.localStorage.setItem(testKey, '1');
-      window.localStorage.removeItem(testKey);
+      nativeSetItem(testKey, '1');
+      nativeRemoveItem(testKey);
       return true;
     } catch(e) {
       return false;
@@ -27,7 +34,7 @@
     getItem: function(key) {
       if (isLocalStorageAvailable) {
         try {
-          const val = window.localStorage.getItem(key);
+          const val = nativeGetItem(key);
           if (val !== null) return val;
         } catch(e) {}
       }
@@ -36,13 +43,13 @@
     setItem: function(key, val) {
       const strVal = String(val);
       if (isLocalStorageAvailable) {
-        try { window.localStorage.setItem(key, strVal); } catch(e) {}
+        try { nativeSetItem(key, strVal); } catch(e) {}
       }
       window.__memoryStorage[key] = strVal;
     },
     removeItem: function(key) {
       if (isLocalStorageAvailable) {
-        try { window.localStorage.removeItem(key); } catch(e) {}
+        try { nativeRemoveItem(key); } catch(e) {}
       }
       delete window.__memoryStorage[key];
     }
@@ -54,103 +61,25 @@
     window.localStorage.removeItem = function(key) { return window.safeStorage.removeItem(key); };
   } catch(e) {}
 
-  function seedDemoDataIfEmpty() {
-    let schools = null;
-    try { schools = JSON.parse(window.safeStorage.getItem('ff_schools') || 'null'); } catch(e){}
-    if (!schools || !Array.isArray(schools) || schools.length === 0) {
-      const now = Date.now();
-      const demoSchools = [
-        { id: 'sch_1', name: "St. Mary's Academy - Nairobi", paybill: "522522", plan: "Premium", collectionRate: 88, status: "active", adminUsername: "admin", adminPassword: "admin123", address: "Westlands, Nairobi, Kenya", phone: "0722123456", code: "SMA-001", messagingEndpoint: "https://api.feeflow.co.ke/v1/sms", smsSender: "STMARYS" },
-        { id: 'sch_2', name: "Greenwood International School", paybill: "880112", plan: "Premium", collectionRate: 94, status: "active", adminUsername: "greenwood", adminPassword: "gw2026", address: "Karen, Nairobi, Kenya", phone: "0733456789", code: "GIS-002", messagingEndpoint: "https://api.feeflow.co.ke/v1/sms", smsSender: "GREENWOOD" },
-        { id: 'sch_3', name: "Mombasa Heritage High", paybill: "400300", plan: "Standard", collectionRate: 76, status: "active", adminUsername: "mombasa", adminPassword: "mhb123", address: "Nyali, Mombasa, Kenya", phone: "0711987654", code: "MHH-003", messagingEndpoint: "", smsSender: "MOMBASAH" }
-      ];
-      const demoParents = [
-        { id: 'par_1', name: "Grace Mwangi", phone: "0712345678", schoolId: 'sch_1', schoolName: "St. Mary's Academy - Nairobi", email: "grace.mwangi@gmail.com", createdAt: now - 864000000 },
-        { id: 'par_2', name: "John Kamau", phone: "0723456789", schoolId: 'sch_1', schoolName: "St. Mary's Academy - Nairobi", email: "jkamau@yahoo.com", createdAt: now - 432000000 },
-        { id: 'par_3', name: "Dr. Achieng Omondi", phone: "0734567890", schoolId: 'sch_2', schoolName: "Greenwood International School", email: "achieng@omondi.co.ke", createdAt: now - 259200000 }
-      ];
-      const demoStudents = [
-        { id: 'stu_1', name: "David Mwangi", parentId: 'par_1', schoolId: 'sch_1', class: "Grade 4", level: "Primary", adm: "ADM-2024-101", boarding: false, total: 45000, paid: 25000, balance: 20000, status: "partial" },
-        { id: 'stu_2', name: "Joy Mwangi", parentId: 'par_1', schoolId: 'sch_1', class: "Grade 8", level: "Primary", adm: "ADM-2022-044", boarding: true, total: 68000, paid: 68000, balance: 0, status: "paid" },
-        { id: 'stu_3', name: "Samuel Kamau", parentId: 'par_2', schoolId: 'sch_1', class: "Form 2", level: "Secondary", adm: "ADM-2023-089", boarding: false, total: 52000, paid: 12000, balance: 40000, status: "partial" },
-        { id: 'stu_4', name: "Zara Omondi", parentId: 'par_3', schoolId: 'sch_2', class: "Grade 7", level: "Junior School", adm: "ADM-2024-502", boarding: true, total: 85000, paid: 85000, balance: 0, status: "paid" }
-      ];
-      const demoPayments = [
-        { id: 'pay_101', studentId: 'stu_1', studentName: "David Mwangi", amount: 25000, method: "M-Pesa", ref: "QXL9821KK", date: "2026-07-10", schoolId: 'sch_1', status: 'reconciled' },
-        { id: 'pay_102', studentId: 'stu_2', studentName: "Joy Mwangi", amount: 68000, method: "Bank Transfer", ref: "BNK-882103", date: "2026-07-05", schoolId: 'sch_1', status: 'reconciled' },
-        { id: 'pay_103', studentId: 'stu_3', studentName: "Samuel Kamau", amount: 12000, method: "M-Pesa", ref: "QXM4410ZZ", date: "2026-07-12", schoolId: 'sch_1', status: 'reconciled' },
-        { id: 'pay_104', studentId: 'stu_4', studentName: "Zara Omondi", amount: 85000, method: "Cheque", ref: "CHQ-009182", date: "2026-07-02", schoolId: 'sch_2', status: 'reconciled' }
-      ];
-      const demoReceipts = demoPayments.map(function(p){
-        return { id: 'rcpt_' + p.id, paymentId: p.id, studentId: p.studentId, studentName: p.studentName, amount: p.amount, method: p.method, ref: p.ref, date: p.date, schoolId: p.schoolId };
-      });
-      const demoNotifs = [
-        { id: now - 1000, schoolId: 'sch_1', audience: 'parent', parentId: 'par_1', type: 'fee-report', title: "Term 2 Fee Structure Published", body: "St. Mary's Academy published the Term 2 fee structure. Tuition fee balance is KES 20,000 for David Mwangi.", time: "2 hours ago", unread: true },
-        { id: now - 2000, schoolId: 'sch_1', audience: 'parent', parentId: 'par_1', type: 'payment', title: "Payment Received", body: "We received KES 25,000 for David Mwangi via M-Pesa Ref QXL9821KK.", time: "4 days ago", unread: false },
-        { id: now - 3000, schoolId: 'sch_1', audience: 'admin', type: 'system', title: "Bulk Reminders Delivered", body: "Fee reminders sent to 14 parents with overdue balances via M-Pesa & SMS.", time: "Yesterday", unread: false },
-        { id: now - 4000, audience: 'super', type: 'platform', title: "New School Onboarded", body: "St. Mary's Academy - Nairobi connected their M-Pesa Paybill successfully.", time: "3 days ago", unread: true }
-      ];
-      const demoPubSch1 = {
-        schoolId: 'sch_1', schoolName: "St. Mary's Academy - Nairobi", paybill: "522522", publishedAt: now - 86400000, publishedBy: "School Admin",
-        levels: [
-          { name: "Primary", grades: [
-            { name: "Grade 4", fees: [ { id: 'f1', name: "Tuition Fee", boarderOnly: false, amounts: [15000, 15000, 15000] }, { id: 'f2', name: "Lunch & Snacks", boarderOnly: false, amounts: [5000, 5000, 5000] } ] },
-            { name: "Grade 8", fees: [ { id: 'f3', name: "Tuition Fee", boarderOnly: false, amounts: [18000, 18000, 18000] }, { id: 'f4', name: "Boarding & Meal Plan", boarderOnly: true, amounts: [12000, 12000, 12000] } ] }
-          ]},
-          { name: "Junior School", grades: [ { name: "Grade 7", fees: [ { id: 'f5', name: "Tuition & Lab Fee", boarderOnly: false, amounts: [20000, 20000, 20000] } ] } ] },
-          { name: "Secondary", grades: [ { name: "Form 2", fees: [ { id: 'f6', name: "Secondary Tuition", boarderOnly: false, amounts: [22000, 22000, 22000] } ] } ] }
-        ]
-      };
-
-      window.safeStorage.setItem('ff_schools', JSON.stringify(demoSchools));
-      window.safeStorage.setItem('ff_parents', JSON.stringify(demoParents));
-      window.safeStorage.setItem('ff_students', JSON.stringify(demoStudents));
-      window.safeStorage.setItem('ff_payments', JSON.stringify(demoPayments));
-      window.safeStorage.setItem('ff_receipts', JSON.stringify(demoReceipts));
-      window.safeStorage.setItem('ff_notifications', JSON.stringify(demoNotifs));
-      window.safeStorage.setItem('ff_fee_published_sch_1', JSON.stringify(demoPubSch1));
-      window.safeStorage.setItem('ff_fee_manager_sch_1', JSON.stringify(demoPubSch1));
-    }
-  }
-
-  seedDemoDataIfEmpty();
-
-  window.ensureDemoSession = function(role) {
-    let sessions = [];
-    try { sessions = JSON.parse(window.safeStorage.getItem('ff_sessions') || '[]'); } catch(e){}
-    if (!Array.isArray(sessions)) sessions = [];
-
-    const existing = sessions.find(function(s) {
-      if (role === 'super') return s.type === 'super';
-      if (role === 'admin') return s.type === 'admin';
-      if (role === 'parent') return s.type === 'parent';
-      return false;
-    });
-
-    if (existing) return existing;
-
-    if (role === 'super') {
-      const superSess = { id: 'sess_' + Date.now(), type: 'super', schoolId: null, name: 'Super Admin', timestamp: Date.now() };
-      window.safeStorage.setItem('ff_sessions', JSON.stringify([superSess]));
-      return superSess;
-    }
-    if (role === 'admin') {
-      let schs = JSON.parse(window.safeStorage.getItem('ff_schools') || '[]');
-      const sch = schs[0] || { id: 'sch_1', name: "St. Mary's Academy - Nairobi" };
-      const adminSess = { id: 'sess_' + Date.now(), type: 'admin', schoolId: sch.id, name: sch.name, timestamp: Date.now() };
-      window.safeStorage.setItem('ff_sessions', JSON.stringify([adminSess]));
-      return adminSess;
-    }
-    if (role === 'parent') {
-      let pars = JSON.parse(window.safeStorage.getItem('ff_parents') || '[]');
-      const par = pars[0] || { id: 'par_1', name: "Grace Mwangi", schoolId: 'sch_1', phone: "0712345678" };
-      const parentSess = { id: 'sess_' + Date.now(), type: 'parent', parentId: par.id, schoolId: par.schoolId, name: par.name, timestamp: Date.now() };
-      window.safeStorage.setItem('ff_sessions', JSON.stringify([parentSess]));
-      return parentSess;
-    }
-    return null;
+  // Only seed a key the very first time it's missing. Never overwrite existing
+  // data on reload — doing so was wiping out real sessions, parents, schools
+  // and students every time this page loaded, which is why parents were being
+  // signed out / losing their data right after registering.
+  var ffDefaults = {
+    ff_sessions: "[]",
+    ff_schools: "[]",
+    ff_students: "[]",
+    ff_parents: "[]",
+    ff_payments: "[]",
+    ff_receipts: "[]",
+    ff_receipt_items: "[]",
+    ff_hidden_reports: "[]"
   };
-
+  Object.keys(ffDefaults).forEach(function(key) {
+    if (window.safeStorage.getItem(key) === null) {
+      window.safeStorage.setItem(key, ffDefaults[key]);
+    }
+  });
 })();
 </script>
     
@@ -962,20 +891,20 @@
         <div class="notice" id="paybillNotice"></div>
         <div class="form-group">
           <label class="form-label" for="paymentStudent">Student</label>
-          <select class="form-input" id="paymentStudent"></select>
+          <select class="form-input" id="paymentStudent" onchange="updatePaymentAmountHint()"></select>
         </div>
         <div class="form-group">
           <label class="form-label" for="paymentAmount">Amount (KES)</label>
-          <input class="form-input" id="paymentAmount" type="number" min="1">
+          <input class="form-input" id="paymentAmount" type="number" min="1" onkeydown="if(event.key==='Enter'){event.preventDefault();makePayment()}" autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label" for="paymentPhone">M-Pesa phone number</label>
-          <input class="form-input" id="paymentPhone" placeholder="7XX XXX XXX">
+          <input class="form-input" id="paymentPhone" type="tel" placeholder="7XX XXX XXX" onkeydown="if(event.key==='Enter'){event.preventDefault();makePayment()}" autocomplete="tel-national">
         </div>
       </div>
       <div class="modal-footer">
-        <button class="button button-outline" onclick="closeModal('paymentModal')">Cancel</button>
-        <button class="button button-success" id="payButton" onclick="makePayment()">Send STK Push</button>
+        <button type="button" class="button button-outline" onclick="closeModal('paymentModal')">Cancel</button>
+        <button type="button" class="button button-success" id="payButton" onclick="makePayment()">Send STK Push</button>
       </div>
     </div>
   </div>
@@ -1072,14 +1001,6 @@
 
       // Require a valid, current parent session. Never silently reopen an account
       // after logout or manufacture a local account.
-      if (!parent && typeof window.ensureDemoSession === 'function') {
-        const demoSess = window.ensureDemoSession('parent');
-        if (demoSess) {
-          parent = parents.find(item => item.id === demoSess.parentId && item.schoolId === demoSess.schoolId) || parents[0];
-          session = demoSess;
-        }
-      }
-
       if (!parent) {
         safeStorage.setItem("ff_sessions", "[]");
         renderSignedOutPage();
@@ -1110,20 +1031,9 @@
             <div style="font-size:48px">✓</div>
             <h1 style="margin-top:12px">You’re signed out</h1>
             <p class="page-description" style="margin-bottom:20px">Your FeeFlow parent session has ended securely.</p>
-            <div style="display:flex;flex-direction:column;gap:10px;width:100%;">
-              <a class="button button-primary" style="text-decoration:none;width:100%;text-align:center;" href="/">Return to Login Portal</a>
-              <button class="button button-outline" style="width:100%;background:#f0fdf4;border-color:#10b981;color:#059669;font-weight:700;" onclick="autoLoginDemoParent()">
-                ⚡ Auto-Login Demo Parent (Grace Mwangi)
-              </button>
-            </div>
           </div>
         </div>`;
     }
-    function autoLoginDemoParent() {
-      if (typeof window.ensureDemoSession === 'function') window.ensureDemoSession('parent');
-      location.reload();
-    }
-
     function renderAccessPage(parents) {
       const accountButtons = parents.map(item => {
         const accountSchool = safeArray("ff_schools").find(value => value.id === item.schoolId);
@@ -2056,7 +1966,8 @@ function renderShell() {
 
       document.getElementById("paymentPhone").value = parent.phone || "";
       document.getElementById("paymentAmount").value = "";
-      document.getElementById("paybillNotice").innerHTML = `Original school paybill: <strong>${escapeHtml(school.paybill || "Not configured")}</strong>`;
+      const endpointNote = school.stkEndpoint ? '' : '<br><small style="color:#475569;">Using local STK endpoint: <strong>/api/mpesa/stk-push/</strong></small>';
+      document.getElementById("paybillNotice").innerHTML = `Original school paybill: <strong>${escapeHtml(school.paybill || "Not configured")}</strong>${endpointNote}`;
       updatePaymentAmountHint();
       openModal("paymentModal");
     }
@@ -2092,7 +2003,8 @@ function renderShell() {
         return;
       }
 
-      if (!school.stkEndpoint) {
+      const endpoint = (school.stkEndpoint || "").trim() || "/api/mpesa/stk-push/";
+      if (!endpoint) {
         alert("The school has not connected its secure STK Push endpoint.");
         return;
       }
@@ -2108,7 +2020,7 @@ function renderShell() {
       button.textContent = "Sending…";
 
       try {
-        const response = await fetch(school.stkEndpoint, {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2116,6 +2028,7 @@ function renderShell() {
             amount,
             paybill: school.paybill,
             accountReference: student.adm,
+            transactionDesc: `School fees for ${student.name}`,
             studentId: student.id,
             schoolId: school.id
           })
@@ -2317,6 +2230,15 @@ function renderShell() {
     document.addEventListener("change", event => {
       if (event.target && event.target.id === "paymentStudent") {
         updatePaymentAmountHint();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Enter" || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      const modal = document.getElementById("paymentModal");
+      if (modal?.classList.contains("open") && modal.contains(event.target)) {
+        event.preventDefault();
+        makePayment();
       }
     });
 

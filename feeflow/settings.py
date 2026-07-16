@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -108,3 +109,28 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+DARAJA_ENV = os.environ.get("DARAJA_ENV", "sandbox")  # sandbox | production
+DARAJA_BASE_URL = (
+    "https://sandbox.safaricom.co.ke"
+    if DARAJA_ENV == "sandbox"
+    else "https://api.safaricom.co.ke"
+)
+MPESA_CALLBACK_BASE_URL = os.environ.get(
+    "MPESA_CALLBACK_BASE_URL", "https://yourdomain.example.com"
+)
+MPESA_ALLOWED_CALLBACK_IPS = [
+    ip.strip() for ip in os.environ.get("MPESA_ALLOWED_CALLBACK_IPS", "").split(",") if ip.strip()
+]
+MPESA_CALLBACK_SECRET = os.environ.get("MPESA_CALLBACK_SECRET", "dev-callback-secret")
+
+STK_PENDING_TIMEOUT_MINUTES = 10
+
+# Safaricom Daraja credentials for M-Pesa STK Push
+DARAJA_CONSUMER_KEY = os.environ.get("DARAJA_CONSUMER_KEY", "")
+DARAJA_CONSUMER_SECRET = os.environ.get("DARAJA_CONSUMER_SECRET", "")
+DARAJA_PASSKEY = os.environ.get("DARAJA_PASSKEY", "")
+DARAJA_PAYBILL = os.environ.get("DARAJA_PAYBILL", "")
+DARAJA_SHORTCODE = os.environ.get("DARAJA_SHORTCODE", DARAJA_PAYBILL)
+DARAJA_CALLBACK_BASE_URL = os.environ.get("DARAJA_CALLBACK_BASE_URL", MPESA_CALLBACK_BASE_URL)
+DARAJA_STK_CALLBACK_PATH = os.environ.get("DARAJA_STK_CALLBACK_PATH", "/api/mpesa/callback/")
+DARAJA_STK_CALLBACK_URL = f"{MPESA_CALLBACK_BASE_URL.rstrip('/')}{DARAJA_STK_CALLBACK_PATH}"
