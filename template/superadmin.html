@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -590,7 +591,7 @@ function checkAuth() {
     if(!superSession && typeof window.ensureDemoSession === 'function') {
         superSession = window.ensureDemoSession('super');
     }
-    if(!superSession){window.location.replace('portal.html');return;}
+    if(!superSession){window.location.replace('/');return;}
     document.getElementById('authCheck').style.display='block';
     loadData();
 }
@@ -598,7 +599,7 @@ function checkAuth() {
 function logout() {
     const sessions = JSON.parse(safeStorage.getItem('ff_sessions') || '[]');
     safeStorage.setItem('ff_sessions', '[]');
-    window.location.href = 'portal.html';
+    window.location.href = '/';
 }
 
 // ============================================================

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -296,7 +297,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
             <i class="fas fa-lock"></i>
             <h2>Access Denied</h2>
             <p>You need to be logged in as School Admin to access this page.</p>
-            <a href="portal.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+            <a href="/" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
         </div>
     </div>
 
@@ -318,7 +319,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                     <div class="nav-label">Main</div>
                     <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
                     <div class="nav-item" data-section="students" onclick="navigate('students',this)"><i class="fas fa-user-graduate"></i> Students <span class="nav-badge green" id="navStudentCount">0</span></div>
-                    <div class="nav-item" data-section="fees" onclick="window.location.href='fee-structure-manager.html'"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
+                    <div class="nav-item" data-section="fees" onclick="window.location.href='/fee-structure-manager/'"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
                     <div class="nav-item" data-section="payments" onclick="navigate('payments',this)"><i class="fas fa-money-bill-wave"></i> Payments</div>
                 </div>
                 <div class="nav-section">
@@ -1155,7 +1156,7 @@ let schoolData = {};
 function checkAuth() {
     const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
     session = sessions.length === 1 ? sessions.find(s => s.type === 'admin' && (Date.now() - s.timestamp) < 24 * 60 * 60 * 1000) : null;
-    if (!session) { window.location.replace('portal.html'); return; }
+    if (!session) { window.location.replace('portal'); return; }
     
     schoolId = session.schoolId;
     const currentSchool=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
@@ -1180,7 +1181,7 @@ function checkAuth() {
 function logout() {
     const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
     localStorage.setItem('ff_sessions', '[]');
-    window.location.href = 'portal.html';
+    window.location.href = '/';
 }
 
 // ============================================================

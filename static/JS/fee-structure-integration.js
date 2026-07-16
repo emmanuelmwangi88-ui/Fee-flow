@@ -5,12 +5,12 @@
   if (!session && typeof window.ensureDemoSession === 'function') {
     session = window.ensureDemoSession('admin');
   }
-  if (!session) { location.replace('portal.html'); return; }
+  if (!session) { location.replace('/'); return; }
   const schoolId = session.schoolId;
   const schools = JSON.parse((window.safeStorage ? window.safeStorage.getItem('ff_schools') : localStorage.getItem('ff_schools')) || '[]');
   let school = schools.find(s => s.id === schoolId);
   if (!school && schools.length > 0) { school = schools[0]; session.schoolId = school.id; }
-  if (!school) { location.replace('portal.html'); return; }
+  if (!school) { location.replace('/'); return; }
   const draftKey = 'ff_fee_manager_' + schoolId;
   const publishedKey = 'ff_fee_published_' + schoolId;
   const saved = JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)(draftKey) || 'null');
@@ -35,7 +35,7 @@
   actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center';
   actions.innerHTML = '<button id="ffBack" class="level-tab" style="opacity:1;background:var(--paper);color:var(--ink)">⌂ Home / Back to Admin</button><button id="ffTerms" class="level-tab" style="opacity:1">Edit Term Names</button><button id="ffSave" class="level-tab active">Save Draft</button><button id="ffPublish" class="level-tab active">Publish to Parents</button><span id="ffStatus" style="font-size:12px;color:var(--gold-light)"></span>';
   document.querySelector('header.topbar').appendChild(actions);
-  document.getElementById('ffBack').onclick=()=>location.href='schooladmin.html';
+  document.getElementById('ffBack').onclick=()=>location.href='/schooladmin/';
   const storedTerms=JSON.parse((window.safeStorage ? window.safeStorage.getItem : localStorage.getItem)('ff_fee_term_names_'+schoolId)||'null');if(storedTerms?.length===3)TERMS.splice(0,3,...storedTerms);
   document.getElementById('ffTerms').onclick=()=>{const next=TERMS.map((t,i)=>prompt('Name for term '+(i+1)+':',t));if(next.every(x=>x&&x.trim())){TERMS.splice(0,3,...next.map(x=>x.trim()));(window.safeStorage ? window.safeStorage.setItem : localStorage.setItem)('ff_fee_term_names_'+schoolId,JSON.stringify(TERMS));render();save(false);}};
 

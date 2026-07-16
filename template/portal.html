@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -597,7 +598,7 @@ function sendOTP() {
     if (type === 'super') {
         if (password !== DEMO_SUPER_ADMIN_PASSWORD) { showError('loginError', 'Incorrect Super Admin password'); return; }
         localStorage.setItem('ff_sessions', JSON.stringify([{ id: 'sess_' + Date.now(), type: 'super', schoolId: null, name: 'Super Admin', timestamp: Date.now() }]));
-        location.href = 'superadmin.html';
+        location.href = '/superadmin/';
         return;
     }
 
@@ -611,7 +612,7 @@ function sendOTP() {
             return;
         }
         localStorage.setItem('ff_sessions', JSON.stringify([{ id: 'sess_' + Date.now(), type: 'admin', schoolId, name: school.name, timestamp: Date.now() }]));
-        location.href = 'schooladmin.html';
+        location.href = '/schooladmin/';
         return;
     }
 
@@ -639,7 +640,7 @@ function verifyLoginOTP() {
 
     const session = { id: 'sess_' + Date.now(), type: 'parent', parentId: parent.id, schoolId: parent.schoolId, name: parent.name, timestamp: Date.now() };
     localStorage.setItem('ff_sessions', JSON.stringify([session]));
-    window.location.href = 'parent.html';
+    window.location.href = '/parent/';
 }
 
 function resendOTP() {
@@ -824,7 +825,7 @@ function finishRegistration() {
     const session = { id: 'sess_' + Date.now(), type: 'parent', parentId: parent.id, schoolId: parent.schoolId, name: parent.name, timestamp: Date.now() };
     localStorage.setItem('ff_sessions', JSON.stringify([session]));
     addNotification(parent.schoolId, 'system', 'Registration Complete!', `${parent.name} registered as a parent for ${parent.schoolName}.`);
-    window.location.href = 'parent.html';
+    window.location.href = '/parent/';
 }
 
 // ============================================================

@@ -1,6 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<a href="{% url 'parent' %}">
+  <script src="{% static 'myapp/js/fee-structure-integration.js' %}"></script>
+</a>
 <script id="feeflow-core-inline">
 (function() {
   if (window.__feeflowBridgeLoaded) return;
@@ -1107,7 +1111,7 @@
             <h1 style="margin-top:12px">You’re signed out</h1>
             <p class="page-description" style="margin-bottom:20px">Your FeeFlow parent session has ended securely.</p>
             <div style="display:flex;flex-direction:column;gap:10px;width:100%;">
-              <a class="button button-primary" style="text-decoration:none;width:100%;text-align:center;" href="portal.html">Return to Login Portal</a>
+              <a class="button button-primary" style="text-decoration:none;width:100%;text-align:center;" href="/">Return to Login Portal</a>
               <button class="button button-outline" style="width:100%;background:#f0fdf4;border-color:#10b981;color:#059669;font-weight:700;" onclick="autoLoginDemoParent()">
                 ⚡ Auto-Login Demo Parent (Grace Mwangi)
               </button>
@@ -2302,12 +2306,12 @@ function renderShell() {
       safeStorage.setItem("ff_sessions", "[]");
       session = null;
       parent = null;
-      window.location.replace("portal.html");
+      window.location.replace("/");
     }
 
     function switchAccount() {
       safeStorage.setItem("ff_sessions", "[]");
-      window.location.replace("portal.html");
+      window.location.replace("/");
     }
 
     document.addEventListener("change", event => {
@@ -2333,7 +2337,7 @@ function renderShell() {
               <h2>Unable to load Parent Portal</h2>
               <p class="page-description">${escapeHtml(event.message || "An unexpected error occurred.")}</p>
               <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
-              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
+              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="/parent/">Reload Dashboard</a>
             </div>
           </div>
         `;
@@ -2353,7 +2357,7 @@ function renderShell() {
               <h2>Unable to load Parent Portal</h2>
               <p class="page-description">${escapeHtml(error.message || "An unexpected error occurred.")}</p>
               <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
-              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
+              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="/parent/">Reload Dashboard</a>
             </div>
           </div>
         `;
@@ -2362,7 +2366,7 @@ function renderShell() {
 
     function resetParentPortalData() {
       safeStorage.setItem("ff_sessions", "[]");
-      window.location.replace("portal.html");
+      window.location.replace("/");
     }
 
     bootParentPortal();
