@@ -14,7 +14,12 @@ SECRET_KEY = 'django-insecure-f(0y5wve29+va*m^9b_a=ef%pt6$du=s86m(plsuxmwb5o_sus
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "fee-flow-psi.vercel.app",
+    ".vercel.app",  # covers preview deployment URLs too, e.g. fee-flow-git-main-....vercel.app
+    "127.0.0.1",
+    "localhost",
+]
 
 
 # Application definition
