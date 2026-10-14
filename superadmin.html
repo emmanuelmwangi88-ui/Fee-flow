@@ -1,8 +1,6 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="feeflow-bridge.js"></script>
 <script>
 // Inline bridge fallback for isolated sandboxed iframe
 if (!window.__feeflowBridgeLoaded) {
@@ -591,7 +589,7 @@ function checkAuth() {
     if(!superSession && typeof window.ensureDemoSession === 'function') {
         superSession = window.ensureDemoSession('super');
     }
-    if(!superSession){window.location.replace('/');return;}
+    if(!superSession){window.location.replace('portal.html');return;}
     document.getElementById('authCheck').style.display='block';
     loadData();
 }
@@ -599,7 +597,7 @@ function checkAuth() {
 function logout() {
     const sessions = JSON.parse(safeStorage.getItem('ff_sessions') || '[]');
     safeStorage.setItem('ff_sessions', '[]');
-    window.location.href = '/';
+    window.location.href = 'portal.html';
 }
 
 // ============================================================
@@ -887,5 +885,5 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1b3e2f7f8c135b2',t:'MTc4NDA2NzMzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

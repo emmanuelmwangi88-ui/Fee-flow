@@ -1,8 +1,7 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="{% static 'myapp/js/fee-structure-integration.js' %}"></script>
+<script src="js/fee-structure-integration.js"></script>
 <script id="feeflow-core-inline">
 (function() {
   if (window.__feeflowBridgeLoaded) return;
@@ -1966,7 +1965,7 @@ function renderShell() {
 
       document.getElementById("paymentPhone").value = parent.phone || "";
       document.getElementById("paymentAmount").value = "";
-      const endpointNote = school.stkEndpoint ? '' : '<br><small style="color:#475569;">Using local STK endpoint: <strong>/api/mpesa/stk-push/</strong></small>';
+      const endpointNote = school.stkEndpoint ? '' : '<br><small style="color:#b45309;">Demo mode: no STK endpoint is configured, so no real M-Pesa charge will be made.</small>';
       document.getElementById("paybillNotice").innerHTML = `Original school paybill: <strong>${escapeHtml(school.paybill || "Not configured")}</strong>${endpointNote}`;
       updatePaymentAmountHint();
       openModal("paymentModal");
@@ -2003,11 +2002,10 @@ function renderShell() {
         return;
       }
 
-      const endpoint = (school.stkEndpoint || "").trim() || "/api/mpesa/stk-push/";
-      if (!endpoint) {
-        alert("The school has not connected its secure STK Push endpoint.");
-        return;
-      }
+      // Optional: a school can set its own secure STK Push endpoint (server/serverless function).
+      // With none configured, the app runs in demo mode and simulates a confirmed payment.
+      const endpoint = (school.stkEndpoint || "").trim();
+      const demoMode = !endpoint;
 
       const student = children.find(item => item.id === studentId);
       if (!student) return;
@@ -2020,36 +2018,44 @@ function renderShell() {
       button.textContent = "Sending…";
 
       try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone,
-            amount,
-            paybill: school.paybill,
-            accountReference: student.adm,
-            transactionDesc: `School fees for ${student.name}`,
-            studentId: student.id,
-            schoolId: school.id
-          })
-        });
+        let reference;
+        if (demoMode) {
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          reference = "DEMO" + Date.now().toString(36).toUpperCase();
+        } else {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone,
+              amount,
+              paybill: school.paybill,
+              accountReference: student.adm,
+              transactionDesc: `School fees for ${student.name}`,
+              studentId: student.id,
+              schoolId: school.id
+            })
+          });
 
-        const result = await response.json().catch(() => ({}));
+          const result = await response.json().catch(() => ({}));
 
-        if (!response.ok || result.success === false) {
-          throw new Error(result.message || "STK Push request failed.");
-        }
+          if (!response.ok || result.success === false) {
+            throw new Error(result.message || "STK Push request failed.");
+          }
 
-        const reference = result.reference || result.checkoutRequestId;
-        if (!reference) {
-          throw new Error("The payment service did not return a reference.");
+          reference = result.reference || result.checkoutRequestId;
+          if (!reference) {
+            throw new Error("The payment service did not return a reference.");
+          }
         }
 
         recordConfirmedPayment(student, amount, phone, reference);
         closeModal("paymentModal");
         initialize();
         showView("payments");
-        alert("Payment confirmed. Your receipt is ready.");
+        alert(demoMode
+          ? "Demo payment recorded (no real M-Pesa charge was made). Your receipt is ready."
+          : "Payment confirmed. Your receipt is ready.");
       } catch (error) {
         alert(error.message || "Unable to complete the STK Push request.");
       } finally {
@@ -2219,12 +2225,12 @@ function renderShell() {
       safeStorage.setItem("ff_sessions", "[]");
       session = null;
       parent = null;
-      window.location.replace("/");
+      window.location.replace("portal.html");
     }
 
     function switchAccount() {
       safeStorage.setItem("ff_sessions", "[]");
-      window.location.replace("/");
+      window.location.replace("portal.html");
     }
 
     document.addEventListener("change", event => {
@@ -2259,7 +2265,7 @@ function renderShell() {
               <h2>Unable to load Parent Portal</h2>
               <p class="page-description">${escapeHtml(event.message || "An unexpected error occurred.")}</p>
               <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
-              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="/parent/">Reload Dashboard</a>
+              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
             </div>
           </div>
         `;
@@ -2279,7 +2285,7 @@ function renderShell() {
               <h2>Unable to load Parent Portal</h2>
               <p class="page-description">${escapeHtml(error.message || "An unexpected error occurred.")}</p>
               <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
-              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="/parent/">Reload Dashboard</a>
+              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
             </div>
           </div>
         `;
@@ -2288,10 +2294,10 @@ function renderShell() {
 
     function resetParentPortalData() {
       safeStorage.setItem("ff_sessions", "[]");
-      window.location.replace("/");
+      window.location.replace("portal.html");
     }
 
     bootParentPortal();
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1b43e2efd7bfdb6',t:'MTc4NDA3MTA2Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

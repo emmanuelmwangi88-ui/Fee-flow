@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -297,7 +296,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
             <i class="fas fa-lock"></i>
             <h2>Access Denied</h2>
             <p>You need to be logged in as School Admin to access this page.</p>
-            <a href="/" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+            <a href="portal.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
         </div>
     </div>
 
@@ -319,7 +318,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                     <div class="nav-label">Main</div>
                     <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
                     <div class="nav-item" data-section="students" onclick="navigate('students',this)"><i class="fas fa-user-graduate"></i> Students <span class="nav-badge green" id="navStudentCount">0</span></div>
-                    <div class="nav-item" data-section="fees" onclick="window.location.href='/fee-structure-manager/'"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
+                    <div class="nav-item" data-section="fees" onclick="window.location.href='fee-structure-manager.html'"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
                     <div class="nav-item" data-section="payments" onclick="navigate('payments',this)"><i class="fas fa-money-bill-wave"></i> Payments</div>
                 </div>
                 <div class="nav-section">
@@ -1156,7 +1155,7 @@ let schoolData = {};
 function checkAuth() {
     const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
     session = sessions.length === 1 ? sessions.find(s => s.type === 'admin' && (Date.now() - s.timestamp) < 24 * 60 * 60 * 1000) : null;
-    if (!session) { window.location.replace('portal'); return; }
+    if (!session) { window.location.replace('portal.html'); return; }
     
     schoolId = session.schoolId;
     const currentSchool=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
@@ -1181,7 +1180,7 @@ function checkAuth() {
 function logout() {
     const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
     localStorage.setItem('ff_sessions', '[]');
-    window.location.href = '/';
+    window.location.href = 'portal.html';
 }
 
 // ============================================================
@@ -1908,5 +1907,5 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1aea4347baa497d',t:'MTc4NDAxMjMzMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1b43d961baefdb6',t:'MTc4NDA3MTA0Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

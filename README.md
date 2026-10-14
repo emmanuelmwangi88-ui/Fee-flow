@@ -4,25 +4,34 @@ A school fee management portal with three connected dashboards — **Parent**, *
 
 **Live demo:** [fee-flow-psi.vercel.app](https://fee-flow-psi.vercel.app)
 
-> **Status:** Front-end prototype. All data (schools, parents, students, payments, receipts, notifications, active session) currently lives in the browser's `localStorage`. A Django backend (`myapp/`, `manage.py`) is scaffolded in this repo but not yet wired to the front end — see [Roadmap](#roadmap).
+> **Status:** Pure front-end project (HTML / CSS / vanilla JavaScript). No server, no build step, no framework. All data (schools, parents, students, payments, receipts, notifications, active session) lives in the browser's `localStorage`.
 
 ## Start here
 
-Open `portal.html`. `index.html` redirects to it automatically.
+Open `index.html` (it redirects to `portal.html`).
 
-## Connected pages
+Some browsers isolate `file://` pages from each other, which stops the pages sharing data. If the dashboards don't see what you registered in the portal, serve the folder instead:
+
+```bash
+python3 -m http.server 8000   # then visit http://localhost:8000
+```
+
+An internet connection is needed for Bootstrap, Font Awesome and Google Fonts, which load from CDNs.
+
+## Pages
 
 | Page | Role |
 |---|---|
 | `portal.html` | Login, school search, parent registration, role routing |
 | `parent.html` | Parent Portal — view fees, make payments, download receipts |
-| `schooladmin.html` | School Admin dashboard — manage students, fee structures, payments |
+| `schooladmin.html` | School Admin dashboard — manage students, payments, reminders |
+| `fee-structure-manager.html` | Fee structure editor, opened from the School Admin dashboard |
 | `superadmin.html` | Super Admin dashboard — manage schools across the platform |
 
 ## Routing
 
 - Parent login/registration → `parent.html`
-- School Admin login → `schooladmin.html`
+- School Admin login → `schooladmin.html` (Fee Structure → `fee-structure-manager.html`)
 - Super Admin selection → `superadmin.html`
 - Logout from any dashboard → `portal.html`
 
@@ -30,54 +39,40 @@ All pages read/write the same `localStorage` keys, so a school added through Sup
 
 ## Roles & workflow
 
-FeeFlow follows a top-down setup, then day-to-day use by school staff and parents:
-
 1. **Super Admin** — onboards the platform. Registers new schools, which then become selectable in the portal.
    - Default password: `#SADMIN888`
 2. **School Admin** — once a school is registered, its admin manages everything fee-related for that school: fee structures, students, payment records, and receipts.
 3. **Parent** — connects to their child's school through the portal, then makes fee payments and handles other parent-facing actions (viewing balances, downloading receipts, etc.).
 
-> ⚠️ `#SADMIN888` is a hardcoded demo credential in the front-end code, not a securely stored password — don't reuse it if/when this moves to the Django backend with real auth.
+> ⚠️ `#SADMIN888` is a hardcoded demo credential in the front-end code, not a securely stored password. Anything in `localStorage` is readable by anyone using that browser, so don't use real passwords or sensitive data.
+
+## Payments
+
+Payments run in **demo mode** by default: no real M-Pesa charge is made, and the receipt reference starts with `DEMO`.
+
+A real STK Push needs a secure server, because M-Pesa (Daraja) credentials must never be stored in front-end code. If a school sets an **STK Push API Endpoint** in its School Admin settings, `parent.html` POSTs `{ phone, amount, paybill, accountReference, transactionDesc, studentId, schoolId }` to it and expects `{ success: true, checkoutRequestId }` back.
 
 ## Project structure
 
 ```
 Fee-flow/
-├── portal.html          # Entry point — login, registration, role routing
-├── parent.html           # Parent Portal
-├── schooladmin.html      # School Admin dashboard
-├── superadmin.html       # Super Admin dashboard
-├── static/JS/            # Front-end logic (localStorage-backed)
-├── template/             # HTML templates
-├── feeflow/               # Django project settings
-├── myapp/                 # Django app (scaffolded, not yet connected to the UI)
-├── manage.py
-├── db.sqlite3
-└── requirements.txt
+├── index.html                    # Redirects to portal.html
+├── portal.html                   # Login, registration, role routing
+├── parent.html                   # Parent Portal
+├── schooladmin.html              # School Admin dashboard
+├── fee-structure-manager.html    # Fee structure editor
+├── superadmin.html               # Super Admin dashboard
+└── js/
+    └── fee-structure-integration.js
 ```
 
-## Running it
+## Limitations / roadmap
 
-### Front-end demo (no setup required)
-Just open `portal.html` in a browser. No server, no build step — it runs entirely client-side.
-
-### Django backend (in progress)
-```bash
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-Note: the Django app is not yet connected to the HTML front end above.
-
-## Roadmap
-
-- [ ] Replace `localStorage` persistence with a real Django backend + database
-- [ ] Wire `portal.html` / `parent.html` / `schooladmin.html` / `superadmin.html` to Django views or a REST API
-- [ ] Add authentication (currently role routing has no real auth check)
-- [ ] Payment integration (e.g. M-Pesa)
+- [ ] Real persistence (data is per-browser today and isn't shared between devices)
+- [ ] Real authentication (role routing currently has no real auth check)
+- [ ] Real M-Pesa STK Push via a secure server endpoint
+- [ ] Real SMS / email delivery (the messaging endpoint setting is optional)
 
 ## Tech stack
 
-- HTML / CSS / vanilla JavaScript (current UI)
-- Django (backend, in progress)
-- SQLite (`db.sqlite3`)
+HTML, CSS and vanilla JavaScript, with Bootstrap 5, Font Awesome and Google Fonts loaded from CDNs. Deployed as a static site on Vercel.
