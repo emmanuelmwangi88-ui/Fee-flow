@@ -4,7 +4,7 @@ A school fee management portal with three connected dashboards — **Parent**, *
 
 **Live demo:** [fee-flow-psi.vercel.app](https://fee-flow-psi.vercel.app)
 
-> **Status:** Pure front-end project (HTML / CSS / vanilla JavaScript). No server, no build step, no framework. All data (schools, parents, students, payments, receipts, notifications, active session) lives in the browser's `localStorage`.
+> **Status: moving to Supabase (in progress).** Sign-in, registration, password reset and the Super Admin dashboard already run on the secure online database. The School Admin, Parent and Fee Manager screens are being converted next; until then they show a "coming soon" page. Database docs and tests are in `supabase/` and `tests/`.
 
 ## Start here
 
