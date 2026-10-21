@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FeeFlow — Dashboard coming soon</title>
+    <style>
+        :root { --primary:#1a6dcc; --navy:#0c2d57; --text:#0f172a; --muted:#64748b; --bg:#f1f5f9; }
+        * { box-sizing: border-box; }
+        body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--text); padding:20px; }
+        .card { background:#fff; border-radius:16px; padding:40px 32px; max-width:460px; width:100%; text-align:center; box-shadow:0 10px 30px rgba(15,23,42,.08); }
+        .icon { width:64px; height:64px; border-radius:50%; background:#eff6ff; color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 18px; }
+        h1 { margin:0 0 8px; font-size:22px; color:var(--navy); }
+        p { margin:0 0 22px; color:var(--muted); line-height:1.6; font-size:14px; }
+        button { background:var(--primary); color:#fff; border:0; border-radius:10px; padding:12px 22px; font-size:14px; font-weight:600; cursor:pointer; }
+        button:hover { filter:brightness(1.08); }
+        .who { font-size:12px; color:var(--muted); margin-bottom:18px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon" aria-hidden="true">🛠️</div>
+        <h1>Your dashboard is being upgraded</h1>
+        <p>FeeFlow is moving to a secure online database. Your account is ready and your sign-in works, but this dashboard is not connected yet. Please check back soon.</p>
+        <div class="who" id="who"></div>
+        <button onclick="FF.signOut()">Sign out</button>
+    </div>
+    <script src="js/vendor/supabase-2.117.2.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/ff-client.js"></script>
+    <script>
+        (async () => {
+            if (!window.FF) return;
+            const p = await FF.getProfile().catch(() => null);
+            if (!p) { location.replace('portal.html'); return; }            // not signed in
+            document.getElementById('who').textContent = 'Signed in as ' + (p.email || '') + ' (' + p.role.replace('_', ' ') + ')';
+        })();
+    </script>
+</body>
+</html>

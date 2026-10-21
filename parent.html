@@ -1,6 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
+=======
+<script>location.replace("coming-soon.html"); /* TEMPORARY: removed when this page is converted to Supabase */</script>
+<script src="js/fee-structure-integration.js"></script>
+<script id="feeflow-core-inline">
+(function() {
+  if (window.__feeflowBridgeLoaded) return;
+  window.__feeflowBridgeLoaded = true;
+
+  window.__memoryStorage = window.__memoryStorage || {};
+
+  // Capture the real, native localStorage methods BEFORE they get overridden
+  // below. safeStorage must always talk to these native references — if it
+  // instead called window.localStorage.getItem/setItem after the override,
+  // it would call right back into itself and blow the call stack on the very
+  // first read or write (this was crashing the page before any data loaded).
+  let nativeGetItem, nativeSetItem, nativeRemoveItem;
+  const isLocalStorageAvailable = (function() {
+    try {
+      nativeGetItem = window.localStorage.getItem.bind(window.localStorage);
+      nativeSetItem = window.localStorage.setItem.bind(window.localStorage);
+      nativeRemoveItem = window.localStorage.removeItem.bind(window.localStorage);
+      const testKey = '__ff_test_storage__';
+      nativeSetItem(testKey, '1');
+      nativeRemoveItem(testKey);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  })();
+
+  window.safeStorage = {
+    getItem: function(key) {
+      if (isLocalStorageAvailable) {
+        try {
+          const val = nativeGetItem(key);
+          if (val !== null) return val;
+        } catch(e) {}
+      }
+      return window.__memoryStorage[key] !== undefined ? window.__memoryStorage[key] : null;
+    },
+    setItem: function(key, val) {
+      const strVal = String(val);
+      if (isLocalStorageAvailable) {
+        try { nativeSetItem(key, strVal); } catch(e) {}
+      }
+      window.__memoryStorage[key] = strVal;
+    },
+    removeItem: function(key) {
+      if (isLocalStorageAvailable) {
+        try { nativeRemoveItem(key); } catch(e) {}
+      }
+      delete window.__memoryStorage[key];
+    }
+  };
+
+  try {
+    window.localStorage.getItem = function(key) { return window.safeStorage.getItem(key); };
+    window.localStorage.setItem = function(key, val) { return window.safeStorage.setItem(key, val); };
+    window.localStorage.removeItem = function(key) { return window.safeStorage.removeItem(key); };
+  } catch(e) {}
+
+  // Only seed a key the very first time it's missing. Never overwrite existing
+  // data on reload — doing so was wiping out real sessions, parents, schools
+  // and students every time this page loaded, which is why parents were being
+  // signed out / losing their data right after registering.
+  var ffDefaults = {
+    ff_sessions: "[]",
+    ff_schools: "[]",
+    ff_students: "[]",
+    ff_parents: "[]",
+    ff_payments: "[]",
+    ff_receipts: "[]",
+    ff_receipt_items: "[]",
+    ff_hidden_reports: "[]"
+  };
+  Object.keys(ffDefaults).forEach(function(key) {
+    if (window.safeStorage.getItem(key) === null) {
+      window.safeStorage.setItem(key, ffDefaults[key]);
+    }
+  });
+})();
+</script>
+>>>>>>> ead16596339ae4d2953c797810b8ff47eaefde85
     
 
   <meta charset="UTF-8">

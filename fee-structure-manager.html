@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
+=======
+<script>location.replace("coming-soon.html"); /* TEMPORARY: removed when this page is converted to Supabase */</script>
+<script src="js/fee-structure-integration.js"></script>
+</body>
+
+<script>
+// Inline bridge fallback for isolated sandboxed iframe
+if (!window.__feeflowBridgeLoaded) {
+  window.__feeflowBridgeLoaded = true;
+  window.__memoryStorage = window.__memoryStorage || {};
+  window.safeStorage = {
+    getItem: function(key) { try { return window.localStorage.getItem(key); } catch(e) { return window.__memoryStorage[key] || null; } },
+    setItem: function(key, val) { try { window.localStorage.setItem(key, val); } catch(e) {} window.__memoryStorage[key] = String(val); },
+    removeItem: function(key) { try { window.localStorage.removeItem(key); } catch(e) {} delete window.__memoryStorage[key]; }
+  };
+}
+</script>
+>>>>>>> ead16596339ae4d2953c797810b8ff47eaefde85
 <meta charset="UTF-8">
 <title>Fee Structure Manager</title>
 <style>

@@ -4,7 +4,11 @@ School fee management for Kenyan schools: a **Parent** portal, a **School Admin*
 
 Static front end (HTML / CSS / vanilla JavaScript, no build step) on **Supabase** (Postgres + Auth + Row Level Security + Edge Functions).
 
+<<<<<<< HEAD
 > **Status:** sign-in, registration, password reset and all three dashboards run on the secure online database. Fee payments can be **recorded** by the school (cash, bank, cheque, M-Pesa statement match). **Automatic M-Pesa STK Push is the next step** (Phase 4): until it is connected, parents are shown the school's paybill and their child's admission number to pay from the M-Pesa menu.
+=======
+> **Status: moving to Supabase (in progress).** Sign-in, registration, password reset and the Super Admin dashboard already run on the secure online database. The School Admin, Parent and Fee Manager screens are being converted next; until then they show a "coming soon" page. Database docs and tests are in `supabase/` and `tests/`.
+>>>>>>> ead16596339ae4d2953c797810b8ff47eaefde85
 
 ## Run it locally
 
