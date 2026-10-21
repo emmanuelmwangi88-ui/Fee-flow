@@ -1,78 +1,63 @@
 # FeeFlow
 
-A school fee management portal with three connected dashboards — **Parent**, **School Admin**, and **Super Admin** — built to fit Kenyan school fee workflows.
+School fee management for Kenyan schools: a **Parent** portal, a **School Admin** dashboard (students, fee structure, payments, receipts, reminders) and a **Super Admin** dashboard (schools, platform totals).
 
-**Live demo:** [fee-flow-psi.vercel.app](https://fee-flow-psi.vercel.app)
+Static front end (HTML / CSS / vanilla JavaScript, no build step) on **Supabase** (Postgres + Auth + Row Level Security + Edge Functions).
 
-> **Status:** Pure front-end project (HTML / CSS / vanilla JavaScript). No server, no build step, no framework. All data (schools, parents, students, payments, receipts, notifications, active session) lives in the browser's `localStorage`.
+> **Status:** sign-in, registration, password reset and all three dashboards run on the secure online database. Fee payments can be **recorded** by the school (cash, bank, cheque, M-Pesa statement match). **Automatic M-Pesa STK Push is the next step** (Phase 4): until it is connected, parents are shown the school's paybill and their child's admission number to pay from the M-Pesa menu.
 
-## Start here
+## Run it locally
 
-Open `index.html` (it redirects to `portal.html`).
-
-Some browsers isolate `file://` pages from each other, which stops the pages sharing data. If the dashboards don't see what you registered in the portal, serve the folder instead:
+Any static server works. Examples:
 
 ```bash
-python3 -m http.server 8000   # then visit http://localhost:8000
+python3 -m http.server 8000      # then open http://localhost:8000/portal.html
 ```
+or use the VS Code **Live Server** extension (`http://127.0.0.1:5500/portal.html`).
 
-An internet connection is needed for Bootstrap, Font Awesome and Google Fonts, which load from CDNs.
+In the Supabase dashboard → Authentication → URL Configuration, add every address you use (local and deployed) to **Redirect URLs**, otherwise confirmation / password-reset links send people to the wrong site.
 
 ## Pages
 
-| Page | Role |
-|---|---|
-| `portal.html` | Login, school search, parent registration, role routing |
-| `parent.html` | Parent Portal — view fees, make payments, download receipts |
-| `schooladmin.html` | School Admin dashboard — manage students, payments, reminders |
-| `fee-structure-manager.html` | Fee structure editor, opened from the School Admin dashboard |
-| `superadmin.html` | Super Admin dashboard — manage schools across the platform |
+| Page | Who | What |
+|---|---|---|
+| `portal.html` | everyone | Sign in, parent registration, password reset; routes by role |
+| `parent.html` | parents | Children, fee reports, payments & receipts, notifications, profile |
+| `schooladmin.html` | school admins | Students, payments, ledger, outstanding fees, reminders, receipts, parents (approve child links), terms, settings |
+| `fee-structure-manager.html` | school admins | Build the fee structure, save drafts, **publish** (the database recalculates every student's total) |
+| `superadmin.html` | platform admin | Create schools + their admin login, edit / suspend, reset admin password, platform totals |
 
-## Routing
+## How it is secured
 
-- Parent login/registration → `parent.html`
-- School Admin login → `schooladmin.html` (Fee Structure → `fee-structure-manager.html`)
-- Super Admin selection → `superadmin.html`
-- Logout from any dashboard → `portal.html`
+- Everyone signs in with email + password (Supabase Auth). The **role comes from the database** (`profiles`), never from the browser.
+- Every table has **Row Level Security**: a school sees only its own data, a parent only their linked children, and the Super Admin sees platform *totals* (not students or payments).
+- Browsers **cannot** create M-Pesa payments or edit totals. Totals are computed in the database from the published fee structure; balances are fees minus *confirmed* payments.
+- A parent's request to link a child stays **pending until the school approves it** (phone numbers are not verified yet).
+- Secrets (Daraja keys, service-role key, SMS keys) live only in Supabase secrets / Edge Functions, **never** in this repo. `js/config.js` holds only the project URL and the *publishable* key, which is public by design.
 
-All pages read/write the same `localStorage` keys, so a school added through Super Admin becomes available in the portal after returning to or refreshing `portal.html`.
-
-## Roles & workflow
-
-1. **Super Admin** — onboards the platform. Registers new schools, which then become selectable in the portal.
-   - Default password: `#SADMIN888`
-2. **School Admin** — once a school is registered, its admin manages everything fee-related for that school: fee structures, students, payment records, and receipts.
-3. **Parent** — connects to their child's school through the portal, then makes fee payments and handles other parent-facing actions (viewing balances, downloading receipts, etc.).
-
-> ⚠️ `#SADMIN888` is a hardcoded demo credential in the front-end code, not a securely stored password. Anything in `localStorage` is readable by anyone using that browser, so don't use real passwords or sensitive data.
-
-## Payments
-
-Payments run in **demo mode** by default: no real M-Pesa charge is made, and the receipt reference starts with `DEMO`.
-
-A real STK Push needs a secure server, because M-Pesa (Daraja) credentials must never be stored in front-end code. If a school sets an **STK Push API Endpoint** in its School Admin settings, `parent.html` POSTs `{ phone, amount, paybill, accountReference, transactionDesc, studentId, schoolId }` to it and expects `{ success: true, checkoutRequestId }` back.
-
-## Project structure
+## Repository layout
 
 ```
-Fee-flow/
-├── index.html                    # Redirects to portal.html
-├── portal.html                   # Login, registration, role routing
-├── parent.html                   # Parent Portal
-├── schooladmin.html              # School Admin dashboard
-├── fee-structure-manager.html    # Fee structure editor
-├── superadmin.html               # Super Admin dashboard
-└── js/
-    └── fee-structure-integration.js
+portal.html  parent.html  schooladmin.html  fee-structure-manager.html  superadmin.html  index.html
+js/            config.js, ff-client.js (shared sign-in/role helpers), fee-manager.js, vendor/ (pinned supabase-js)
+supabase/
+  migrations/  the exact SQL applied to the live database, in order (0001 ... 0006)
+  functions/   Edge Functions: admin-create-school, admin-reset-password
+  tests/       SQL security tests (roll back; run in the Supabase SQL editor)
+tests/         front-end tests (simulated browser + mock Supabase)
 ```
 
-## Limitations / roadmap
+## Tests
 
-- [ ] Real persistence (data is per-browser today and isn't shared between devices)
-- [ ] Real authentication (role routing currently has no real auth check)
-- [ ] Real M-Pesa STK Push via a secure server endpoint
-- [ ] Real SMS / email delivery (the messaging endpoint setting is optional)
+```bash
+npm install      # jsdom, for the front-end tests only
+npm test         # 373 front-end checks
+```
+SQL tests are in `supabase/tests/` (`rls_smoke.sql`, `access_matrix.sql`, `migration_0006.sql`); each ends with a deliberate error that rolls everything back, and a successful run is a message listing only `PASS` lines. Re-run them after any schema or policy change.
 
-## Tech stack
+## Still to do
 
-HTML, CSS and vanilla JavaScript, with Bootstrap 5, Font Awesome and Google Fonts loaded from CDNs. Deployed as a static site on Vercel.
+- [ ] **M-Pesa STK Push** (Daraja): `mpesa-stk-push`, `mpesa-callback`, reconciliation job, per-school credentials. Needs your Daraja sandbox keys, set as Supabase secrets (never in the repo).
+- [ ] SMS fee reminders (Africa's Talking) and SMS code verification of parents' phone numbers.
+- [ ] Custom email sender (Supabase's built-in sender is slow and rate-limited), leaked-password protection, custom domain.
+- [ ] Privacy policy / terms; check Kenya Data Protection Act registration.

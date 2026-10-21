@@ -390,6 +390,12 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                         </div>
                     </div>
 
+                    <div class="alert alert-info" id="pendingAlert" style="display:none;">
+                        <i class="fas fa-user-clock"></i>
+                        <div><div class="alert-title">Parent link requests waiting</div>
+                        <div><span id="pendingAlertCount">0</span> parent(s) asked to link a child. <a href="#" onclick="showSection('parents');return false;" style="font-weight:600;">Review requests →</a></div></div>
+                    </div>
+
                     <div class="stats-grid">
                         <div class="stat-card blue">
                             <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
@@ -495,6 +501,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                     <option value="paid">Paid</option>
                                     <option value="partial">Partial</option>
                                     <option value="unpaid">Unpaid</option>
+                                    <option value="overdue">Overdue</option>
                                 </select>
                             </div>
                         </div>
@@ -514,39 +521,13 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                     <div class="page-header">
                         <div class="page-header-left">
                             <div class="page-title">Fee Structure</div>
-                            <div class="page-desc">Configure fee items per class/grade</div>
+                            <div class="page-desc">Build and publish your fees in the Fee Structure Manager</div>
                         </div>
-                        <button class="btn btn-primary" onclick="openModal('addFeeItem')"><i class="fas fa-plus"></i> Add Fee Item</button>
+                        <button class="btn btn-primary" onclick="location.href='fee-structure-manager.html'"><i class="fas fa-edit"></i> Open Fee Structure Manager</button>
                     </div>
-
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <div>
-                            <div class="alert-title">Current Term Fee Structure</div>
-                            <div>Edit amounts per class level. Mandatory fees are charged to all students automatically.</div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Fee Items by Term</div><div class="filter-bar"><select class="filter-select" id="feeTermFilter" onchange="renderFeeStructure()"><option value="">All Terms</option></select>
-                            <select class="filter-select" id="feeClassFilter" onchange="renderFeeStructure()">
-                                <option value="">All Levels</option>
-                                <option>PP1-PP2</option><option>Class 1-3</option><option>Class 4-5</option><option>Class 6-8</option><option>Form 1-4</option>
-                            </select></div>
-                        </div>
-                        <div class="card-body">
-                            <div style="overflow-x:auto;">
-                                <table class="table">
-                                    <thead><tr><th>Term</th><th>Fee Item</th><th>Category</th><th>PP1-PP2</th><th>Class 1-3</th><th>Class 4-5</th><th>Class 6-8</th><th>Form 1-4</th><th>Mandatory</th><th>Actions</th></tr></thead>
-                                    <tbody id="feeStructureBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="card"><div class="card-body p" id="feeSummary"></div></div>
                 </div>
 
-                <!-- PAYMENTS -->
                 <div class="section" id="sec-payments">
                     <div class="page-header">
                         <div class="page-header-left">
@@ -740,6 +721,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                         <div class="sms-phone">To: +254 7XX XXX XXX (<span id="previewCount">0</span> recipients)</div>
                                         <div class="sms-body" id="smsPreviewText"></div>
                                     </div>
+                                    <div class="form-hint" style="margin-bottom:8px;"><i class="fas fa-info-circle"></i> Reminders are delivered to parents' FeeFlow dashboards. SMS delivery will be switched on with the SMS integration.</div>
                                     <button class="btn btn-orange" style="width:100%;justify-content:center;margin-top:16px;" onclick="sendBulkReminders()">
                                         <i class="fas fa-paper-plane"></i> Send SMS Reminders
                                     </button>
@@ -815,6 +797,11 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 <!-- PARENT DIRECTORY (school records only) -->
                 <div class="section" id="sec-parents">
                     <div class="page-header"><div><div class="page-title">Parent Directory</div><div class="page-desc">Parents registered specifically with this school</div></div></div>
+                    <div class="card" id="pendingLinksCard" style="display:none;margin-bottom:20px;">
+                        <div class="card-header"><div class="card-title"><i class="fas fa-user-clock" style="color:var(--warning);margin-right:6px;"></i> Pending Link Requests <span id="pendingLinksCount"></span></div></div>
+                        <div class="card-body"><div class="alert alert-info" style="margin:12px 16px;"><i class="fas fa-info-circle"></i><div>Approve a request only if you recognise the parent and the child. Approved parents can see that child's fees and make payments.</div></div>
+                        <div style="overflow:auto"><table class="table"><thead><tr><th>Parent</th><th>Phone</th><th>Child</th><th>Admission No.</th><th>Class</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pendingLinksBody"></tbody></table></div></div>
+                    </div>
                     <div class="card"><div class="card-header"><div class="card-title">Registered Parents <span id="parentCount"></span></div></div><div class="card-body"><div style="overflow:auto"><table class="table"><thead><tr><th>Parent</th><th>Phone</th><th>Email</th><th>Children</th><th>Combined Balance</th><th>Registered</th></tr></thead><tbody id="parentsBody"></tbody></table></div></div></div>
                 </div>
 
@@ -823,16 +810,16 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                     <div class="page-header">
                         <div class="page-header-left">
                             <div class="page-title">Classes</div>
-                            <div class="page-desc">Class and stream management</div>
+                            <div class="page-desc">Classes appear automatically from your students</div>
                         </div>
-                        <button class="btn btn-primary" onclick="openModal('addClass')"><i class="fas fa-plus"></i> Add Class</button>
+                        
                     </div>
 
                     <div class="card">
                         <div class="card-body">
                             <div style="overflow-x:auto;">
                                 <table class="table">
-                                    <thead><tr><th>Class</th><th>Level</th><th>Streams</th><th>Students</th><th>Collection</th><th>Class Teacher</th><th>Actions</th></tr></thead>
+                                    <thead><tr><th>Class</th><th>Level</th><th>Streams</th><th>Students</th><th>Collection</th></tr></thead>
                                     <tbody id="classesBody"></tbody>
                                 </table>
                             </div>
@@ -873,6 +860,16 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                 <button class="btn btn-primary" onclick="saveSchoolInfo()"><i class="fas fa-save"></i> Save</button>
                             </div>
                         </div>
+                        <div class="card" style="margin-top:20px;">
+                            <div class="card-header"><div class="card-title">Change Password</div></div>
+                            <div class="card-body p">
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-input" id="newPasswordInput" placeholder="At least 10 characters" autocomplete="new-password"></div>
+                                    <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" class="form-input" id="newPasswordInput2" placeholder="Repeat new password" autocomplete="new-password"></div>
+                                </div>
+                                <button class="btn btn-primary" onclick="changePassword()"><i class="fas fa-lock"></i> Change Password</button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Paybill -->
@@ -882,14 +879,9 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                             <div class="card-body p">
                                 <div class="form-row">
                                     <div class="form-group"><label class="form-label">Paybill Number</label><input type="text" class="form-input" id="paybillInput" value=""></div>
-                                    <div class="form-group"><label class="form-label">Paybill Name</label><input type="text" class="form-input" value="SCHOOL"></div>
                                 </div>
-                                <div class="form-group"><label class="form-label">Account Reference Format</label>
-                                    <select class="form-input"><option selected>ADM-YYYY-NNN</option><option>STU-NNNN</option><option>CLASS-NAME-NNN</option></select>
-                                </div>
-                                <div class="form-group"><label class="form-label">STK Push API Endpoint</label><input type="url" class="form-input" id="stkEndpointInput" placeholder="https://your-server.example/api/mpesa/stk-push"><div class="form-hint">A secure server endpoint is required; API credentials must never be stored in this HTML file.</div></div>
+                                <div class="alert alert-info" style="margin-bottom:14px;"><i class="fas fa-info-circle"></i><div>Parents pay to this paybill using the student's admission number as the account number. FeeFlow's M-Pesa connection (STK Push) is set up securely by the platform, so no API keys are needed here.</div></div>
                                 <div style="display:flex;gap:8px;">
-                                    <button class="btn btn-green" onclick="testPaybill()"><i class="fas fa-plug"></i> Test Connection</button>
                                     <button class="btn btn-primary" onclick="savePaybill()"><i class="fas fa-save"></i> Save</button>
                                 </div>
                             </div>
@@ -920,7 +912,6 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                 <div class="checkbox-row"><input type="checkbox" id="notifReceipt" checked><label for="notifReceipt">Auto-generate PDF receipts</label></div>
                                 <div class="checkbox-row"><input type="checkbox" id="notifUnmatched"><label for="notifUnmatched">Admin alert for unmatched payments</label></div>
                                 <div class="form-group" style="margin-top:16px;"><label class="form-label">SMS Sender ID</label><input type="text" class="form-input" id="smsSenderInput" placeholder="Your approved SMS sender ID"></div>
-                                <div class="form-group"><label class="form-label">Email & SMS Messaging API Endpoint</label><input type="url" class="form-input" id="messagingEndpointInput" placeholder="https://your-server.example/api/messages"><div class="form-hint">Used to deliver email and SMS. Website-account notifications work locally.</div></div>
                                 <button class="btn btn-primary" onclick="saveNotifications()" style="margin-top:12px;"><i class="fas fa-save"></i> Save</button>
                             </div>
                         </div>
@@ -982,7 +973,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Reference / Receipt No.</label>
+                <label class="form-label">Reference / M-Pesa Code</label>
                 <input type="text" class="form-input" id="payRef" placeholder="Enter payment reference">
             </div>
             <div class="form-group">
@@ -992,7 +983,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="closeModal('recordPayment')">Cancel</button>
-            <button class="btn btn-green" onclick="recordPayment()"><i class="fas fa-check"></i> Record</button>
+            <button class="btn btn-green" onclick="recordPayment()" id="recordPaymentBtn"><i class="fas fa-check"></i> Record</button>
         </div>
     </div>
 </div>
@@ -1011,47 +1002,23 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                         <option>PP1</option><option>PP2</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-input" value="A" style="width:80px;"></div>
+                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-input" id="newStudentStream" value="A" maxlength="1" style="width:80px;"></div>
             </div>
+            <div class="form-group"><label class="form-label">Admission Number</label><input type="text" class="form-input" id="newStudentAdm" placeholder="Leave blank to generate automatically (e.g. ADM-2026-001)"><div class="form-hint">Parents use this number as the M-Pesa account reference.</div></div>
             <div class="form-group"><label class="form-label">Parent Name <span>*</span></label><input type="text" class="form-input" id="newStudentParent" placeholder="e.g. John Kamau"></div>
             <div class="form-group"><label class="form-label">Parent Phone (+254) <span>*</span></label><input type="tel" class="form-input" id="newStudentPhone" placeholder="7XX XXX XXX"></div>
-            <div class="form-group"><label class="form-label">Gender</label>
-                <select class="form-input"><option>Female</option><option>Male</option></select>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Gender</label>
+                    <select class="form-input" id="newStudentGender"><option>Female</option><option>Male</option></select>
+                </div>
+                <div class="form-group"><label class="form-label">Boarding</label>
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:13px;"><input type="checkbox" id="newStudentBoarding"> Boarder (pays boarding fees)</label>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="closeModal('addStudent')">Cancel</button>
-            <button class="btn btn-primary" onclick="addStudent()"><i class="fas fa-plus"></i> Add Student</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-addFeeItem">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-file-invoice-dollar" style="color:var(--primary);"></i> Add Fee Item</div>
-            <button class="modal-close" onclick="closeModal('addFeeItem')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group"><label class="form-label">Term <span>*</span></label><select class="form-input" id="newFeeTerm"></select></div>
-            <div class="form-group"><label class="form-label">Fee Item Name <span>*</span></label><input type="text" class="form-input" id="newFeeName" placeholder="e.g. Development Fee"></div>
-            <div class="form-group"><label class="form-label">Category</label>
-                <select class="form-input" id="newFeeCat"><option>Academic</option><option>Boarding</option><option>Transport</option><option>Activities</option><option>Examinations</option><option>Other</option></select>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">PP1-PP2</label><input type="number" class="form-input" id="newFeePP" placeholder="0"></div>
-                <div class="form-group"><label class="form-label">Class 1-3</label><input type="number" class="form-input" id="newFee13" placeholder="0"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Class 4-5</label><input type="number" class="form-input" id="newFee45" placeholder="0"></div>
-                <div class="form-group"><label class="form-label">Class 6-8</label><input type="number" class="form-input" id="newFee68" placeholder="0"></div>
-            </div>
-            <div class="form-group"><label class="form-label">Form 1-4</label><input type="number" class="form-input" id="newFeeF14" placeholder="0"></div>
-            <div class="checkbox-row"><input type="checkbox" id="newFeeMandatory" checked><label for="newFeeMandatory">Mandatory (charged to all students)</label></div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('addFeeItem')">Cancel</button>
-            <button class="btn btn-primary" onclick="addFeeItem()"><i class="fas fa-plus"></i> Add</button>
+            <button class="btn btn-primary" onclick="addStudent()" id="addStudentBtn"><i class="fas fa-plus"></i> Add Student</button>
         </div>
     </div>
 </div>
@@ -1067,13 +1034,13 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
             <div class="form-group"><label class="form-label">Transaction Ref <span>*</span></label><input type="text" class="form-input" id="reconRef" placeholder="e.g. R7K2MNP4QX"></div>
             <div class="form-group"><label class="form-label">Match to Student <span>*</span></label><select class="form-input" id="reconStudent"></select></div>
             <div class="form-row">
-                <div class="form-group"><label class="form-label">Amount</label><input type="number" class="form-input" id="reconAmount" placeholder="KES"></div>
-                <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Amount <span>*</span></label><input type="number" class="form-input" id="reconAmount" placeholder="KES"></div>
+                <div class="form-group"><label class="form-label">Statement Date</label><input type="date" class="form-input" id="reconDate"></div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="closeModal('manualReconcile')">Cancel</button>
-            <button class="btn btn-green" onclick="manualReconcile()"><i class="fas fa-check"></i> Reconcile</button>
+            <button class="btn btn-green" onclick="manualReconcile()" id="reconcileBtn"><i class="fas fa-check"></i> Reconcile</button>
         </div>
     </div>
 </div>
@@ -1095,27 +1062,6 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="closeModal('editTemplate')">Cancel</button>
             <button class="btn btn-primary" onclick="closeModal('editTemplate');showToast('Template saved')"><i class="fas fa-save"></i> Save</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-addClass">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-chalkboard" style="color:var(--violet);"></i> Add Class</div>
-            <button class="modal-close" onclick="closeModal('addClass')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Class Name</label><input type="text" class="form-input" placeholder="e.g. Class 4"></div>
-                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-input" value="A"></div>
-            </div>
-            <div class="form-group"><label class="form-label">Level</label><select class="form-input"><option selected>Primary</option><option>Secondary</option><option>Pre-Primary</option></select></div>
-            <div class="form-group"><label class="form-label">Class Teacher</label><input type="text" class="form-input" placeholder="e.g. John Kamau"></div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('addClass')">Cancel</button>
-            <button class="btn btn-primary" onclick="closeModal('addClass');showToast('Class added')"><i class="fas fa-plus"></i> Add</button>
         </div>
     </div>
 </div>
@@ -1144,105 +1090,208 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script src="js/config.js"></script>
+<script src="js/ff-client.js"></script>
 <script>
+'use strict';
 // ============================================================
-// AUTH CHECK
+// FeeFlow School Admin dashboard (Supabase)
+// Every school sees only its own data: the database enforces it (Row Level Security).
+// Balances always come from CONFIRMED payments; totals come from the published fee structure.
 // ============================================================
-let session = null;
+if (!window.FF) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center;">FeeFlow could not load. Check your internet connection and refresh the page.</div>';
+    throw new Error('FeeFlow client failed to load');
+}
+const sb = FF.sb;
+const esc = FF.escapeHtml;
+
+let me = null;
 let schoolId = null;
-let schoolData = {};
+let school = {};
+let allStudents = [];
+const schoolData = { students: [], payments: [], parents: [], links: [], pendingLinks: [], notifications: [], terms: [], reminderHistory: [], classes: [], published: null };
 
-function checkAuth() {
-    const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
-    session = sessions.length === 1 ? sessions.find(s => s.type === 'admin' && (Date.now() - s.timestamp) < 24 * 60 * 60 * 1000) : null;
-    if (!session) { window.location.replace('portal.html'); return; }
-    
-    schoolId = session.schoolId;
-    const currentSchool=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
-    session.name=currentSchool.name||session.name;
-    document.getElementById('mainApp').style.display = 'flex';
-    document.getElementById('userName').textContent = session.name || 'School Admin';
-    document.getElementById('userSchool').textContent = session.name || 'School Admin';
-    document.getElementById('schoolNameDisplay').innerHTML = `<i class="fas fa-school" style="margin-right:6px;"></i> ${session.name || 'School'}`;
-    document.getElementById('schoolNameDisplay').innerHTML = `<i class="fas fa-school" style="margin-right:6px;"></i> ${session.name || 'School'}`;
-    const currentSchoolData=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
-    if(document.getElementById('schoolNameInput')) document.getElementById('schoolNameInput').value=currentSchoolData.name||'';
-    if(document.getElementById('paybillInput')) document.getElementById('paybillInput').value=currentSchoolData.paybill||'';
-    if(document.getElementById('stkEndpointInput'))document.getElementById('stkEndpointInput').value=currentSchoolData.stkEndpoint||'';
-    if(document.getElementById('schoolAddressInput'))document.getElementById('schoolAddressInput').value=currentSchoolData.address||'';
-    if(document.getElementById('schoolPhoneInput'))document.getElementById('schoolPhoneInput').value=currentSchoolData.phone||'';
-    if(document.getElementById('schoolCodeInput'))document.getElementById('schoolCodeInput').value=currentSchoolData.code||currentSchoolData.id||'';
-    if(document.getElementById('messagingEndpointInput'))document.getElementById('messagingEndpointInput').value=currentSchoolData.messagingEndpoint||'';
-    if(document.getElementById('smsSenderInput'))document.getElementById('smsSenderInput').value=currentSchoolData.smsSender||'';
-    loadData();
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const val = (id) => ($(id) && $(id).value || '').trim();
+const num = (v) => Number(v || 0);
+const money = (n) => 'KES ' + num(n).toLocaleString();
+const sum = (arr, f) => arr.reduce((a, x) => a + num(f(x)), 0);
+const COLORS = ['#2b7fd4', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6', '#ef4444'];
+function colorFor(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return `linear-gradient(135deg,${COLORS[h % COLORS.length]},#1e293b)`; }
+const initialsOf = (name) => String(name || '?').split(/\s+/).filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+function fmtDate(v) { return v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
+function fmtDateTime(v) {
+    if (!v) return '—';
+    const d = new Date(v);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
-
-function logout() {
-    const sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
-    localStorage.setItem('ff_sessions', '[]');
-    window.location.href = 'portal.html';
+function timeAgo(iso) {
+    if (!iso) return 'Recently';
+    const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (sec < 60) return 'Just now';
+    if (sec < 3600) return Math.floor(sec / 60) + ' min ago';
+    if (sec < 86400) return Math.floor(sec / 3600) + ' hr ago';
+    if (sec < 172800) return 'Yesterday';
+    return fmtDate(iso);
 }
+const isToday = (iso) => !!iso && new Date(iso).toDateString() === new Date().toDateString();
+const cap = (s) => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1);
+function setBusy(btnId, busy, label) {
+    const btn = $(btnId); if (!btn) return;
+    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + esc(label); }
+    else { btn.disabled = false; if (btn.dataset.html) btn.innerHTML = btn.dataset.html; }
+}
+function dbMessage(e) {                                  // friendlier messages for the rules this page can trip
+    const msg = String((e && e.message) || '');
+    if (e && e.code === '23505' && /admission/i.test(msg + (e.details || ''))) return 'That admission number is already used by another student.';
+    if (e && e.code === '23505' && /mpesa|receipt|payments_/i.test(msg + (e.details || ''))) return 'That M-Pesa transaction code has already been recorded.';
+    if (e && e.code === '23505') return 'That record already exists.';
+    return FF.friendlyError(e);
+}
+function normalizeKePhone(raw) {
+    const d = String(raw || '').replace(/\D/g, '');
+    if (/^254[17]\d{8}$/.test(d)) return d;
+    if (/^0[17]\d{8}$/.test(d)) return '254' + d.slice(1);
+    if (/^[17]\d{8}$/.test(d)) return '254' + d;
+    return null;
+}
+const METHOD_LABEL = { mpesa_stk: 'M-Pesa', mpesa_c2b: 'M-Pesa', bank: 'Bank Transfer', cash: 'Cash', cheque: 'Cheque' };
+const METHOD_KEY = { 'M-Pesa': 'mpesa_c2b', 'Bank Transfer': 'bank', 'Cash': 'cash', 'Cheque': 'cheque' };
+const PAY_STATUS = { completed: 'reconciled', pending: 'pending', failed: 'failed', cancelled: 'failed', timeout: 'failed' };
 
 // ============================================================
-// DATA LOADING
+// AUTH + DATA LOADING
 // ============================================================
-function loadData() {
-    initSchoolData();
-    
-    // Load school-specific data
-    const allStudents = JSON.parse(localStorage.getItem('ff_students') || '[]');
-    const allPayments = JSON.parse(localStorage.getItem('ff_payments') || '[]');
-    const allReceipts = JSON.parse(localStorage.getItem('ff_receipts') || '[]');
-    const allNotifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
-    const allParents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
-    
-    // Filter to THIS school only
-    schoolData.students = allStudents.filter(s => !s.parentId || allParents.some(p => p.id === s.parentId && p.schoolId === schoolId));
-    // Actually, let's use a simpler approach - mark students with schoolId
-    schoolData.students = allStudents.filter(s => s.schoolId === schoolId);
-    
-    schoolData.payments = allPayments.filter(p => p.schoolId === schoolId);
-    
-    schoolData.receipts = allReceipts.filter(r => r.schoolId === schoolId);
-    schoolData.parents = allParents.filter(p => p.schoolId === schoolId);
-    schoolData.notifications = allNotifs.filter(n => n.schoolId === schoolId && n.audience !== 'super' && n.audience !== 'platform' && n.audience !== 'parent');
-    schoolData.feeItems = JSON.parse(localStorage.getItem('ff_feeItems_' + schoolId) || 'null') || [];
-    schoolData.classes = JSON.parse(localStorage.getItem('ff_classes_' + schoolId) || 'null') || [];
-    schoolData.terms = JSON.parse(localStorage.getItem('ff_terms_' + schoolId) || 'null') || [];
-    schoolData.reminderHistory = JSON.parse(localStorage.getItem('ff_reminderHistory_' + schoolId) || '[]');
-    
-    // Render everything
-    renderAll();
+async function checkAuth() {
+    me = await FF.requireRole('school_admin');
+    if (!me) return;                                      // sent back to the login page
+    schoolId = me.school_id;
+    $('mainApp').style.display = 'flex';
+    $('userName').textContent = me.full_name || me.email || 'School Admin';
+    await loadData();
+    subscribeRealtime();
+}
+function logout() { FF.signOut(); }
+
+async function fetchAll(make, max = 20000) {            // PostgREST returns at most 1,000 rows per request
+    const out = [];
+    for (let from = 0; from < max; from += 1000) {
+        const { data, error } = await make().range(from, from + 999);
+        if (error) throw error;
+        out.push(...(data || []));
+        if (!data || data.length < 1000) break;
+    }
+    return out;
 }
 
-function initSchoolData() {}
+function activeTerm() { return schoolData.terms.find(t => t.status === 'active') || null; }
 
-function saveSchoolData() {
-    const mergeBySchool = (key, current) => {
-        const all = JSON.parse(localStorage.getItem(key) || '[]').filter(item => item.schoolId !== schoolId);
-        localStorage.setItem(key, JSON.stringify([...all, ...current]));
+async function loadData() {
+    try {
+        const [schoolR, students, payments, parentsR, linksR, notifR, termsR, remR, feeR] = await Promise.all([
+            sb.from('schools').select('*').eq('id', schoolId).maybeSingle(),
+            fetchAll(() => sb.from('student_balances').select('*').order('full_name')),
+            fetchAll(() => sb.from('payments').select('id, student_id, parent_id, amount, method, status, mpesa_receipt, account_reference, receipt_no, note, phone, created_at, completed_at').order('created_at', { ascending: false }), 10000),
+            sb.from('parents').select('id, full_name, phone, email, created_at').order('created_at', { ascending: false }),
+            sb.from('parent_students').select('parent_id, student_id, status, created_at'),
+            sb.from('notifications').select('id, title, body, unread, created_at, type').eq('audience', 'school').order('created_at', { ascending: false }).limit(100),
+            sb.from('terms').select('*').order('start_date', { ascending: false }),
+            sb.from('reminder_history').select('*').order('created_at', { ascending: false }).limit(20),
+            sb.from('fee_structure_published').select('published_at, data').eq('school_id', schoolId).maybeSingle()
+        ]);
+        for (const r of [schoolR, parentsR, linksR, notifR, termsR, remR, feeR]) if (r.error) throw r.error;
+
+        school = schoolR.data || school;
+        schoolData.terms = termsR.data || [];
+        const deadline = (activeTerm() || {}).deadline || null;
+        allStudents = students.map(r => mapStudent(r, deadline));
+        schoolData.students = allStudents.filter(s => s.verified && s.active);
+        const byId = Object.fromEntries(allStudents.map(s => [s.id, s]));
+        schoolData.payments = payments.map(p => mapPayment(p, byId));
+        schoolData.parents = (parentsR.data || []).map(p => ({ id: p.id, name: p.full_name, phone: p.phone, email: p.email, created: p.created_at }));
+        schoolData.links = linksR.data || [];
+        const parentById = Object.fromEntries(schoolData.parents.map(p => [p.id, p]));
+        schoolData.pendingLinks = schoolData.links.filter(l => l.status === 'pending' && parentById[l.parent_id] && byId[l.student_id])
+            .map(l => ({ ...l, parent: parentById[l.parent_id], student: byId[l.student_id] }));
+        schoolData.notifications = notifR.data || [];
+        schoolData.reminderHistory = remR.data || [];
+        schoolData.published = feeR.data || null;
+        schoolData.classes = deriveClasses();
+        renderAll();
+    } catch (e) {
+        showToast(FF.friendlyError(e), 'error');
+    }
+}
+
+function mapStudent(r, deadline) {
+    const balance = num(r.balance);
+    let overdueDays = 0;
+    if (balance > 0 && deadline) overdueDays = Math.max(0, Math.floor((Date.now() - new Date(deadline + 'T23:59:59').getTime()) / 86400000));
+    const status = balance > 0 && overdueDays > 0 ? 'overdue' : (r.fee_status === 'no_fee' ? 'unpaid' : r.fee_status);
+    return {
+        id: r.id, name: r.full_name, adm: r.admission_no, class: r.class_name, gender: r.gender, boarding: !!r.boarding,
+        total: num(r.total_due), paid: num(r.paid), balance, credit: num(r.credit), noFee: r.fee_status === 'no_fee', feeStatus: r.fee_status,
+        status, overdueDays, lastPayment: r.last_payment_at ? fmtDate(r.last_payment_at) : '—',
+        parentName: r.guardian_name || '', parentPhone: r.guardian_phone ? '+' + r.guardian_phone : '—',
+        color: colorFor(r.id), initials: initialsOf(r.full_name), verified: !!r.verified, active: !!r.active
     };
-    mergeBySchool('ff_students', schoolData.students);
-    mergeBySchool('ff_payments', schoolData.payments);
-    mergeBySchool('ff_receipts', schoolData.receipts);
-    mergeBySchool('ff_notifications', schoolData.notifications);
-    localStorage.setItem('ff_feeItems_' + schoolId, JSON.stringify(schoolData.feeItems));
-    localStorage.setItem('ff_classes_' + schoolId, JSON.stringify(schoolData.classes));
-    localStorage.setItem('ff_terms_' + schoolId, JSON.stringify(schoolData.terms));
-    localStorage.setItem('ff_reminderHistory_' + schoolId, JSON.stringify(schoolData.reminderHistory));
+}
+function mapPayment(p, byId) {
+    const st = byId[p.student_id] || {};
+    return {
+        id: p.id, studentId: p.student_id, studentName: st.name || 'Unknown student', class: st.class || '—', adm: st.adm || '—',
+        amount: num(p.amount), method: METHOD_LABEL[p.method] || p.method, methodKey: p.method,
+        status: PAY_STATUS[p.status] || p.status, rawStatus: p.status,
+        ref: p.mpesa_receipt || p.account_reference || p.receipt_no || '—', receiptNo: p.receipt_no || '', mpesaReceipt: p.mpesa_receipt || '',
+        note: p.note || '', created: p.created_at, completed: p.completed_at, date: fmtDateTime(p.completed_at || p.created_at), parentId: p.parent_id
+    };
+}
+function levelOf(name) { return /^PP/i.test(name) ? 'Pre-Primary' : /^Form/i.test(name) ? 'Secondary' : 'Primary'; }
+function classOrder(name) {
+    const m = String(name).match(/^(PP|Class|Grade|Form)\s*(\d+)/i);
+    if (!m) return [9, 0, name];
+    return [{ pp: 0, class: 1, grade: 1, form: 2 }[m[1].toLowerCase()], Number(m[2]), name];
+}
+function deriveClasses() {
+    const groups = {};
+    schoolData.students.forEach(s => { const base = s.class.replace(/[A-Z]$/, '').trim() || s.class; (groups[base] = groups[base] || []).push(s); });
+    return Object.entries(groups).map(([name, list]) => {
+        const expected = sum(list, s => s.total), collected = sum(list, s => s.paid);
+        return { name, level: levelOf(name), streams: new Set(list.map(s => (s.class.match(/[A-Z]$/) || ['—'])[0])).size,
+                 students: list.length, collectionRate: expected > 0 ? Math.round(collected / expected * 100) : 0 };
+    }).sort((a, b) => { const x = classOrder(a.name), y = classOrder(b.name); return x[0] - y[0] || x[1] - y[1] || String(x[2]).localeCompare(y[2]); });
+}
+
+let reloadTimer = null;
+function subscribeRealtime() {                           // new payments / notifications appear without refreshing
+    if (!sb.channel) return;
+    const refresh = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadData, 800); };
+    try {
+        sb.channel('school-' + schoolId)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: 'school_id=eq.' + schoolId }, refresh)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: 'school_id=eq.' + schoolId }, refresh)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'parent_students' }, refresh)
+            .subscribe();
+    } catch (e) { /* live updates are optional */ }
 }
 
 // ============================================================
-// RENDER ALL
+// RENDER
 // ============================================================
 function renderAll() {
+    renderSchoolHeader();
     renderStats();
+    renderTermBanner();
     renderRecentPayments();
     renderClassPerformance();
     renderStudents();
-    renderFeeStructure();
+    renderFeeSummary();
     renderPayments();
     renderOutstanding();
+    renderMpesa();
     renderReceipts();
     renderParents();
     renderClasses();
@@ -1251,330 +1300,298 @@ function renderAll() {
     renderReminderRecipients();
     renderReports();
     populateSelects();
-    updateNotifBadge();
+    fillSettingsForm();
+    loadLedger();
+}
+
+function renderSchoolHeader() {
+    $('userSchool').textContent = school.name || 'School';
+    $('schoolNameDisplay').innerHTML = '<i class="fas fa-school" style="margin-right:6px;"></i> ' + esc(school.name || 'School');
 }
 
 function renderStats() {
-    const students = schoolData.students;
-    const totalStudents = students.length;
-    const totalPaid = students.reduce((a, s) => a + s.paid, 0);
-    const totalOutstanding = students.reduce((a, s) => a + s.balance, 0);
-    const overdueCount = students.filter(s => s.balance > 0 && s.overdueDays > 0).length;
-    const collectionRate = totalPaid + totalOutstanding > 0 ? Math.round((totalPaid / (totalPaid + totalOutstanding)) * 100) : 0;
-
-    document.getElementById('statStudents').textContent = totalStudents;
-    document.getElementById('statCollected').textContent = 'KES ' + totalPaid.toLocaleString();
-    document.getElementById('statOutstanding').textContent = 'KES ' + totalOutstanding.toLocaleString();
-    document.getElementById('statOverdue').textContent = overdueCount;
-    document.getElementById('overdueCountAlert').textContent = overdueCount;
-    document.getElementById('collectionPct').textContent = collectionRate + '%';
-    
-    // Update circular progress
-    const offset = 364.42 - (364.42 * collectionRate / 100);
-    const circle = document.getElementById('collectionCircle');
-    if (circle) circle.setAttribute('stroke-dashoffset', offset);
-
-    // Nav badges
-    document.getElementById('navStudentCount').textContent = totalStudents;
-    document.getElementById('navOverdueCount').textContent = overdueCount;
-    document.getElementById('navParentCount').textContent = schoolData.parents.length;
-
-    // Outstanding stats
-    document.getElementById('outstandingTotal').textContent = overdueCount;
-    document.getElementById('outstandingAmount').textContent = 'KES ' + totalOutstanding.toLocaleString();
-    document.getElementById('outstanding30').textContent = students.filter(s => s.overdueDays >= 30).length;
-    document.getElementById('outstandingPartial').textContent = students.filter(s => s.status === 'partial').length;
-
-    // Recon stats
-    const reconDone = schoolData.payments.filter(p => p.status === 'reconciled').length;
-    const reconPending = schoolData.payments.filter(p => p.status === 'pending').length
-    const reconFailed = schoolData.payments.filter(p => p.status === 'failed').length;
-    document.getElementById('reconDone').textContent = reconDone;
-    document.getElementById('reconPending').textContent = reconPending;
-    document.getElementById('reconFailed').textContent = reconFailed;
-
+    const S = schoolData.students;
+    const totalPaid = sum(S, s => s.paid), totalOutstanding = sum(S, s => s.balance);
+    const overdueCount = S.filter(s => s.balance > 0 && s.overdueDays > 0).length;
+    const rate = totalPaid + totalOutstanding > 0 ? Math.round(totalPaid / (totalPaid + totalOutstanding) * 100) : 0;
+    $('statStudents').textContent = S.length;
+    $('statCollected').textContent = money(totalPaid);
+    $('statOutstanding').textContent = money(totalOutstanding);
+    $('statOverdue').textContent = overdueCount;
+    $('overdueCountAlert').textContent = overdueCount;
+    $('collectionPct').textContent = rate + '%';
+    const circle = $('collectionCircle'); if (circle) circle.setAttribute('stroke-dashoffset', 364.42 - (364.42 * rate / 100));
+    $('navStudentCount').textContent = S.length;
+    $('navOverdueCount').textContent = overdueCount;
+    $('navParentCount').textContent = schoolData.parents.length;
+    $('outstandingTotal').textContent = S.filter(s => s.balance > 0).length;
+    $('outstandingAmount').textContent = money(totalOutstanding);
+    $('outstanding30').textContent = S.filter(s => s.overdueDays >= 30).length;
+    $('outstandingPartial').textContent = S.filter(s => s.status === 'partial').length;
+    const pending = schoolData.pendingLinks.length;
+    const alertBox = $('pendingAlert');
+    alertBox.style.display = pending ? 'flex' : 'none';
+    $('pendingAlertCount').textContent = pending;
 }
 
-function renderRecentPayments() {
-    const tbody = document.getElementById('recentPaymentsBody');
-    const payments = schoolData.payments.slice(0, 8);
-    tbody.innerHTML = payments.map(p => `
-        <tr>
-            <td><div class="student-cell"><div class="student-avatar" style="background:${schoolData.students.find(s=>s.id===p.studentId)?.color||'#94a3b8'};">${schoolData.students.find(s=>s.id===p.studentId)?.initials||'?'}</div><div><div class="student-name">${p.studentName}</div></div></div></td>
-            <td class="amount" style="color:${p.status==='reconciled'?'var(--emerald)':'var(--warning)'};">KES ${p.amount.toLocaleString()}</td>
-            <td><i class="fas ${p.method==='M-Pesa'?'fa-mobile-alt':'fa-university'}" style="color:${p.method==='M-Pesa'?'var(--emerald)':'var(--primary-light)'};margin-right:4px;"></i> ${p.method}</td>
-            <td><span class="badge ${p.status}"><i class="fas fa-circle"></i> ${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span></td>
-            <td style="color:var(--text-light);font-size:12px;">${p.date}</td>
-        </tr>
-    `).join('');
+function renderTermBanner() {
+    const t = activeTerm();
+    $('termInfo').textContent = t ? `${t.name} • ${fmtDate(t.start_date)} – ${fmtDate(t.end_date)}` : 'No active term. Add one under Settings → Term Dates.';
+    const title = document.querySelector('#deadlineAlert .alert-title');
+    if (title) title.textContent = t && t.deadline ? 'Fee Deadline: ' + fmtDate(t.deadline) : 'Fee Deadline: Not configured';
+}
 
-    // Populate class filter
+function payIcon(p) { const m = p.method === 'M-Pesa'; return `<i class="fas ${m ? 'fa-mobile-alt' : 'fa-university'}" style="color:${m ? 'var(--emerald)' : 'var(--primary-light)'};margin-right:4px;"></i> ${esc(p.method)}`; }
+const statusBadge = (s) => `<span class="badge ${esc(s)}"><i class="fas fa-circle"></i> ${esc(cap(s))}</span>`;
+
+function renderRecentPayments() {
+    const filter = $('recentClassFilter').value;
+    const rows = schoolData.payments.filter(p => !filter || p.class === filter).slice(0, 8);
+    $('recentPaymentsBody').innerHTML = rows.length ? rows.map(p => {
+        const st = allStudents.find(s => s.id === p.studentId) || {};
+        return `<tr>
+            <td><div class="student-cell"><div class="student-avatar" style="background:${st.color || '#94a3b8'};">${esc(st.initials || '?')}</div><div class="student-name">${esc(p.studentName)}</div></div></td>
+            <td class="amount" style="color:${p.status === 'reconciled' ? 'var(--emerald)' : 'var(--warning)'};">${money(p.amount)}</td>
+            <td>${payIcon(p)}</td>
+            <td>${statusBadge(p.status)}</td>
+            <td style="color:var(--text-light);font-size:12px;">${esc(p.date)}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light);">No payments yet.</td></tr>';
     const classes = [...new Set(schoolData.students.map(s => s.class))].sort();
-    const filter = document.getElementById('recentClassFilter');
-    filter.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option>${c}</option>`).join('');
+    $('recentClassFilter').innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option ${c === filter ? 'selected' : ''}>${esc(c)}</option>`).join('');
 }
 
 function renderClassPerformance() {
-    const container = document.getElementById('classPerformance');
-    const classes = [...new Set(schoolData.students.map(s => s.class))];
-    const performance = classes.map(cls => {
-        const clsStudents = schoolData.students.filter(s => s.class === cls);
-        const rate = clsStudents.length > 0 ? Math.round((clsStudents.reduce((a,s)=>a+s.paid,0) / clsStudents.reduce((a,s)=>a+s.total,0)) * 100) : 0;
-        return { cls, rate };
-    }).sort((a,b) => b.rate - a.rate).slice(0, 6);
-
     const colors = ['linear-gradient(90deg,#059669,#10b981)', 'linear-gradient(90deg,#3b82f6,#60a5fa)', 'linear-gradient(90deg,#f59e0b,#fbbf24)', 'linear-gradient(90deg,#ef4444,#f87171)'];
-
-    container.innerHTML = performance.map((p, i) => `
+    const perf = schoolData.classes.slice().sort((a, b) => b.collectionRate - a.collectionRate).slice(0, 6);
+    $('classPerformance').innerHTML = perf.length ? perf.map((p, i) => `
         <div>
-            <div class="progress-item-header">
-                <span class="progress-name">${p.cls}</span>
-                <span class="progress-pct" style="color:${p.rate>=80?'var(--emerald)':p.rate>=60?'var(--warning)':'var(--danger)'};">${p.rate}%</span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" style="width:${p.rate}%;background:${colors[i%colors.length]};"></div>
-            </div>
-        </div>
-    `).join('');
+            <div class="progress-item-header"><span class="progress-name">${esc(p.name)}</span>
+                <span class="progress-pct" style="color:${p.collectionRate >= 80 ? 'var(--emerald)' : p.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'};">${p.collectionRate}%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, p.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
+        </div>`).join('') : '<p style="padding:16px;color:var(--text-light);font-size:13px;">Add students to see class performance.</p>';
+}
+
+function fillClassFilters() {
+    const classes = [...new Set(schoolData.students.map(s => s.class))].sort();
+    for (const id of ['studentClassFilter', 'outstandingClassFilter']) {
+        const el = $(id); if (!el) continue;
+        const keep = el.value;
+        el.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option ${c === keep ? 'selected' : ''}>${esc(c)}</option>`).join('');
+    }
 }
 
 function renderStudents() {
-    const search = document.getElementById('studentSearch')?.value?.toLowerCase() || '';
-    const clsFilter = document.getElementById('studentClassFilter')?.value || '';
-    const statusFilter = document.getElementById('studentStatusFilter')?.value || '';
-
-    let filtered = schoolData.students;
-    if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search) || s.adm.toLowerCase().includes(search));
-    if (clsFilter) filtered = filtered.filter(s => s.class === clsFilter);
-    if (statusFilter) filtered = filtered.filter(s => s.status === statusFilter);
-
-    document.getElementById('studentTableCount').textContent = `(${filtered.length})`;
-
-    // Populate class filter
-    const allClasses = [...new Set(schoolData.students.map(s => s.class))].sort();
-    const clsSelect = document.getElementById('studentClassFilter');
-    if (clsSelect && !clsSelect.dataset.filled) {
-        clsSelect.innerHTML = '<option value="">All Classes</option>' + allClasses.map(c => `<option>${c}</option>`).join('');
-        clsSelect.dataset.filled = 'true';
-    }
-
-    const outstandingClassSelect = document.getElementById('outstandingClassFilter');
-    if (outstandingClassSelect && !outstandingClassSelect.dataset.filled) {
-        outstandingClassSelect.innerHTML = '<option value="">All Classes</option>' + allClasses.map(c => `<option>${c}</option>`).join('');
-        outstandingClassSelect.dataset.filled = 'true';
-    }
-
-    const tbody = document.getElementById('studentsBody');
-    tbody.innerHTML = filtered.map(s => `
-        <tr class="clickable-row" onclick="viewStudentProfile('${s.id}')">
-            <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${s.initials}</div><div><div class="student-name">${s.name}</div><div class="student-adm">${s.adm}</div></div></div></td>
-            <td>${s.class}</td>
-            <td class="amount">KES ${s.total.toLocaleString()}</td>
-            <td class="amount" style="color:var(--emerald);">KES ${s.paid.toLocaleString()}</td>
-            <td class="amount" style="color:${s.balance>0?'var(--danger)':'var(--emerald)'};">KES ${s.balance.toLocaleString()}</td>
-            <td><span class="badge ${s.status}"><i class="fas fa-circle"></i> ${s.status.charAt(0).toUpperCase()+s.status.slice(1)}</span></td>
+    fillClassFilters();
+    const search = val('studentSearch').toLowerCase(), cls = $('studentClassFilter').value, status = $('studentStatusFilter').value;
+    let rows = schoolData.students;
+    if (search) rows = rows.filter(s => s.name.toLowerCase().includes(search) || s.adm.toLowerCase().includes(search));
+    if (cls) rows = rows.filter(s => s.class === cls);
+    if (status === 'overdue') rows = rows.filter(s => s.balance > 0 && s.overdueDays > 0);          // past the term deadline
+    else if (status) rows = rows.filter(s => s.feeStatus === status);                                   // paid / partial / unpaid by payments made
+    $('studentTableCount').textContent = `(${rows.length})`;
+    $('studentsBody').innerHTML = rows.length ? rows.map(s => `
+        <tr class="clickable-row" onclick="viewStudentProfile('${esc(s.id)}')">
+            <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${esc(s.initials)}</div><div><div class="student-name">${esc(s.name)}</div><div class="student-adm">${esc(s.adm)}</div></div></div></td>
+            <td>${esc(s.class)}</td>
+            <td class="amount">${s.noFee ? '<span style="color:var(--text-light);font-size:12px;" title="No fee structure matches this class">Not set</span>' : money(s.total)}</td>
+            <td class="amount" style="color:var(--emerald);">${money(s.paid)}</td>
+            <td class="amount" style="color:${s.balance > 0 ? 'var(--danger)' : 'var(--emerald)'};">${money(s.balance)}</td>
+            <td>${statusBadge(s.status)}</td>
             <td onclick="event.stopPropagation()">
-                <button class="btn btn-outline btn-sm" onclick="viewStudentProfile('${s.id}')"><i class="fas fa-eye"></i></button>
-                <button class="btn btn-outline btn-sm" onclick="openRecordPaymentFor('${s.id}')"><i class="fas fa-plus"></i></button>
-            </td>
-        </tr>
-    `).join('');
+                <button class="btn btn-outline btn-sm" onclick="viewStudentProfile('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-outline btn-sm" onclick="openRecordPaymentFor('${esc(s.id)}')" aria-label="Record payment for ${esc(s.name)}"><i class="fas fa-plus"></i></button>
+            </td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No students found. Use "Add Student" to enrol the first one.</td></tr>';
 }
 
-function renderFeeStructure() {
-    const termFilter=document.getElementById('feeTermFilter')?.value||'';
-    const terms=schoolData.terms||[];
-    const termSelect=document.getElementById('feeTermFilter');if(termSelect){const current=termSelect.value;termSelect.innerHTML='<option value="">All Terms</option>'+terms.map(t=>`<option value="${t.id||t.name}">${t.name}</option>`).join('');termSelect.value=current;}
-    const modalTerm=document.getElementById('newFeeTerm');if(modalTerm)modalTerm.innerHTML='<option value="">Select term</option>'+terms.map(t=>`<option value="${t.id||t.name}">${t.name}</option>`).join('');
-    const items=termFilter?schoolData.feeItems.filter(f=>f.termId===termFilter):schoolData.feeItems;
-    document.getElementById('feeStructureBody').innerHTML=items.length?items.map(f=>{const realIndex=schoolData.feeItems.indexOf(f),term=terms.find(t=>(t.id||t.name)===f.termId);return `<tr><td>${term?.name||'Unassigned'}</td><td style="font-weight:600">${f.name}</td><td>${f.cat}</td><td class="amount">KES ${Number(f.pp||0).toLocaleString()}</td><td class="amount">KES ${Number(f.c13||0).toLocaleString()}</td><td class="amount">KES ${Number(f.c45||0).toLocaleString()}</td><td class="amount">KES ${Number(f.c68||0).toLocaleString()}</td><td class="amount">KES ${Number(f.f14||0).toLocaleString()}</td><td>${f.mandatory?'Yes':'Optional'}</td><td><button class="btn btn-outline btn-sm" onclick="editFeeItem(${realIndex})"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="deleteFeeItem(${realIndex})"><i class="fas fa-trash"></i></button></td></tr>`}).join(''):'<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-light)">No fee items configured for this term.</td></tr>';
+function renderFeeSummary() {
+    const pub = schoolData.published;
+    const unbilled = schoolData.students.filter(s => s.noFee);
+    const classes = [...new Set(unbilled.map(s => s.class))].sort();
+    let levels = 0, grades = 0;
+    if (pub && pub.data && Array.isArray(pub.data.levels)) { levels = pub.data.levels.length; grades = sum(pub.data.levels, l => (l.grades || []).length); }
+    $('feeSummary').innerHTML = `
+        <div class="alert ${pub ? 'alert-info' : 'alert-warning'}" style="margin-bottom:16px;">
+            <i class="fas ${pub ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+            <div>
+                <div class="alert-title">${pub ? 'Fee structure published' : 'No fee structure published yet'}</div>
+                <div>${pub ? `Published ${esc(fmtDate(pub.published_at))} • ${levels} level(s), ${grades} grade(s). Parents see this structure, and every student's total is calculated from it automatically.`
+                           : 'Students show no fee until you build and publish a fee structure.'}</div>
+            </div>
+        </div>
+        ${unbilled.length && pub ? `<div class="alert alert-warning" style="margin-bottom:16px;"><i class="fas fa-exclamation-triangle"></i><div>
+            <div class="alert-title">${unbilled.length} student(s) have no fee assigned</div>
+            <div>Their class name does not match a grade in the published structure: <strong>${classes.map(esc).join(', ')}</strong>. Rename the grade in the Fee Structure Manager or correct the student's class, then publish again.</div></div></div>` : ''}
+`;
 }
 
 function renderPayments() {
-    const tbody = document.getElementById('paymentsBody');
-    tbody.innerHTML = schoolData.payments.map(p => `
-        <tr class="clickable-row" onclick="viewTransaction('${p.id}')">
-            <td style="font-weight:700;font-family:'Space Grotesk',sans-serif;">${p.ref}</td>
-            <td style="font-weight:500;">${p.studentName}</td>
-            <td style="font-size:12px;color:var(--text-light);">${p.class}</td>
-            <td class="amount" style="color:${p.status==='reconciled'?'var(--emerald)':'var(--warning)'};">KES ${p.amount.toLocaleString()}</td>
-            <td><i class="fas ${p.method==='M-Pesa'?'fa-mobile-alt':'fa-university'}" style="color:${p.method==='M-Pesa'?'var(--emerald)':'var(--primary-light)'};margin-right:4px;"></i> ${p.method}</td>
-            <td><span class="badge ${p.status}"><i class="fas fa-circle"></i> ${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span></td>
-            <td style="font-size:12px;color:var(--text-light);">${p.date}</td>
-        </tr>
-    `).join('');
+    $('paymentsBody').innerHTML = schoolData.payments.length ? schoolData.payments.map(p => `
+        <tr class="clickable-row" onclick="viewTransaction('${esc(p.id)}')">
+            <td style="font-weight:700;font-family:'Space Grotesk',sans-serif;">${esc(p.ref)}</td>
+            <td style="font-weight:500;">${esc(p.studentName)}</td>
+            <td style="font-size:12px;color:var(--text-light);">${esc(p.class)}</td>
+            <td class="amount" style="color:${p.status === 'reconciled' ? 'var(--emerald)' : 'var(--warning)'};">${money(p.amount)}</td>
+            <td>${payIcon(p)}</td>
+            <td>${statusBadge(p.status)}</td>
+            <td style="font-size:12px;color:var(--text-light);">${esc(p.date)}</td></tr>`).join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No payments recorded yet.</td></tr>';
 }
 
 function renderOutstanding() {
-    const clsFilter = document.getElementById('outstandingClassFilter')?.value || '';
-    const daysFilter = parseInt(document.getElementById('outstandingDaysFilter')?.value) || 0;
+    const cls = $('outstandingClassFilter').value, days = parseInt($('outstandingDaysFilter').value) || 0;
+    let rows = schoolData.students.filter(s => s.balance > 0);
+    if (cls) rows = rows.filter(s => s.class === cls);
+    if (days > 0) rows = rows.filter(s => s.overdueDays >= days);
+    rows.sort((a, b) => b.overdueDays - a.overdueDays || b.balance - a.balance);
+    $('outstandingBody').innerHTML = rows.length ? rows.map(s => {
+        const oc = s.overdueDays >= 60 ? 'd60' : s.overdueDays >= 30 ? 'd30' : s.overdueDays >= 14 ? 'd14' : s.overdueDays >= 7 ? 'd7' : '';
+        return `<tr>
+            <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${esc(s.initials)}</div><div><div class="student-name">${esc(s.name)}</div><div class="student-adm">${esc(s.adm)}</div></div></div></td>
+            <td>${esc(s.class)}</td>
+            <td class="amount" style="color:var(--danger);font-weight:700;">${money(s.balance)}</td>
+            <td style="color:var(--text-light);font-size:12px;">${esc(s.lastPayment)}</td>
+            <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${oc}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--text-light);">—</span>'}</td>
+            <td style="font-size:12px;">${esc(s.parentPhone)}</td>
+            <td><button class="btn btn-outline btn-sm" onclick="sendReminder('${esc(s.id)}')" aria-label="Send reminder"><i class="fas fa-paper-plane"></i></button>
+                <button class="btn btn-outline btn-sm" onclick="viewStudentLedger('${esc(s.id)}')" aria-label="View ledger"><i class="fas fa-eye"></i></button></td></tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No outstanding balances. 🎉</td></tr>';
+}
 
-    let filtered = schoolData.students.filter(s => s.balance > 0);
-    if (clsFilter) filtered = filtered.filter(s => s.class === clsFilter);
-    if (daysFilter > 0) filtered = filtered.filter(s => s.overdueDays >= daysFilter);
-
-    filtered.sort((a, b) => b.overdueDays - a.overdueDays);
-
-    const tbody = document.getElementById('outstandingBody');
-    tbody.innerHTML = filtered.map(s => {
-        const overdueClass = s.overdueDays >= 60 ? 'd60' : s.overdueDays >= 30 ? 'd30' : s.overdueDays >= 14 ? 'd14' : s.overdueDays >= 7 ? 'd7' : '';
-        return `
-            <tr>
-                <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${s.initials}</div><div><div class="student-name">${s.name}</div><div class="student-adm">${s.adm}</div></div></div></td>
-                <td>${s.class}</td>
-                <td class="amount" style="color:var(--danger);font-weight:700;">KES ${s.balance.toLocaleString()}</td>
-                <td style="color:var(--text-light);font-size:12px;">${s.lastPayment}</td>
-                <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${overdueClass}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--text-light);">—</span>'}</td>
-                <td style="font-size:12px;">${s.parentPhone}</td>
-                <td>
-                    <button class="btn btn-outline btn-sm" onclick="sendReminder('${s.id}')"><i class="fas fa-paper-plane"></i></button>
-                    <button class="btn btn-outline btn-sm" onclick="viewStudentLedger('${s.id}')"><i class="fas fa-eye"></i></button>
-                </td>
-            </tr>
-        `;
-    }).join('');
+function renderMpesa() {
+    const mp = schoolData.payments.filter(p => p.methodKey === 'mpesa_stk' || p.methodKey === 'mpesa_c2b');
+    $('reconDone').textContent = mp.filter(p => p.rawStatus === 'completed' && isToday(p.completed)).length;
+    $('reconPending').textContent = mp.filter(p => p.rawStatus === 'pending').length;
+    $('reconFailed').textContent = mp.filter(p => ['failed', 'cancelled', 'timeout'].includes(p.rawStatus)).length;
+    $('unmatchedList').innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No unmatched transactions. Payments made through FeeFlow are matched to students automatically. Use "Manual Match" for a payment you find on your paybill statement.</p>';
+    $('reconLog').innerHTML = mp.slice(0, 10).map(p => `
+        <div style="display:flex;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+            <div><strong>${esc(p.ref)}</strong><div style="font-size:12px;color:var(--text-light);">${esc(p.studentName)} • ${esc(p.date)}</div></div>
+            <div style="text-align:right;"><div style="font-weight:700;">${money(p.amount)}</div>${statusBadge(p.status)}</div></div>`).join('')
+        || '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No M-Pesa activity yet.</p>';
 }
 
 function renderReceipts() {
-    const grid = document.getElementById('receiptsGrid');
-    grid.innerHTML = schoolData.payments.filter(p => p.status === 'reconciled').slice(0, 6).map(p => `
+    const rows = schoolData.payments.filter(p => p.status === 'reconciled').slice(0, 6);
+    $('receiptsGrid').innerHTML = rows.length ? rows.map(p => `
         <div class="receipt-card">
-            <div class="receipt-header">
-                <div style="font-weight:700;font-size:13px;">Receipt #${p.ref}</div>
-                <span class="badge paid"><i class="fas fa-circle"></i> Confirmed</span>
-            </div>
+            <div class="receipt-header"><div style="font-weight:700;font-size:13px;">Receipt #${esc(p.receiptNo || p.ref)}</div>
+                <span class="badge paid"><i class="fas fa-circle"></i> Confirmed</span></div>
             <div class="receipt-body">
-                <div class="receipt-logo">
-                    <div class="receipt-logo-name">${(JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)?.name) || session?.name || 'School'}</div>
-                    <div class="receipt-logo-addr">P.O. Box 12345, Nairobi • 0712 345 678</div>
-                </div>
-                <div class="receipt-row"><span class="receipt-label">Student</span><span class="receipt-value">${p.studentName}</span></div>
-                <div class="receipt-row"><span class="receipt-label">Class</span><span class="receipt-value">${p.class}</span></div>
-                <div class="receipt-row"><span class="receipt-label">Method</span><span class="receipt-value">${p.method} (${p.ref})</span></div>
-                <div class="receipt-row"><span class="receipt-label">Date</span><span class="receipt-value">${p.date}</span></div>
-                <div class="receipt-row total"><span class="receipt-label">Amount</span><span class="receipt-value" style="color:var(--emerald);">KES ${p.amount.toLocaleString()}</span></div>
-                <div style="text-align:center;margin-top:12px;">
-                    <button class="btn btn-outline btn-sm" onclick="downloadReceipt('${p.id}')"><i class="fas fa-file-pdf"></i> PDF</button>
-                </div>
-            </div>
-        </div>
-    `).join('');
+                <div class="receipt-logo"><div class="receipt-logo-name">${esc(school.name || 'School')}</div>
+                    <div class="receipt-logo-addr">${esc([school.address, school.phone].filter(Boolean).join(' • ') || 'Address not set')}</div></div>
+                <div class="receipt-row"><span class="receipt-label">Student</span><span class="receipt-value">${esc(p.studentName)}</span></div>
+                <div class="receipt-row"><span class="receipt-label">Class</span><span class="receipt-value">${esc(p.class)}</span></div>
+                <div class="receipt-row"><span class="receipt-label">Method</span><span class="receipt-value">${esc(p.method)}${p.ref !== '—' ? ' (' + esc(p.ref) + ')' : ''}</span></div>
+                <div class="receipt-row"><span class="receipt-label">Date</span><span class="receipt-value">${esc(p.date)}</span></div>
+                <div class="receipt-row total"><span class="receipt-label">Amount</span><span class="receipt-value" style="color:var(--emerald);">${money(p.amount)}</span></div>
+                <div style="text-align:center;margin-top:12px;"><button class="btn btn-outline btn-sm" onclick="printReceipt('${esc(p.id)}')"><i class="fas fa-print"></i> Print / PDF</button></div>
+            </div></div>`).join('')
+        : '<p style="padding:30px;color:var(--text-light);">Receipts appear here once payments are confirmed.</p>';
 }
 
-
 function renderParents() {
-    const tbody=document.getElementById('parentsBody');
-    document.getElementById('parentCount').textContent='('+schoolData.parents.length+')';
-    tbody.innerHTML=schoolData.parents.length?schoolData.parents.map(p=>{
-        const kids=schoolData.students.filter(s=>s.parentId===p.id);
-        const balance=kids.reduce((a,c)=>a+Number(c.balance||0),0);
-        return `<tr><td style="font-weight:600">${p.name}</td><td>+254 ${p.phone||''}</td><td>${p.email||'—'}</td><td>${kids.map(k=>k.name).join(', ')||'None linked'}</td><td class="amount" style="color:${balance?'var(--danger)':'var(--emerald)'}">KES ${balance.toLocaleString()}</td><td>${p.createdAt?new Date(p.createdAt).toLocaleDateString():'—'}</td></tr>`;
-    }).join(''):'<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light)">No parents registered for this school yet.</td></tr>';
+    const { parents, links, pendingLinks } = schoolData;
+    $('parentCount').textContent = '(' + parents.length + ')';
+    const activeKids = (pid) => links.filter(l => l.parent_id === pid && l.status === 'active').map(l => allStudents.find(s => s.id === l.student_id)).filter(Boolean);
+    $('parentsBody').innerHTML = parents.length ? parents.map(p => {
+        const kids = activeKids(p.id), balance = sum(kids, k => k.balance);
+        return `<tr><td style="font-weight:600">${esc(p.name)}</td><td>+${esc(p.phone)}</td><td>${esc(p.email || '—')}</td>
+            <td>${kids.map(k => esc(k.name)).join(', ') || 'None linked'}</td>
+            <td class="amount" style="color:${balance ? 'var(--danger)' : 'var(--emerald)'}">${money(balance)}</td>
+            <td style="color:var(--text-light);font-size:12px;">${esc(fmtDate(p.created))}</td></tr>`;
+    }).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light)">No parents registered for this school yet.</td></tr>';
+
+    $('pendingLinksCard').style.display = pendingLinks.length ? 'block' : 'none';
+    $('pendingLinksCount').textContent = '(' + pendingLinks.length + ')';
+    $('pendingLinksBody').innerHTML = pendingLinks.map(l => `
+        <tr><td style="font-weight:600">${esc(l.parent.name)}</td><td>+${esc(l.parent.phone)}</td>
+            <td>${esc(l.student.name)}</td><td>${esc(l.student.adm)}</td><td>${esc(l.student.class)}</td>
+            <td style="color:var(--text-light);font-size:12px;">${esc(timeAgo(l.created_at))}</td>
+            <td><button class="btn btn-green btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',true)"><i class="fas fa-check"></i> Approve</button>
+                <button class="btn btn-outline btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',false)"><i class="fas fa-times"></i> Reject</button></td></tr>`).join('');
+}
+
+async function resolveLink(parentId, studentId, approve) {
+    const l = schoolData.pendingLinks.find(x => x.parent_id === parentId && x.student_id === studentId);
+    if (!approve && !confirm('Reject this request? The parent will not see this child.')) return;
+    const { error } = await sb.from('parent_students').update({ status: approve ? 'active' : 'rejected' }).eq('parent_id', parentId).eq('student_id', studentId);
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast(approve ? `${l ? l.student.name : 'Child'} is now linked to ${l ? l.parent.name : 'the parent'}` : 'Request rejected', approve ? 'success' : 'info');
+    await loadData();
 }
 
 function renderClasses() {
-    const tbody = document.getElementById('classesBody');
-    tbody.innerHTML = schoolData.classes.map(c => `
-        <tr>
-            <td style="font-weight:600;">${c.name}</td>
-            <td>${c.level}</td>
-            <td>${c.streams}</td>
-            <td>${c.students}</td>
-            <td><span style="font-weight:700;color:${c.collectionRate>=80?'var(--emerald)':c.collectionRate>=60?'var(--warning)':'var(--danger)'};">${c.collectionRate}%</span></td>
-            <td>${c.teacher}</td>
-            <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
-        </tr>
-    `).join('');
+    $('classesBody').innerHTML = schoolData.classes.length ? schoolData.classes.map(c => `
+        <tr><td style="font-weight:600;">${esc(c.name)}</td><td>${esc(c.level)}</td><td>${c.streams}</td><td>${c.students}</td>
+            <td><span style="font-weight:700;color:${c.collectionRate >= 80 ? 'var(--emerald)' : c.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'};">${c.collectionRate}%</span></td></tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">Classes appear automatically as you add students.</td></tr>';
 }
 
 function renderTerms() {
-    const tbody = document.getElementById('termsBody');
-    tbody.innerHTML = schoolData.terms.map(t => `
-        <tr>
-            <td style="font-weight:600;">${t.name}</td>
-            <td>${new Date(t.start).toLocaleDateString()}</td>
-            <td>${new Date(t.end).toLocaleDateString()}</td>
-            <td style="color:${t.status==='active'?'var(--danger)':'var(--text-light)'};font-weight:${t.status==='active'?'700':''};">${new Date(t.deadline).toLocaleDateString()}</td>
-            <td><span class="badge ${t.status==='active'?'paid':'pending'}"><i class="fas fa-circle"></i> ${t.status.charAt(0).toUpperCase()+t.status.slice(1)}</span></td>
-            <td><button class="btn btn-outline btn-sm" onclick="setActiveTerm('${t.id||t.name}')"><i class="fas fa-check"></i> Active</button> <button class="btn btn-outline btn-sm" onclick="deleteTerm('${t.id||t.name}')"><i class="fas fa-trash"></i></button></td>
-        </tr>
-    `).join('');
+    $('termsBody').innerHTML = schoolData.terms.length ? schoolData.terms.map(t => `
+        <tr><td style="font-weight:600;">${esc(t.name)}</td><td>${esc(fmtDate(t.start_date))}</td><td>${esc(fmtDate(t.end_date))}</td>
+            <td style="color:${t.status === 'active' ? 'var(--danger)' : 'var(--text-light)'};font-weight:${t.status === 'active' ? '700' : ''};">${esc(fmtDate(t.deadline))}</td>
+            <td><span class="badge ${t.status === 'active' ? 'paid' : 'pending'}"><i class="fas fa-circle"></i> ${esc(cap(t.status))}</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="setActiveTerm('${esc(t.id)}')"><i class="fas fa-check"></i> Active</button>
+                <button class="btn btn-outline btn-sm" onclick="deleteTerm('${esc(t.id)}')" aria-label="Delete term"><i class="fas fa-trash"></i></button></td></tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">No terms yet. Add a term to set the fee deadline used for overdue tracking.</td></tr>';
 }
 
-function setActiveTerm(id){schoolData.terms.forEach(t=>t.status=((t.id||t.name)===id?'active':'upcoming'));saveSchoolData();renderTerms();showToast('Active term updated','success')}
-function deleteTerm(id){if(schoolData.feeItems.some(f=>f.termId===id)){showToast('Delete this term’s fee items first','error');return}if(!confirm('Delete this term?'))return;schoolData.terms=schoolData.terms.filter(t=>(t.id||t.name)!==id);saveSchoolData();renderTerms();renderFeeStructure()}
-
 function renderNotifications() {
-    const container = document.getElementById('notifList');
-    const notifs = schoolData.notifications;
-    container.innerHTML = notifs.length === 0 ? '<p style="padding:30px;text-align:center;color:var(--text-light);">No notifications</p>' : notifs.map(n => `
-        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markNotifRead(${n.id})">
-            <div class="notif-title">${n.title}</div>
-            <div class="notif-body">${n.body}</div>
-            <div class="notif-time">${n.time || 'Recently'}</div>
-        </div>
-    `).join('');
+    const n = schoolData.notifications;
+    $('notifDot').style.display = n.some(x => x.unread) ? 'block' : 'none';
+    $('notifList').innerHTML = n.length ? n.map(x => `
+        <div class="notif-item ${x.unread ? 'unread' : ''}" onclick="markNotifRead(${Number(x.id)})">
+            <div class="notif-title">${esc(x.title)}</div><div class="notif-body">${esc(x.body)}</div>
+            <div class="notif-time">${esc(timeAgo(x.created_at))}</div></div>`).join('')
+        : '<p style="padding:30px;text-align:center;color:var(--text-light);">No notifications</p>';
 }
 
 function renderReminderRecipients() {
-    const container = document.getElementById('reminderRecipients');
-    const overdue = schoolData.students.filter(s => s.balance > 0);
-    
-    document.getElementById('reminderCount').textContent = overdue.length;
-    document.getElementById('reminderCost').textContent = 'KES ' + (overdue.length * 0.4).toFixed(2);
-    document.getElementById('selectedCount').textContent = overdue.length;
-    document.getElementById('selectedCost').textContent = 'KES ' + (overdue.length * 0.4).toFixed(2);
-    document.getElementById('previewCount').textContent = overdue.length;
-    
-    container.innerHTML = overdue.map(s => `
-        <div class="checkbox-row">
-            <input type="checkbox" class="reminder-check" data-id="${s.id}" checked>
-            <label style="flex:1;"><strong>${s.name}</strong> <span style="color:var(--text-light);font-size:12px;">(${s.class})</span></label>
-            <span style="font-weight:700;color:var(--danger);font-size:12px;">KES ${s.balance.toLocaleString()}</span>
-        </div>
-    `).join('');
-
+    const owing = schoolData.students.filter(s => s.balance > 0);
+    $('reminderCount').textContent = owing.length;
+    $('reminderCost').textContent = 'KES 0.00';
+    $('selectedCount').textContent = owing.length;
+    $('selectedCost').textContent = 'KES 0.00';
+    $('previewCount').textContent = owing.length;
+    $('reminderRecipients').innerHTML = owing.map(s => `
+        <div class="checkbox-row"><input type="checkbox" class="reminder-check" data-id="${esc(s.id)}" onchange="updateReminderCounts()" checked>
+            <label style="flex:1;"><strong>${esc(s.name)}</strong> <span style="color:var(--text-light);font-size:12px;">(${esc(s.class)})</span></label>
+            <span style="font-weight:700;color:var(--danger);font-size:12px;">${money(s.balance)}</span></div>`).join('')
+        || '<p style="padding:16px;color:var(--text-light);font-size:13px;">Nobody owes fees right now.</p>';
     updateSmsPreview();
-
-    // Reminder history
-    const history = document.getElementById('reminderHistory');
-    const reminders = schoolData.reminderHistory || [];
-    history.innerHTML = reminders.length === 0 ? '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No reminders sent yet.</p>' : reminders.map(r => `
+    $('reminderHistory').innerHTML = schoolData.reminderHistory.length ? schoolData.reminderHistory.map(r => `
         <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
-            <div style="font-weight:600;font-size:13px;">${r.count} SMS sent</div>
-            <div style="font-size:12px;color:var(--text-light);margin-top:2px;">${r.date}</div>
-        </div>
-    `).join('');
+            <div style="font-weight:600;font-size:13px;">${r.recipient_count} parent(s) notified</div>
+            <div style="font-size:12px;color:var(--text-light);margin-top:2px;">${esc(fmtDateTime(r.created_at))}</div></div>`).join('')
+        : '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No reminders sent yet.</p>';
 }
 
 function renderReports() {
-    const totalPaid = schoolData.students.reduce((a, s) => a + s.paid, 0);
-    const totalPartial = schoolData.students.filter(s=>s.status==='partial').reduce((a,s)=>a+Number(s.paid||0),0)
-    const totalOutstanding = schoolData.students.reduce((a, s) => a + s.balance, 0);
+    const S = schoolData.students;
+    $('reportCollected').textContent = money(sum(S, s => s.paid));
+    $('reportPartial').textContent = money(sum(S.filter(s => s.status === 'partial'), s => s.paid));
+    $('reportOutstanding').textContent = money(sum(S, s => s.balance));
+    const done = schoolData.payments.filter(p => p.rawStatus === 'completed'), total = sum(done, p => p.amount);
+    const share = (pred) => total > 0 ? Math.round(sum(done.filter(pred), p => p.amount) / total * 100) : 0;
+    const mp = share(p => p.method === 'M-Pesa'), bank = share(p => p.method === 'Bank Transfer'), cash = share(p => p.method === 'Cash' || p.method === 'Cheque');
+    [['reportMpesa', mp], ['reportBank', bank], ['reportCash', cash]].forEach(([id, v]) => { $(id).textContent = v + '%'; $(id + 'Bar').style.width = v + '%'; });
+    $('reportClassBody').innerHTML = schoolData.classes.map(c => {
+        const list = S.filter(s => s.class.replace(/[A-Z]$/, '').trim() === c.name);
+        const expected = sum(list, s => s.total), collected = sum(list, s => s.paid), rate = expected > 0 ? Math.round(collected / expected * 100) : 0;
+        return `<tr><td style="font-weight:600;">${esc(c.name)}</td><td>${list.length}</td><td class="amount">${money(expected)}</td>
+            <td class="amount" style="color:var(--emerald);">${money(collected)}</td><td class="amount" style="color:var(--danger);">${money(Math.max(0, expected - collected))}</td>
+            <td><span class="badge ${rate >= 80 ? 'paid' : rate >= 60 ? 'partial' : 'unpaid'}"><i class="fas fa-circle"></i> ${rate}%</span></td></tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">No data yet.</td></tr>';
+}
 
-    document.getElementById('reportCollected').textContent = 'KES ' + totalPaid.toLocaleString();
-    document.getElementById('reportPartial').textContent = 'KES ' + totalPartial.toLocaleString();
-    document.getElementById('reportOutstanding').textContent = 'KES ' + totalOutstanding.toLocaleString();
-
-    // Class breakdown
-    const classes = [...new Set(schoolData.students.map(s => s.class))];
-    const tbody = document.getElementById('reportClassBody');
-    tbody.innerHTML = schoolData.classes.map(c => {
-        const clsStudents = schoolData.students.filter(s => s.class.startsWith(c.name));
-        const expected = clsStudents.reduce((a, s) => a + s.total, 0);
-        const collected = clsStudents.reduce((a, s) => a + s.paid, 0);
-        const rate = expected > 0 ? Math.round((collected / expected) * 100) : 0;
-        return `
-            <tr>
-                <td style="font-weight:600;">${c.name}</td>
-                <td>${clsStudents.length || c.students}</td>
-                <td class="amount">KES ${expected.toLocaleString()}</td>
-                <td class="amount" style="color:var(--emerald);">KES ${collected.toLocaleString()}</td>
-                <td class="amount" style="color:var(--danger);">KES ${(expected - collected).toLocaleString()}</td>
-                <td><span class="badge ${rate>=80?'paid':rate>=60?'partial':'unpaid'}"><i class="fas fa-circle"></i> ${rate}%</span></td>
-            </tr>
-        `;
-    }).join('');
+function populateSelects() {
+    const S = schoolData.students;
+    const keepLedger = $('ledgerStudentSelect').value;
+    $('ledgerStudentSelect').innerHTML = '<option value="">Select Student...</option>' + S.map(s => `<option value="${esc(s.id)}" ${s.id === keepLedger ? 'selected' : ''}>${esc(s.name)} (${esc(s.adm)})</option>`).join('');
+    const keepPay = $('payStudentSelect').value;
+    $('payStudentSelect').innerHTML = S.map(s => `<option value="${esc(s.id)}" ${s.id === keepPay ? 'selected' : ''}>${esc(s.name)} — ${esc(s.class)} (Bal: ${money(s.balance)})</option>`).join('');
+    $('reconStudent').innerHTML = '<option value="">Select Student...</option>' + S.map(s => `<option value="${esc(s.id)}">${esc(s.name)} — ${esc(s.adm)}</option>`).join('');
 }
 
 // ============================================================
@@ -1584,328 +1601,373 @@ function navigate(section, el) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
-    document.getElementById('sec-' + section).classList.add('active');
-    document.getElementById('breadcrumb').textContent = section.charAt(0).toUpperCase() + section.slice(1);
-
-    if (section === 'notifications') renderNotifications();
+    $('sec-' + section).classList.add('active');
+    $('breadcrumb').textContent = cap(section);
 }
-
-function showSection(section) { navigate(section, null); }
-
+function showSection(section) { navigate(section, document.querySelector(`[data-section=${section}]`)); }
 function switchSettingsTab(tab, btn) {
     document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    document.getElementById('settings-' + tab).classList.add('active');
+    $('settings-' + tab).classList.add('active');
 }
 
 // ============================================================
-// LEDGER
+// LEDGER / DETAILS / RECEIPTS
 // ============================================================
-function populateSelects() {
-    // Ledger student select
-    const ledgerSelect = document.getElementById('ledgerStudentSelect');
-    if (ledgerSelect) {
-        ledgerSelect.innerHTML = '<option value="">Select Student...</option>' + schoolData.students.map(s => `<option value="${s.id}">${s.name} (${s.adm})</option>`).join('');
-    }
-
-    // Record payment student select
-    const paySelect = document.getElementById('payStudentSelect');
-    if (paySelect) {
-        paySelect.innerHTML = schoolData.students.map(s => `<option value="${s.id}">${s.name} — ${s.class} (Bal: KES ${s.balance.toLocaleString()})</option>`).join('');
-    }
-
-    // Reconcile student select
-    const reconSelect = document.getElementById('reconStudent');
-    if (reconSelect) {
-        reconSelect.innerHTML = '<option value="">Select Student...</option>' + schoolData.students.map(s => `<option value="${s.id}">${s.name} — ${s.adm}</option>`).join('');
-    }
-}
-
-function viewStudentLedger(studentId) {
-    navigate('ledger', document.querySelector('[data-section=ledger]'));
-    document.getElementById('ledgerStudentSelect').value = studentId;
-    loadLedger();
-}
-
+function viewStudentLedger(id) { navigate('ledger', document.querySelector('[data-section=ledger]')); $('ledgerStudentSelect').value = id; loadLedger(); }
 function loadLedger() {
-    const studentId = document.getElementById('ledgerStudentSelect').value;
-    if (!studentId) {
-        document.getElementById('ledgerPlaceholder').style.display = 'block';
-        document.getElementById('ledgerContent').style.display = 'none';
-        return;
-    }
-
-    const student = schoolData.students.find(s => s.id === studentId);
+    const id = $('ledgerStudentSelect').value;
+    const student = schoolData.students.find(s => s.id === id);
+    $('ledgerPlaceholder').style.display = student ? 'none' : 'block';
+    $('ledgerContent').style.display = student ? 'block' : 'none';
     if (!student) return;
-
-    document.getElementById('ledgerPlaceholder').style.display = 'none';
-    document.getElementById('ledgerContent').style.display = 'block';
-
-    document.getElementById('ledgerStats').innerHTML = `
-        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div><div class="stat-value">KES ${student.paid.toLocaleString()}</div><div class="stat-label">Total Paid</div></div>
-        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-arrow-up"></i></div><div class="stat-value">KES ${student.balance.toLocaleString()}</div><div class="stat-label">Balance Due</div></div>
-        <div class="stat-card blue"><div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div><div class="stat-value">KES ${student.total.toLocaleString()}</div><div class="stat-label">Total Billed</div></div>
-    `;
-    const studentPayments=schoolData.payments.filter(p=>p.studentId===studentId);
-    let running=Number(student.total||0);
-    const rows=[{date:'—',desc:'Current fee charges',debit:Number(student.total||0),credit:0,balance:running,ref:'FEES'}];
-    studentPayments.slice().reverse().forEach(p=>{running=Math.max(0,running-Number(p.amount||0));rows.push({date:p.date,desc:p.method+' payment',debit:0,credit:Number(p.amount||0),balance:running,ref:p.ref,creditRow:true});});
-
-    document.getElementById('ledgerRows').innerHTML = rows.map(r => `
-        <div class="ledger ${r.creditRow ? 'credit-row' : ''}">
-            <div class="ledger-date">${r.date}</div>
-            <div class="ledger-desc">${r.desc}</div>
-            <div class="ledger-debit">${r.debit > 0 ? 'KES ' + r.debit.toLocaleString() : '—'}</div>
-            <div class="ledger-credit">${r.credit > 0 ? 'KES ' + r.credit.toLocaleString() : '—'}</div>
-            <div class="ledger-balance">KES ${r.balance.toLocaleString()}</div>
-            <div style="font-size:11px;color:var(--text-light);">${r.ref}</div>
-        </div>
-    `).join('');
+    $('ledgerStats').innerHTML = `
+        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div><div class="stat-value">${money(student.paid)}</div><div class="stat-label">Total Paid</div></div>
+        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-arrow-up"></i></div><div class="stat-value">${money(student.balance)}</div><div class="stat-label">Balance Due</div></div>
+        <div class="stat-card blue"><div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div><div class="stat-value">${money(student.total)}</div><div class="stat-label">Total Billed</div></div>`;
+    let running = student.total;
+    const rows = [{ date: '—', desc: 'Current fee charges', debit: student.total, credit: 0, balance: running, ref: 'FEES' }];
+    schoolData.payments.filter(p => p.studentId === id && p.rawStatus === 'completed').slice().reverse().forEach(p => {
+        running = Math.max(0, running - p.amount);
+        rows.push({ date: p.date, desc: p.method + ' payment', debit: 0, credit: p.amount, balance: running, ref: p.ref, creditRow: true });
+    });
+    $('ledgerRows').innerHTML = rows.map(r => `
+        <div class="ledger ${r.creditRow ? 'credit-row' : ''}"><div class="ledger-date">${esc(r.date)}</div><div class="ledger-desc">${esc(r.desc)}</div>
+            <div class="ledger-debit">${r.debit > 0 ? money(r.debit) : '—'}</div><div class="ledger-credit">${r.credit > 0 ? money(r.credit) : '—'}</div>
+            <div class="ledger-balance">${money(r.balance)}</div><div style="font-size:11px;color:var(--text-light);">${esc(r.ref)}</div></div>`).join('');
 }
+function printLedger() { window.print(); }
 
-function printLedger() { showToast('Print dialog opened (Ctrl+P)'); }
+function ensureDetailModal() {
+    if ($('modal-details')) return;
+    document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay" id="modal-details"><div class="modal-box" style="max-width:720px"><div class="modal-header"><div class="modal-title" id="detailTitle">Details</div><button class="modal-close" onclick="closeModal('details')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detailBody"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('details')">Close</button></div></div></div>`);
+    $('modal-details').addEventListener('click', e => { if (e.target.id === 'modal-details') closeModal('details'); });
+}
+const detailBox = (label, value, style) => `<div class="detail-box"><div class="detail-label">${esc(label)}</div><div class="detail-value" ${style ? `style="${style}"` : ''}>${value}</div></div>`;
+
+function viewTransaction(id) {
+    const p = schoolData.payments.find(x => x.id === id); if (!p) return;
+    ensureDetailModal();
+    $('detailTitle').innerHTML = '<i class="fas fa-receipt"></i> Transaction ' + esc(p.ref);
+    $('detailBody').innerHTML = `<div class="detail-grid">
+        ${detailBox('Student', esc(p.studentName))}${detailBox('Admission / Class', esc(p.adm) + ' • ' + esc(p.class))}
+        ${detailBox('Reference / M-Pesa code', esc(p.ref))}
+        ${detailBox('Amount', money(p.amount), 'color:var(--emerald)')}${detailBox('Method', esc(p.method))}
+        ${detailBox('Status', esc(cap(p.status)))}${detailBox('Date', esc(p.date))}
+        ${detailBox('Receipt No.', esc(p.receiptNo || '—'))}${detailBox('Note', esc(p.note || '—'))}</div>
+        <div style="margin-top:16px"><button class="btn btn-primary" onclick="printReceipt('${esc(p.id)}')"><i class="fas fa-print"></i> Print Receipt</button>
+        <button class="btn btn-outline" onclick="closeModal('details');viewStudentProfile('${esc(p.studentId)}')"><i class="fas fa-user"></i> Student Profile</button></div>`;
+    openModal('details');
+}
+function viewStudentProfile(id) {
+    const st = allStudents.find(s => s.id === id); if (!st) return;
+    const tx = schoolData.payments.filter(p => p.studentId === id);
+    const parentNames = schoolData.links.filter(l => l.student_id === id && l.status === 'active').map(l => (schoolData.parents.find(p => p.id === l.parent_id) || {}).name).filter(Boolean);
+    ensureDetailModal();
+    $('detailTitle').innerHTML = '<i class="fas fa-user-graduate"></i> ' + esc(st.name);
+    $('detailBody').innerHTML = `<div class="detail-grid">
+        ${detailBox('Admission', esc(st.adm))}${detailBox('Class', esc(st.class) + (st.boarding ? ' (boarder)' : ''))}
+        ${detailBox('Total billed', st.noFee ? 'Not set' : money(st.total))}${detailBox('Balance', money(st.balance), 'color:var(--danger)')}
+        ${detailBox('Guardian', esc(st.parentName || '—') + '<br>' + esc(st.parentPhone))}${detailBox('Status', esc(cap(st.status)))}
+        ${detailBox('Linked parent accounts', esc(parentNames.join(', ') || 'None yet'))}</div>
+        <h4 style="margin:20px 0 10px">Payment Transactions</h4>
+        <div style="overflow:auto"><table class="table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>
+        ${tx.length ? tx.map(p => `<tr class="clickable-row" onclick="viewTransaction('${esc(p.id)}')"><td>${esc(p.ref)}</td><td class="amount">${money(p.amount)}</td><td>${esc(p.method)}</td><td>${esc(p.date)}</td></tr>`).join('') : '<tr><td colspan="4">No payments yet.</td></tr>'}
+        </tbody></table></div>
+        <div style="margin-top:14px;"><button class="btn btn-outline" onclick="closeModal('details');viewStudentLedger('${esc(st.id)}')"><i class="fas fa-book"></i> View Ledger</button>
+        <button class="btn btn-green" onclick="closeModal('details');openRecordPaymentFor('${esc(st.id)}')"><i class="fas fa-plus"></i> Record Payment</button></div>`;
+    openModal('details');
+}
+function printReceipt(id) {
+    const p = schoolData.payments.find(x => x.id === id); if (!p) return;
+    const w = window.open('', '_blank', 'width=650,height=750'); if (!w) return showToast('Allow pop-ups to print the receipt', 'warning');
+    w.document.write(`<title>Receipt ${esc(p.receiptNo || p.ref)}</title><div style="font-family:Arial;padding:40px;max-width:560px;margin:auto">
+        <h1 style="margin:0">${esc(school.name || 'School')}</h1><div style="color:#64748b;font-size:13px">${esc([school.address, school.phone].filter(Boolean).join(' • '))}</div>
+        <h2>Payment Receipt</h2><hr>
+        <p><b>Receipt No:</b> ${esc(p.receiptNo || '—')}</p><p><b>Reference:</b> ${esc(p.ref)}</p>
+        <p><b>Student:</b> ${esc(p.studentName)} (${esc(p.adm)}, ${esc(p.class)})</p>
+        <p><b>Amount:</b> ${money(p.amount)}</p><p><b>Method:</b> ${esc(p.method)}</p><p><b>Date:</b> ${esc(p.date)}</p><hr>
+        <p style="color:#64748b;font-size:12px">Payment confirmed by FeeFlow.</p></div>`);
+    w.document.close(); w.print();
+}
+function downloadReceipt(id) { printReceipt(id); }
 
 // ============================================================
-// ACTIONS
+// ACTIONS: students, payments, reconciliation
 // ============================================================
+function openModal(id) { $('modal-' + id).classList.add('open'); }
+function closeModal(id) { $('modal-' + id).classList.remove('open'); }
+function openRecordPaymentFor(id) { openModal('recordPayment'); $('payStudentSelect').value = id; }
 
-function ensureDetailModal(){
- if(document.getElementById('modal-details'))return;
- document.body.insertAdjacentHTML('beforeend',`<div class="modal-overlay" id="modal-details"><div class="modal-box" style="max-width:720px"><div class="modal-header"><div class="modal-title" id="detailTitle">Details</div><button class="modal-close" onclick="closeModal('details')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detailBody"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('details')">Close</button></div></div></div>`);
+function nextAdmission() {
+    const prefix = `ADM-${new Date().getFullYear()}-`;
+    let max = 0;
+    allStudents.forEach(s => { if (s.adm.startsWith(prefix)) max = Math.max(max, parseInt(s.adm.slice(prefix.length), 10) || 0); });
+    return prefix + String(max + 1).padStart(3, '0');
 }
-function viewTransaction(id){
- const p=schoolData.payments.find(x=>x.id===id); if(!p)return; const st=schoolData.students.find(s=>s.id===p.studentId);
- ensureDetailModal(); document.getElementById('detailTitle').innerHTML='<i class="fas fa-receipt"></i> Transaction '+p.ref;
- document.getElementById('detailBody').innerHTML=`<div class="detail-grid"><div class="detail-box"><div class="detail-label">Student</div><div class="detail-value">${p.studentName}</div></div><div class="detail-box"><div class="detail-label">Admission / Class</div><div class="detail-value">${st?.adm||'—'} • ${p.class||'—'}</div></div><div class="detail-box"><div class="detail-label">Amount</div><div class="detail-value" style="color:var(--emerald)">KES ${Number(p.amount).toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Method</div><div class="detail-value">${p.method}</div></div><div class="detail-box"><div class="detail-label">Status</div><div class="detail-value">${p.status}</div></div><div class="detail-box"><div class="detail-label">Date</div><div class="detail-value">${p.date}</div></div></div><div style="margin-top:16px"><button class="btn btn-primary" onclick="printReceipt('${p.id}')"><i class="fas fa-print"></i> Print Receipt</button> <button class="btn btn-outline" onclick="closeModal('details');viewStudentProfile('${p.studentId}')"><i class="fas fa-user"></i> Student Profile</button></div>`;
- openModal('details');
+
+async function addStudent() {
+    const name = val('newStudentName'), cls = val('newStudentClass'), stream = val('newStudentStream').toUpperCase().slice(0, 1);
+    const parent = val('newStudentParent'), phoneRaw = val('newStudentPhone');
+    if (name.length < 2 || !cls || !parent || !phoneRaw) return showToast('Please fill all required fields', 'error');
+    const phone = normalizeKePhone(phoneRaw);
+    if (!phone) return showToast('Enter a valid Kenyan phone number, e.g. 712 345 678', 'error');
+    const adm = val('newStudentAdm') || nextAdmission();
+    setBusy('addStudentBtn', true, 'Adding…');
+    try {
+        const { error } = await sb.from('students').insert({
+            school_id: schoolId, admission_no: adm, full_name: name, class_name: cls + (/^[A-Z]$/.test(stream) ? stream : ''),
+            gender: val('newStudentGender') || null, boarding: !!($('newStudentBoarding') && $('newStudentBoarding').checked),
+            guardian_name: parent, guardian_phone: phone
+        });
+        if (error) throw error;
+        closeModal('addStudent');
+        ['newStudentName', 'newStudentAdm', 'newStudentParent', 'newStudentPhone'].forEach(id => { $(id).value = ''; });
+        showToast(`${name} added (admission no. ${adm})`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+    finally { setBusy('addStudentBtn', false); }
 }
-function viewStudentProfile(id){
- const st=schoolData.students.find(s=>s.id===id);if(!st)return;const tx=schoolData.payments.filter(p=>p.studentId===id);
- ensureDetailModal();document.getElementById('detailTitle').innerHTML='<i class="fas fa-user-graduate"></i> '+st.name;
- document.getElementById('detailBody').innerHTML=`<div class="detail-grid"><div class="detail-box"><div class="detail-label">Admission</div><div class="detail-value">${st.adm}</div></div><div class="detail-box"><div class="detail-label">Class</div><div class="detail-value">${st.class}</div></div><div class="detail-box"><div class="detail-label">Total billed</div><div class="detail-value">KES ${st.total.toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Balance</div><div class="detail-value" style="color:var(--danger)">KES ${st.balance.toLocaleString()}</div></div><div class="detail-box"><div class="detail-label">Parent phone</div><div class="detail-value">${st.parentPhone||'—'}</div></div><div class="detail-box"><div class="detail-label">Status</div><div class="detail-value">${st.status}</div></div></div><h4 style="margin:20px 0 10px">Payment Transactions</h4><div style="overflow:auto"><table class="table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>${tx.length?tx.map(p=>`<tr class="clickable-row" onclick="viewTransaction('${p.id}')"><td>${p.ref}</td><td class="amount">KES ${p.amount.toLocaleString()}</td><td>${p.method}</td><td>${p.date}</td></tr>`).join(''):'<tr><td colspan="4">No payments yet.</td></tr>'}</tbody></table></div><button class="btn btn-outline" onclick="closeModal('details');viewStudentLedger('${st.id}')"><i class="fas fa-book"></i> Open Full Ledger</button>`;
- openModal('details');
-}
-function printReceipt(id){const p=schoolData.payments.find(x=>x.id===id);if(!p)return;const receiptSchool=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId);const w=window.open('','_blank','width=650,height=750');w.document.write(`<title>Receipt ${p.ref}</title><div style="font-family:Arial;padding:40px"><h1>${receiptSchool?.name||session?.name||'School'}</h1><h2>Payment Receipt</h2><hr><p><b>Receipt:</b> ${p.ref}</p><p><b>Student:</b> ${p.studentName}</p><p><b>Amount:</b> KES ${p.amount.toLocaleString()}</p><p><b>Method:</b> ${p.method}</p><p><b>Date:</b> ${p.date}</p><hr><p>Payment confirmed by FeeFlow.</p></div>`);w.document.close();w.print()}
-function setTheme(mode){localStorage.setItem('ff_theme',mode);const dark=mode==='dark'||(mode==='system'&&matchMedia('(prefers-color-scheme:dark)').matches);document.body.classList.toggle('dark',dark)}
-function savePreferences(){localStorage.setItem('ff_compact',document.getElementById('compactTables')?.checked?'1':'0');showToast('Preferences saved','success')}
 
-
-function recordPayment() {
-    const studentId = document.getElementById('payStudentSelect').value;
-    const amount = parseInt(document.getElementById('payAmount').value);
-    const method = document.getElementById('payMethod').value;
-    const ref = document.getElementById('payRef').value || 'REF-' + Date.now();
-
-    if (!studentId || !amount) { showToast('Please fill required fields', 'error'); return; }
-
+async function recordPayment() {
+    const studentId = $('payStudentSelect').value, amount = Number(val('payAmount')), methodLabel = $('payMethod').value;
+    const method = METHOD_KEY[methodLabel], ref = val('payRef'), notes = val('payNotes');
     const student = schoolData.students.find(s => s.id === studentId);
-    if (!student) return;
-
-    // Update student
-    student.paid += amount;
-    student.balance = Math.max(0, student.total - student.paid);
-    student.status = student.balance === 0 ? 'paid' : 'partial';
-
-    // Add payment record
-    const payment = {
-        id: 'p_' + Date.now(), ref, studentName: student.name, studentId: student.id,
-        class: student.class, amount, method, status: 'reconciled',
-        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ', ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-        schoolId
-    };
-    schoolData.payments.unshift(payment);
-
-    // Add notification
-    const linkedParent = schoolData.parents.find(p => p.id === student.parentId);
-    schoolData.notifications.unshift({
-        id: Date.now(), audience:'school', schoolId, parentId: linkedParent?.id || null, studentId: student.id,
-        type: 'payment', title: 'Payment Recorded — Receipt Ready',
-        body: `KES ${amount.toLocaleString()} paid by ${student.name} via ${method} (${ref})`,
-        time: 'Just now', unread: true
-    });
-
-    saveSchoolData();
-    closeModal('recordPayment');
-    renderAll();
-    showToast('Payment of KES ' + amount.toLocaleString() + ' recorded for ' + student.name, 'success');
+    if (!student) return showToast('Select a student', 'error');
+    if (!(amount > 0) || amount > 10000000) return showToast('Enter a valid amount', 'error');
+    if (!method) return showToast('Choose a payment method', 'error');
+    if (method === 'mpesa_c2b' && !ref) return showToast('Enter the M-Pesa transaction code', 'error');
+    if (amount > student.balance && !confirm(`This is ${money(amount - student.balance)} more than ${student.name}'s balance. Record it anyway?`)) return;
+    const row = { school_id: schoolId, student_id: studentId, amount, method, status: 'completed', recorded_by: me.id, note: notes || null };
+    if (method === 'mpesa_c2b') row.mpesa_receipt = ref; else if (ref) row.account_reference = ref;
+    setBusy('recordPaymentBtn', true, 'Recording…');
+    try {
+        const { error } = await sb.from('payments').insert(row);
+        if (error) throw error;
+        closeModal('recordPayment');
+        ['payAmount', 'payRef', 'payNotes'].forEach(id => { $(id).value = ''; });
+        showToast(`Payment of ${money(amount)} recorded for ${student.name}`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+    finally { setBusy('recordPaymentBtn', false); }
 }
 
-function openRecordPaymentFor(studentId) {
-    openModal('recordPayment');
-    setTimeout(() => {
-        document.getElementById('payStudentSelect').value = studentId;
-    }, 100);
+async function manualReconcile() {
+    const ref = val('reconRef'), studentId = $('reconStudent').value, amount = Number(val('reconAmount')), date = val('reconDate');
+    if (!ref || !studentId) return showToast('Enter the transaction code and choose a student', 'error');
+    if (!(amount > 0)) return showToast('Enter the amount from the statement', 'error');
+    setBusy('reconcileBtn', true, 'Matching…');
+    try {
+        const { error } = await sb.from('payments').insert({
+            school_id: schoolId, student_id: studentId, amount, method: 'mpesa_c2b', status: 'completed', recorded_by: me.id,
+            mpesa_receipt: ref, note: 'Manual match' + (date ? ` (statement date ${date})` : '')
+        });
+        if (error) throw error;
+        closeModal('manualReconcile');
+        ['reconRef', 'reconAmount', 'reconDate'].forEach(id => { $(id).value = ''; });
+        showToast(`Transaction ${ref.toUpperCase()} matched`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+    finally { setBusy('reconcileBtn', false); }
 }
+function autoReconcile() { showToast('Automatic matching starts with the M-Pesa integration. Until then, use Manual Match for payments on your paybill statement.', 'info'); }
 
-function addStudent() {
-    const name = document.getElementById('newStudentName').value;
-    const cls = document.getElementById('newStudentClass').value;
-    const parent = document.getElementById('newStudentParent').value;
-    const phone = document.getElementById('newStudentPhone').value;
-
-    if (!name || !cls || !parent || !phone) { showToast('Please fill required fields', 'error'); return; }
-
-    const colors = ['#2b7fd4','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#14b8a6','#ef4444'];
-    const color = colors[schoolData.students.length % colors.length];
-
-    const student = {
-        id: 's_' + Date.now(), name, class: cls + 'A',
-        adm: 'ADM-' + new Date().getFullYear() + '-' + String(schoolData.students.length + 1).padStart(3, '0'),
-        total: 0, paid: 0, balance: 0, status: 'paid',
-        parentPhone: '+254 ' + phone, overdueDays: 0, lastPayment: '—',
-        color: `linear-gradient(135deg,${color},#1e293b)`, initials: name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
-        schoolId
-    };
-
-    schoolData.students.push(student);
-    saveSchoolData();
-    closeModal('addStudent');
-    renderAll();
-    showToast(name + ' added successfully!', 'success');
-}
-
-let editingFeeIndex=null;
-function addFeeItem(){const name=document.getElementById('newFeeName').value.trim(),termId=document.getElementById('newFeeTerm').value;if(!name||!termId){showToast('Select a term and enter the fee name','error');return}const item={termId,name,cat:document.getElementById('newFeeCat').value,pp:Number(document.getElementById('newFeePP').value||0),c13:Number(document.getElementById('newFee13').value||0),c45:Number(document.getElementById('newFee45').value||0),c68:Number(document.getElementById('newFee68').value||0),f14:Number(document.getElementById('newFeeF14').value||0),mandatory:document.getElementById('newFeeMandatory').checked};if(editingFeeIndex===null)schoolData.feeItems.push(item);else schoolData.feeItems[editingFeeIndex]=item;editingFeeIndex=null;saveSchoolData();closeModal('addFeeItem');renderFeeStructure();showToast('Fee structure saved','success')}
-function editFeeItem(i){const f=schoolData.feeItems[i];if(!f)return;editingFeeIndex=i;openModal('addFeeItem');setTimeout(()=>{document.getElementById('newFeeTerm').value=f.termId||'';document.getElementById('newFeeName').value=f.name;document.getElementById('newFeeCat').value=f.cat;document.getElementById('newFeePP').value=f.pp||0;document.getElementById('newFee13').value=f.c13||0;document.getElementById('newFee45').value=f.c45||0;document.getElementById('newFee68').value=f.c68||0;document.getElementById('newFeeF14').value=f.f14||0;document.getElementById('newFeeMandatory').checked=!!f.mandatory},0)}
-function deleteFeeItem(i){if(!confirm('Delete this fee item?'))return;schoolData.feeItems.splice(i,1);saveSchoolData();renderFeeStructure()}
-function addTerm(){const name=document.getElementById('newTermName').value.trim(),start=document.getElementById('newTermStart').value,end=document.getElementById('newTermEnd').value,deadline=document.getElementById('newTermDeadline').value;if(!name||!start||!end){showToast('Complete the term name and dates','error');return}schoolData.terms.push({id:'term_'+Date.now(),name,start,end,deadline,status:'upcoming'});saveSchoolData();closeModal('addTerm');renderTerms();renderFeeStructure();showToast('Term added','success')}
-
-function manualReconcile() {
-    const ref = document.getElementById('reconRef').value;
-    const studentId = document.getElementById('reconStudent').value;
-    if (!ref || !studentId) { showToast('Fill required fields', 'error'); return; }
-
-    const student = schoolData.students.find(s => s.id === studentId);
-    const amount = parseInt(document.getElementById('reconAmount').value) || 0;
-
-    schoolData.payments.unshift({
-        id: 'p_' + Date.now(), ref, studentName: student?.name, studentId,
-        class: student?.class, amount, method: 'M-Pesa', status: 'reconciled',
-        date: new Date().toLocaleDateString() + ', Manual Match',
-        schoolId
-    });
-
-    if (student && amount > 0) {
-        student.paid += amount;
-        student.balance = Math.max(0, student.total - student.paid);
-        student.status = student.balance === 0 ? 'paid' : 'partial';
-    }
-
-    schoolData.notifications.unshift({
-        id: Date.now(), audience:'school', schoolId, type: 'payment', title: 'Manual Reconciliation',
-        body: `Transaction ${ref} matched to ${student?.name || 'student'}`,
-        time: 'Just now', unread: true
-    });
-
-    saveSchoolData();
-    closeModal('manualReconcile');
-    renderAll();
-    showToast('Transaction ' + ref + ' reconciled successfully', 'success');
-}
-
-function autoReconcile() {
-    showToast('Running auto-reconciliation...', 'info');
-    setTimeout(() => {
-        showToast('All matched transactions reconciled', 'success');
-        document.getElementById('reconPending').textContent = '0';
-    }, 2000);
-}
-
-function toggleAllReminders() {
-    const checked = document.getElementById('selectAllReminders').checked;
-    document.querySelectorAll('.reminder-check').forEach(cb => cb.checked = checked);
-    updateReminderCounts();
-}
-
+// ============================================================
+// REMINDERS (delivered to parents' FeeFlow dashboards; SMS comes with the SMS integration)
+// ============================================================
+function toggleAllReminders() { const on = $('selectAllReminders').checked; document.querySelectorAll('.reminder-check').forEach(cb => { cb.checked = on; }); updateReminderCounts(); }
 function updateReminderCounts() {
-    const checked = document.querySelectorAll('.reminder-check:checked').length;
-    document.getElementById('selectedCount').textContent = checked;
-    document.getElementById('selectedCost').textContent = 'KES ' + (checked * 0.4).toFixed(2);
-    document.getElementById('previewCount').textContent = checked;
+    const n = document.querySelectorAll('.reminder-check:checked').length;
+    $('selectedCount').textContent = n; $('previewCount').textContent = n; $('selectedCost').textContent = 'KES 0.00';
 }
-
 function updateSmsPreview() {
-    const school=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};
-    const sample=schoolData.students.find(s=>s.balance>0);
-    const templates={deadline:`${school.name||'School'}: Fee reminder for {{STUDENT}}. Balance: KES {{BALANCE}}. Paybill: ${school.paybill||'not configured'}, Account: {{REF}}.`,overdue:`${school.name||'School'}: {{STUDENT}} has an outstanding balance of KES {{BALANCE}}. Please contact the school if you need assistance.`,welcome:`${school.name||'School'}: Fee information is now available in FeeFlow.`,custom:`${school.name||'School'}: School fee notification.`};
-    const tpl=templates[document.getElementById('smsTemplate')?.value]||templates.deadline;
-    document.getElementById('smsPreviewText').textContent=tpl.replaceAll('{{STUDENT}}',sample?.name||'Student').replaceAll('{{BALANCE}}',Number(sample?.balance||0).toLocaleString()).replaceAll('{{REF}}',sample?.adm||'admission number');
+    const sample = schoolData.students.find(s => s.balance > 0);
+    const nm = school.name || 'School';
+    const templates = {
+        deadline: `${nm}: Fee reminder for {{STUDENT}}. Balance: KES {{BALANCE}}. Paybill: ${school.paybill || 'not configured'}, Account: {{REF}}.`,
+        overdue: `${nm}: {{STUDENT}} has an outstanding balance of KES {{BALANCE}}. Please contact the school if you need assistance.`,
+        welcome: `${nm}: Fee information is now available in FeeFlow.`, custom: `${nm}: School fee notification.` };
+    const tpl = templates[$('smsTemplate').value] || templates.deadline;
+    $('smsPreviewText').textContent = tpl.replaceAll('{{STUDENT}}', sample ? sample.name : 'Student').replaceAll('{{BALANCE}}', num(sample && sample.balance).toLocaleString()).replaceAll('{{REF}}', sample ? sample.adm : 'admission number');
 }
-
-async function sendBulkReminders(){const ids=[...document.querySelectorAll('.reminder-check:checked')].map(x=>x.dataset.id),students=schoolData.students.filter(s=>ids.includes(s.id)&&Number(s.balance)>0);if(!students.length){showToast('No recipients selected','error');return}const school=JSON.parse(localStorage.getItem('ff_schools')||'[]').find(s=>s.id===schoolId)||{};const parentMessages=new Map();students.forEach(st=>{const parent=schoolData.parents.find(p=>p.id===st.parentId);if(!parent)return;const existing=parentMessages.get(parent.id)||{parent,children:[],balance:0};existing.children.push(st.name);existing.balance+=Number(st.balance||0);parentMessages.set(parent.id,existing)});if(!parentMessages.size){showToast('Selected students are not linked to registered parents','error');return}const allNotifs=JSON.parse(localStorage.getItem('ff_notifications')||'[]');const outbound=[];parentMessages.forEach(({parent,children,balance})=>{const body=`${school.name||'School'}: Remaining fee balance for ${children.join(', ')} is KES ${balance.toLocaleString()}.`;allNotifs.unshift({id:Date.now()+Math.random(),audience:'parent',schoolId,parentId:parent.id,type:'fee-reminder',title:'Fee Balance Reminder',body,time:'Just now',unread:true});outbound.push({parentId:parent.id,name:parent.name,email:parent.email,phone:parent.phone,subject:'Fee Balance Reminder',message:body})});localStorage.setItem('ff_notifications',JSON.stringify(allNotifs));let external='Website notifications delivered.';if(school.messagingEndpoint){try{const response=await fetch(school.messagingEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({schoolId,schoolName:school.name,senderId:school.smsSender,channels:['email','sms'],recipients:outbound})});if(!response.ok)throw new Error('Messaging service rejected the request');external=' Website, email and SMS delivery requested.'}catch(e){external=' Website notifications delivered; email/SMS failed: '+e.message}}else external=' Website notifications delivered. Configure the messaging endpoint for email and SMS.';schoolData.notifications=allNotifs.filter(n=>n.schoolId===schoolId&&n.audience!=='super'&&n.audience!=='platform'&&n.audience!=='parent');schoolData.reminderHistory.unshift({count:parentMessages.size,date:new Date().toLocaleString()});localStorage.setItem('ff_reminderHistory_'+schoolId,JSON.stringify(schoolData.reminderHistory));renderReminderRecipients();showToast(parentMessages.size+' parents notified. '+external,'success')}
-
-function sendReminder(studentId) {
-    const student = schoolData.students.find(s => s.id === studentId);
-    if (!student) return;
-    showToast('Reminder sent to parent of ' + student.name, 'success');
+function reminderRows(students) {
+    const byParent = new Map();
+    students.forEach(st => {
+        schoolData.links.filter(l => l.student_id === st.id && l.status === 'active').forEach(l => {
+            const e = byParent.get(l.parent_id) || { names: [], balance: 0 };
+            e.names.push(st.name); e.balance += st.balance; byParent.set(l.parent_id, e);
+        });
+    });
+    return [...byParent.entries()].map(([parentId, e]) => ({
+        audience: 'parent', school_id: schoolId, parent_id: parentId, type: 'fee-reminder', title: 'Fee Balance Reminder',
+        body: `${school.name || 'School'}: Remaining fee balance for ${e.names.join(', ')} is KES ${e.balance.toLocaleString()}.` }));
 }
-
-function downloadReceipt(paymentId) {
-    showToast('PDF receipt downloaded!', 'success');
+async function sendBulkReminders() {
+    const ids = [...document.querySelectorAll('.reminder-check:checked')].map(x => x.dataset.id);
+    const students = schoolData.students.filter(s => ids.includes(s.id) && s.balance > 0);
+    if (!students.length) return showToast('No recipients selected', 'error');
+    const rows = reminderRows(students);
+    if (!rows.length) return showToast('None of the selected students are linked to a registered parent yet', 'error');
+    try {
+        const n = await sb.from('notifications').insert(rows); if (n.error) throw n.error;
+        const h = await sb.from('reminder_history').insert({ school_id: schoolId, sent_by: me.id, recipient_count: rows.length, channels: ['website'] }); if (h.error) throw h.error;
+        showToast(`Reminder sent to ${rows.length} parent(s)`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
 }
-
-function markNotifRead(id) {
-    const n = schoolData.notifications.find(x => x.id === id);
-    if (n) n.unread = false;
-    saveSchoolData();
-    renderNotifications();
-    updateNotifBadge();
+async function sendReminder(studentId) {
+    const st = schoolData.students.find(s => s.id === studentId); if (!st) return;
+    const rows = reminderRows([st]);
+    if (!rows.length) return showToast(`${st.name} is not linked to a registered parent yet`, 'warning');
+    const { error } = await sb.from('notifications').insert(rows);
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast('Reminder sent to the parent of ' + st.name, 'success');
 }
-
-function markAllRead() {
-    schoolData.notifications.forEach(n => n.unread = false);
-    saveSchoolData();
-    renderNotifications();
-    updateNotifBadge();
-    showToast('All marked as read');
-}
-
-function updateNotifBadge() {
-    const unread = schoolData.notifications.filter(n => n.unread).length;
-    document.getElementById('notifDot').style.display = unread > 0 ? 'block' : 'none';
-}
-
-// Settings
-function saveSchoolInfo() { const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]'),school=schools.find(s=>s.id===schoolId);if(school){school.name=document.getElementById('schoolNameInput').value.trim();school.address=document.getElementById('schoolAddressInput').value.trim();school.phone=document.getElementById('schoolPhoneInput').value.trim();localStorage.setItem('ff_schools',JSON.stringify(schools));session.name=school.name;} saveSchoolData(); showToast('School info saved','success'); }
-function savePaybill() { const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]'),school=schools.find(s=>s.id===schoolId);if(school){school.paybill=document.getElementById('paybillInput').value.trim();school.stkEndpoint=document.getElementById('stkEndpointInput').value.trim();localStorage.setItem('ff_schools',JSON.stringify(schools));} saveSchoolData();showToast('Paybill settings saved','success'); }
-function testPaybill() { showToast('Testing M-Pesa connection...', 'info'); setTimeout(() => showToast('Connection successful!', 'success'), 1500); }
-function saveNotifications(){const schools=JSON.parse(localStorage.getItem('ff_schools')||'[]'),school=schools.find(s=>s.id===schoolId);if(school){school.messagingEndpoint=document.getElementById('messagingEndpointInput').value.trim();school.smsSender=document.getElementById('smsSenderInput').value.trim();localStorage.setItem('ff_schools',JSON.stringify(schools));}saveSchoolData();showToast('Notification settings saved','success')}
-
-// Export functions
-function exportDashboard() { showToast('Dashboard exported as PDF', 'info'); }
-function exportPayments() { showToast('Payments exported to CSV', 'info'); }
-function exportOutstanding() { showToast('Outstanding report exported', 'info'); }
-function exportReceipts() { showToast('Receipts exported as PDF', 'info'); }
 
 // ============================================================
-// MODALS
+// NOTIFICATIONS
 // ============================================================
-function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
-function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
+async function markNotifRead(id) {
+    const n = schoolData.notifications.find(x => x.id === id); if (!n || !n.unread) return;
+    const { error } = await sb.from('notifications').update({ unread: false }).eq('id', id);
+    if (error) return showToast(dbMessage(error), 'error');
+    n.unread = false; renderNotifications();
+}
+async function markAllRead() {
+    const { error } = await sb.from('notifications').update({ unread: false }).eq('audience', 'school').eq('unread', true);
+    if (error) return showToast(dbMessage(error), 'error');
+    schoolData.notifications.forEach(n => { n.unread = false; }); renderNotifications(); showToast('All marked as read');
+}
 
 // ============================================================
-// TOAST
+// TERMS
+// ============================================================
+async function addTerm() {
+    const name = val('newTermName'), start = val('newTermStart'), end = val('newTermEnd'), deadline = val('newTermDeadline');
+    if (!name || !start || !end) return showToast('Complete the term name and dates', 'error');
+    if (end < start) return showToast('The term cannot end before it starts', 'error');
+    const { error } = await sb.from('terms').insert({ school_id: schoolId, name, start_date: start, end_date: end, deadline: deadline || null, status: 'upcoming' });
+    if (error) return showToast(dbMessage(error), 'error');
+    closeModal('addTerm'); ['newTermName', 'newTermStart', 'newTermEnd', 'newTermDeadline'].forEach(id => { $(id).value = ''; });
+    showToast('Term added', 'success'); await loadData();
+}
+async function setActiveTerm(id) {
+    const { error } = await sb.rpc('set_active_term', { p_term: id });
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast('Active term updated. Overdue days now follow its deadline.', 'success'); await loadData();
+}
+async function deleteTerm(id) {
+    if (!confirm('Delete this term?')) return;
+    const { error } = await sb.from('terms').delete().eq('id', id);
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast('Term deleted', 'success'); await loadData();
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function fillSettingsForm() {
+    const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v == null ? '' : v; };
+    set('schoolNameInput', school.name); set('schoolCodeInput', school.id); set('schoolAddressInput', school.address);
+    set('schoolPhoneInput', school.phone); set('paybillInput', school.paybill); set('smsSenderInput', school.sms_sender);
+    const n = (school.settings && school.settings.notify) || {};
+    [['notifPayReceived', true], ['notifDeadline', true], ['notifOverdue', true], ['notifReceipt', true], ['notifUnmatched', false]].forEach(([id, def]) => {
+        const el = $(id); if (el && document.activeElement !== el) el.checked = n[id] === undefined ? def : !!n[id];
+    });
+}
+async function saveSchoolRow(changes, okMessage) {
+    const { error } = await sb.from('schools').update(changes).eq('id', schoolId);
+    if (error) return showToast(dbMessage(error), 'error');
+    Object.assign(school, changes); renderSchoolHeader(); showToast(okMessage, 'success');
+}
+async function saveSchoolInfo() {
+    const name = val('schoolNameInput');
+    if (name.length < 2) return showToast('Enter the school name', 'error');
+    await saveSchoolRow({ name, address: val('schoolAddressInput') || null, phone: val('schoolPhoneInput') || null }, 'School info saved');
+}
+async function savePaybill() {
+    const paybill = val('paybillInput');
+    if (paybill && !/^[0-9]{5,7}$/.test(paybill)) return showToast('Paybill must be 5 to 7 digits', 'error');
+    await saveSchoolRow({ paybill: paybill || null }, 'Paybill saved');
+}
+async function saveNotifications() {
+    const sender = val('smsSenderInput');
+    if (sender && !/^[A-Za-z0-9 ]{1,11}$/.test(sender)) return showToast('SMS sender ID: up to 11 letters or numbers', 'error');
+    const notify = {}; ['notifPayReceived', 'notifDeadline', 'notifOverdue', 'notifReceipt', 'notifUnmatched'].forEach(id => { notify[id] = $(id).checked; });
+    await saveSchoolRow({ sms_sender: sender || null, settings: { ...(school.settings || {}), notify } }, 'Notification settings saved');
+}
+async function changePassword() {
+    const pw = $('newPasswordInput').value, pw2 = $('newPasswordInput2').value;
+    if (pw.length < 10) return showToast('Use at least 10 characters', 'error');
+    if (pw !== pw2) return showToast('The two passwords do not match', 'error');
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) return showToast(FF.friendlyError(error), 'error');
+    $('newPasswordInput').value = ''; $('newPasswordInput2').value = '';
+    showToast('Password changed', 'success');
+}
+function setTheme(mode) { try { localStorage.setItem('ff_theme', mode); } catch (e) { /* ignore */ } const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme:dark)').matches); document.body.classList.toggle('dark', dark); }
+function savePreferences() { try { localStorage.setItem('ff_compact', $('compactTables') && $('compactTables').checked ? '1' : '0'); } catch (e) { /* ignore */ } showToast('Preferences saved', 'success'); }
+
+// ============================================================
+// EXPORTS (real CSV downloads)
+// ============================================================
+function csvCell(v) {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;             // stop spreadsheet formula injection
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function downloadCsv(filename, header, rows) {
+    const text = [header, ...rows].map(r => r.map(csvCell).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function exportPayments() {
+    downloadCsv('payments.csv', ['Receipt No', 'Reference', 'Student', 'Admission', 'Class', 'Amount (KES)', 'Method', 'Status', 'Date'],
+        schoolData.payments.map(p => [p.receiptNo, p.ref, p.studentName, p.adm, p.class, p.amount, p.method, p.status, p.date]));
+    showToast('Payments exported', 'success');
+}
+function exportOutstanding() {
+    downloadCsv('outstanding-balances.csv', ['Student', 'Admission', 'Class', 'Balance (KES)', 'Overdue days', 'Guardian', 'Phone'],
+        schoolData.students.filter(s => s.balance > 0).map(s => [s.name, s.adm, s.class, s.balance, s.overdueDays, s.parentName, s.parentPhone]));
+    showToast('Outstanding balances exported', 'success');
+}
+function exportReceipts() {
+    downloadCsv('receipts.csv', ['Receipt No', 'Student', 'Class', 'Amount (KES)', 'Method', 'Reference', 'Date'],
+        schoolData.payments.filter(p => p.status === 'reconciled').map(p => [p.receiptNo, p.studentName, p.class, p.amount, p.method, p.ref, p.date]));
+    showToast('Receipts exported', 'success');
+}
+function exportDashboard() { window.print(); }
+
+// ============================================================
+// TOAST (text is never interpreted as HTML)
 // ============================================================
 function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
+    const container = $('toastContainer');
     const toast = document.createElement('div');
     toast.className = 'toast ' + type;
     const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
     const colors = { info: 'var(--info)', success: 'var(--emerald)', error: 'var(--danger)', warning: 'var(--warning)' };
-    toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:16px;"></i> ${message}`;
+    const icon = document.createElement('i');
+    icon.className = 'fas ' + (icons[type] || icons.info);
+    icon.style.cssText = 'color:' + (colors[type] || colors.info) + ';font-size:16px;';
+    toast.appendChild(icon);
+    toast.appendChild(document.createTextNode(' ' + message));
     container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, type === 'error' ? 6000 : 3500);
 }
 
 // ============================================================
 // INIT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => { setTheme(localStorage.getItem('ff_theme') || 'light'); checkAuth(); setTimeout(()=>{const t=document.getElementById('themeSelect');if(t)t.value=localStorage.getItem('ff_theme')||'light'},0); });
-
-document.querySelectorAll('.modal-overlay').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+document.addEventListener('DOMContentLoaded', () => {
+    let theme = 'light'; try { theme = localStorage.getItem('ff_theme') || 'light'; } catch (e) { /* ignore */ }
+    setTheme(theme);
+    const t = $('themeSelect'); if (t) t.value = theme;
+    checkAuth();
 });
+document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }); });
 </script>
 </body>
 </html>

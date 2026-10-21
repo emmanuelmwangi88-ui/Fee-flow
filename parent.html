@@ -1,86 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/fee-structure-integration.js"></script>
-<script id="feeflow-core-inline">
-(function() {
-  if (window.__feeflowBridgeLoaded) return;
-  window.__feeflowBridgeLoaded = true;
-
-  window.__memoryStorage = window.__memoryStorage || {};
-
-  // Capture the real, native localStorage methods BEFORE they get overridden
-  // below. safeStorage must always talk to these native references — if it
-  // instead called window.localStorage.getItem/setItem after the override,
-  // it would call right back into itself and blow the call stack on the very
-  // first read or write (this was crashing the page before any data loaded).
-  let nativeGetItem, nativeSetItem, nativeRemoveItem;
-  const isLocalStorageAvailable = (function() {
-    try {
-      nativeGetItem = window.localStorage.getItem.bind(window.localStorage);
-      nativeSetItem = window.localStorage.setItem.bind(window.localStorage);
-      nativeRemoveItem = window.localStorage.removeItem.bind(window.localStorage);
-      const testKey = '__ff_test_storage__';
-      nativeSetItem(testKey, '1');
-      nativeRemoveItem(testKey);
-      return true;
-    } catch(e) {
-      return false;
-    }
-  })();
-
-  window.safeStorage = {
-    getItem: function(key) {
-      if (isLocalStorageAvailable) {
-        try {
-          const val = nativeGetItem(key);
-          if (val !== null) return val;
-        } catch(e) {}
-      }
-      return window.__memoryStorage[key] !== undefined ? window.__memoryStorage[key] : null;
-    },
-    setItem: function(key, val) {
-      const strVal = String(val);
-      if (isLocalStorageAvailable) {
-        try { nativeSetItem(key, strVal); } catch(e) {}
-      }
-      window.__memoryStorage[key] = strVal;
-    },
-    removeItem: function(key) {
-      if (isLocalStorageAvailable) {
-        try { nativeRemoveItem(key); } catch(e) {}
-      }
-      delete window.__memoryStorage[key];
-    }
-  };
-
-  try {
-    window.localStorage.getItem = function(key) { return window.safeStorage.getItem(key); };
-    window.localStorage.setItem = function(key, val) { return window.safeStorage.setItem(key, val); };
-    window.localStorage.removeItem = function(key) { return window.safeStorage.removeItem(key); };
-  } catch(e) {}
-
-  // Only seed a key the very first time it's missing. Never overwrite existing
-  // data on reload — doing so was wiping out real sessions, parents, schools
-  // and students every time this page loaded, which is why parents were being
-  // signed out / losing their data right after registering.
-  var ffDefaults = {
-    ff_sessions: "[]",
-    ff_schools: "[]",
-    ff_students: "[]",
-    ff_parents: "[]",
-    ff_payments: "[]",
-    ff_receipts: "[]",
-    ff_receipt_items: "[]",
-    ff_hidden_reports: "[]"
-  };
-  Object.keys(ffDefaults).forEach(function(key) {
-    if (window.safeStorage.getItem(key) === null) {
-      window.safeStorage.setItem(key, ffDefaults[key]);
-    }
-  });
-})();
-</script>
     
 
   <meta charset="UTF-8">
@@ -856,7 +776,7 @@
   <div class="modal-backdrop" id="childModal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">Add Child</div>
+        <div class="modal-title">Link a Child</div>
         <button class="button button-outline" onclick="closeModal('childModal')">✕</button>
       </div>
       <div class="modal-body">
@@ -870,12 +790,19 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="childClass">Class / grade / form</label>
-          <input class="form-input" id="childClass" placeholder="Enter class or grade">
+          <select class="form-input" id="childClass">
+            <option value="">Select class</option>
+            <option>PP1</option><option>PP2</option>
+            <option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option>
+            <option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option>
+            <option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
+          </select>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;">Enter the details exactly as the school has them. The school confirms every request before you can see fees.</div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="button button-outline" onclick="closeModal('childModal')">Cancel</button>
-        <button class="button button-primary" onclick="saveChild()">Add Child</button>
+        <button class="button button-primary" onclick="saveChild()" id="addChildButton">Request Link</button>
       </div>
     </div>
   </div>
@@ -883,7 +810,7 @@
   <div class="modal-backdrop" id="paymentModal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">M-Pesa STK Push</div>
+        <div class="modal-title">Pay School Fees (M-Pesa)</div>
         <button class="button button-outline" onclick="closeModal('paymentModal')">✕</button>
       </div>
       <div class="modal-body">
@@ -918,9 +845,7 @@
       <div class="modal-body" id="childModalBody" style="max-height:70vh;overflow-y:auto;padding:20px;">
       </div>
       <div class="modal-footer">
-        <button class="button button-outline" style="color:var(--danger);border-color:var(--danger);" onclick="deleteChildAccount()">✕ Remove Child Link</button>
         <button class="button button-outline" onclick="closeModal('childDetailsModal')">Close</button>
-        <button class="button button-primary" onclick="saveChildEdit()">Save Changes</button>
       </div>
     </div>
   </div>
@@ -939,7 +864,18 @@
     </div>
   </div>
 
+  <script src="js/vendor/supabase-2.117.2.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/ff-client.js"></script>
   <script>
+    'use strict';
+    if (!window.FF) { document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center;">FeeFlow could not load. Check your internet connection and refresh the page.</div>'; throw new Error('FeeFlow client failed to load'); }
+    // Only harmless display preferences (sidebar width, hidden report cards) stay on this device.
+    const safeStorage = {
+      getItem(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+      setItem(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { /* ignore */ } },
+      removeItem(k) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+    };
     let session = null;
     let parent = null;
     let school = null;
@@ -950,16 +886,124 @@
     let receiptSearchQuery = '';
     let receiptSortMode = 'date-desc';
     let reportViewMode = 'list';
-    let hiddenReports = JSON.parse(safeStorage.getItem('ff_hidden_reports') || '[]');
+    let hiddenReports = (() => { try { const v = JSON.parse(safeStorage.getItem('ff_hidden_reports') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })();
     let activeEditingChildId = null;
 
-    function safeArray(key) {
+    // ======================= SUPABASE DATA LAYER =======================
+    const sb = FF.sb;
+    let allParents = [];
+    let published = null;
+    let terms = [];
+    let pendingCount = 0;
+    let rejectedCount = 0;
+    let realtimeChannel = null;
+    let reloadTimer = null;
+    let payPollTimer = null;
+    let PAY_POLL_MS = 3000, PAY_POLL_MAX = 30;                    // poll every 3s for up to 90s
+    let loginEmail = '';
+
+    const COLORS = ['#1768b2', '#059669', '#8b5cf6', '#f59e0b', '#0ea5a4', '#ec4899', '#ef4444'];
+    function colorFor(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return `linear-gradient(135deg,${COLORS[h % COLORS.length]},#0c2d57)`; }
+    function fmtDate(v) { return v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
+    function fmtDateTime(v) {
+      if (!v) return '—';
+      const d = new Date(v);
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
+    function timeAgo(iso) {
+      if (!iso) return 'Recently';
+      const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+      if (sec < 60) return 'Just now';
+      if (sec < 3600) return Math.floor(sec / 60) + ' min ago';
+      if (sec < 86400) return Math.floor(sec / 3600) + ' hr ago';
+      if (sec < 172800) return 'Yesterday';
+      return fmtDate(iso);
+    }
+    async function fnErrorMessage(error) {
+      try { const body = await error.context.json(); if (body && body.error) return body.error; } catch (e) { /* fall through */ }
+      return FF.friendlyError(error);
+    }
+    function toast(message) { alert(message); }
+
+    function renderMessagePage(title, text) {
+      document.getElementById("app").innerHTML = `
+        <div class="access-page">
+          <div class="access-card">
+            <h2>${escapeHtml(title)}</h2>
+            <p class="page-description" style="margin-bottom:20px">${escapeHtml(text)}</p>
+            <button class="button button-outline" onclick="logout()">Sign out</button>
+            <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Try again</a>
+          </div>
+        </div>`;
+    }
+
+    async function initialize() {
+      const profile = await FF.requireRole('parent');
+      if (!profile) return;                                     // sent to the login page
+      loginEmail = profile.email || '';
+      const { data, error } = await sb.from('parents').select('id, school_id, full_name, phone, email, phone_verified, created_at').order('created_at', { ascending: true });
+      if (error) { renderMessagePage('Unable to load your account', FF.friendlyError(error)); return; }
+      allParents = data || [];
+      if (!allParents.length) { renderMessagePage('No school linked yet', 'Your account is not connected to a school. Register again from the sign-in page and choose your school.'); return; }
+      const wanted = safeStorage.getItem('ff_parent_active');
+      parent = allParents.find(x => x.id === wanted) || allParents[0];
+      parent.name = parent.full_name;
+      await loadSchoolData();
+      renderShell();
+      renderAllViews();
+      subscribeRealtime();
+    }
+
+    async function loadSchoolData() {
+      const pid = parent.id, sid = parent.school_id;
+      const [schoolR, kidsR, payR, notifR, linksR, pubR, termsR] = await Promise.all([
+        sb.from('schools').select('id, name, location, paybill, address, phone').eq('id', sid).maybeSingle(),
+        sb.from('student_balances').select('*').eq('school_id', sid).order('full_name'),
+        sb.from('payments').select('id, student_id, amount, method, status, mpesa_receipt, receipt_no, note, created_at, completed_at').order('created_at', { ascending: false }).limit(500),
+        sb.from('notifications').select('id, title, body, unread, created_at, type').eq('audience', 'parent').eq('parent_id', pid).order('created_at', { ascending: false }).limit(100),
+        sb.from('parent_students').select('student_id, status').eq('parent_id', pid),
+        sb.from('fee_structure_published').select('data, term_names, published_at').eq('school_id', sid).maybeSingle(),
+        sb.from('terms').select('name, start_date, end_date, deadline, status').eq('school_id', sid).order('start_date', { ascending: false })
+      ]);
+      const failed = [schoolR, kidsR, payR, notifR, linksR, pubR, termsR].find(r => r.error);
+      if (failed) throw failed.error;
+      school = schoolR.data || { id: sid, name: 'School', paybill: '' };
+      children = (kidsR.data || []).filter(r => r.active).map(r => ({
+        id: r.id, name: r.full_name, adm: r.admission_no, class: r.class_name, boarding: !!r.boarding,
+        total: Number(r.total_due || 0), paid: Number(r.paid || 0), balance: Number(r.balance || 0), noFee: r.fee_status === 'no_fee',
+        status: r.fee_status, initials: initials(r.full_name), color: colorFor(r.id)
+      }));
+      const byId = Object.fromEntries(children.map(c => [c.id, c]));
+      const STATUS = { completed: 'Paid', pending: 'Pending', failed: 'Failed', cancelled: 'Failed', timeout: 'Failed' };
+      payments = (payR.data || []).filter(x => byId[x.student_id]).map(x => ({
+        id: x.id, studentId: x.student_id, studentName: byId[x.student_id].name, class: byId[x.student_id].class, adm: byId[x.student_id].adm,
+        amount: Number(x.amount), method: /mpesa/.test(x.method) ? 'M-Pesa' : cap(x.method), status: STATUS[x.status] || x.status, rawStatus: x.status,
+        ref: x.mpesa_receipt || x.receipt_no || (x.status === 'pending' ? 'Awaiting confirmation' : '—'), receiptNo: x.receipt_no || '', mpesaCode: x.mpesa_receipt || '',
+        date: fmtDateTime(x.completed_at || x.created_at), paybill: school.paybill
+      }));
+      notifications = (notifR.data || []).map(n => ({ ...n, time: timeAgo(n.created_at) }));
+      const links = linksR.data || [];
+      pendingCount = links.filter(l => l.status === 'pending').length;
+      rejectedCount = links.filter(l => l.status === 'rejected').length;
+      published = pubR.data && pubR.data.data && Array.isArray(pubR.data.data.levels) ? pubR.data : null;
+      terms = termsR.data || [];
+    }
+    const cap = (t) => String(t || '').charAt(0).toUpperCase() + String(t || '').slice(1);
+
+    async function refresh() {
+      try { await loadSchoolData(); renderAllViews(); } catch (e) { console.error(e); }
+    }
+    function subscribeRealtime() {                               // new payments / notices show up without refreshing
+      if (!sb.channel) return;
       try {
-        const value = JSON.parse(safeStorage.getItem(key) || "[]");
-        return Array.isArray(value) ? value : [];
-      } catch (error) {
-        return [];
-      }
+        if (realtimeChannel && sb.removeChannel) sb.removeChannel(realtimeChannel);
+        const reload = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(refresh, 800); };
+        realtimeChannel = sb.channel('parent-' + parent.id)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, reload)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: 'parent_id=eq.' + parent.id }, reload)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'parent_students', filter: 'parent_id=eq.' + parent.id }, reload)
+          .subscribe();
+      } catch (e) { /* live updates are optional */ }
     }
 
     function escapeHtml(value) {
@@ -986,90 +1030,8 @@
       return null;
     }
 
-    function initialize() {
-      const parents = safeArray("ff_parents");
-      const schools = safeArray("ff_schools");
-      const sessions = safeArray("ff_sessions");
-      const existingSession = sessions.length === 1
-        ? sessions.find(item => item.type === "parent" && Date.now() - Number(item.timestamp || 0) < 86400000)
-        : null;
 
-      parent = existingSession
-        ? parents.find(item => item.id === existingSession.parentId && item.schoolId === existingSession.schoolId)
-        : null;
 
-      // Require a valid, current parent session. Never silently reopen an account
-      // after logout or manufacture a local account.
-      if (!parent) {
-        safeStorage.setItem("ff_sessions", "[]");
-        renderSignedOutPage();
-        return;
-      }
-
-      session = existingSession;
-
-      school = schools.find(item => item.id === parent.schoolId) || {
-        id: parent.schoolId,
-        name: parent.schoolName || "School not assigned",
-        paybill: ""
-      };
-
-      children = safeArray("ff_students").filter(item => item.parentId === parent.id);
-      const childIds = new Set(children.map(item => item.id));
-      payments = safeArray("ff_payments").filter(item => childIds.has(item.studentId));
-      notifications = safeArray("ff_notifications").filter(item => item.parentId === parent.id);
-
-      renderShell();
-      renderAllViews();
-    }
-
-    function renderSignedOutPage() {
-      document.getElementById("app").innerHTML = `
-        <div class="access-page">
-          <div class="access-card">
-            <div style="font-size:48px">✓</div>
-            <h1 style="margin-top:12px">You’re signed out</h1>
-            <p class="page-description" style="margin-bottom:20px">Your FeeFlow parent session has ended securely.</p>
-          </div>
-        </div>`;
-    }
-    function renderAccessPage(parents) {
-      const accountButtons = parents.map(item => {
-        const accountSchool = safeArray("ff_schools").find(value => value.id === item.schoolId);
-        return `
-          <button class="button button-outline" style="width:100%;margin-top:9px" onclick="enterParent('${item.id}')">
-            ${escapeHtml(item.name)} — ${escapeHtml(accountSchool?.name || item.schoolName || "School")}
-          </button>
-        `;
-      }).join("");
-
-      document.getElementById("app").innerHTML = `
-        <div class="access-page">
-          <div class="access-card">
-            <div style="font-size:48px">🎓</div>
-            <h1 style="margin-top:12px">FeeFlow Parent Portal</h1>
-            <p class="page-description" style="margin-bottom:18px">More than one parent account was found on this device. Choose which one to open.</p>
-            ${accountButtons || '<div class="notice">No parent accounts have been registered.</div>'}
-          </div>
-        </div>
-      `;
-    }
-
-    function enterParent(parentId) {
-      const account = safeArray("ff_parents").find(item => item.id === parentId);
-      if (!account) return;
-
-      safeStorage.setItem("ff_sessions", JSON.stringify([{
-        id: "parent_" + Date.now(),
-        type: "parent",
-        parentId: account.id,
-        schoolId: account.schoolId,
-        name: account.name,
-        timestamp: Date.now()
-      }]));
-
-      location.reload();
-    }
 
     
 let currentParentSidebarMode = safeStorage.getItem('ff_parent_sidebar_mode') || 'standard';
@@ -1183,20 +1145,16 @@ function viewNotificationPreview(id) {
     const notif = notifications.find(n => String(n.id) === String(id));
     if (!notif) return;
     activeParentPreviewNotifId = id;
-    notif.unread = false;
-    safeStorage.setItem('ff_notifications', JSON.stringify(notifications));
-    updateNotificationBadge();
-
+    if (notif.unread) markNotificationRead(id);
     document.getElementById('parentNotifTitle').innerHTML = `<i class="fas fa-bell" style="color:var(--gold);"></i> ${escapeHtml(notif.title)}`;
     document.getElementById('parentNotifBody').innerHTML = `
         <div style="font-size:11px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px;display:flex;justify-content:space-between;">
-            <span>Audience: <strong>${notif.audience ? notif.audience.toUpperCase() : 'PARENT'}</strong></span>
-            <span>Date: <strong>${notif.time || 'Recently'}</strong></span>
+            <span>From: <strong>${escapeHtml(school.name || 'School')}</strong></span>
+            <span>Date: <strong>${escapeHtml(fmtDateTime(notif.created_at))}</strong></span>
         </div>
         <p style="font-size:14px;line-height:1.6;color:var(--ink);margin-bottom:16px;">${escapeHtml(notif.body)}</p>
     `;
     openModal('modal-notifPreview');
-    renderNotifications();
 }
 
 function deleteParentNotifFromPreview() {
@@ -1272,9 +1230,8 @@ function initParentAutoSuggestAndSearchableSelects() {
 }
 
 function renderShell() {
-      const parents = safeArray("ff_parents");
-      const switchAccountButton = parents.length > 1
-        ? `<button class="logout-button" style="margin-bottom:8px" onclick="switchAccount()">⇄ Switch Account</button>`
+      const switchAccountButton = allParents.length > 1
+        ? `<button class="logout-button" style="margin-bottom:8px" onclick="switchAccount()">⇄ Switch School</button>`
         : "";
 
       document.getElementById("app").innerHTML = `
@@ -1351,10 +1308,17 @@ function renderShell() {
       updateNotificationBadge();
     }
 
+    function linkNotices() {
+      let html = '';
+      if (pendingCount > 0) html += `<div class="notice" style="margin-bottom:14px;background:#fffbeb;border-color:#fcd34d;color:#92400e;">⏳ ${pendingCount} child link request${pendingCount > 1 ? 's are' : ' is'} waiting for ${escapeHtml(school.name || 'the school')} to approve. Fees appear once approved.</div>`;
+      if (rejectedCount > 0) html += `<div class="notice" style="margin-bottom:14px;background:#fef2f2;border-color:#fca5a5;color:#991b1b;">${rejectedCount} link request${rejectedCount > 1 ? 's were' : ' was'} declined. Please contact the school to confirm the child's details.</div>`;
+      return html;
+    }
     function renderDashboard() {
       const paid = children.reduce((sum, child) => sum + Number(child.paid || 0), 0);
       const balance = children.reduce((sum, child) => sum + Number(child.balance || 0), 0);
-
+      const term = terms.find(t => t.status === 'active');
+      const deadline = term && term.deadline ? ` Fee deadline for ${escapeHtml(term.name)}: <strong>${escapeHtml(fmtDate(term.deadline))}</strong>.` : '';
       document.getElementById("view-dashboard").innerHTML = `
         <div class="page-heading">
           <div>
@@ -1363,18 +1327,16 @@ function renderShell() {
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="button button-outline" onclick="showView('reports')">▧ View Fee Reports</button><button class="button button-success" onclick="openPaymentModal()">▣ Make Payment</button></div>
         </div>
-
+        ${linkNotices()}
         <div class="notice">
           Pay school fees using M-Pesa Paybill <strong>${escapeHtml(school.paybill || "Not configured")}</strong>
-          and your child's admission number as the account reference.
+          and your child's admission number as the account reference.${deadline}
         </div>
-
         <div class="stats-grid">
           ${statCard(children.length, "Children linked")}
           ${statCard(money(paid), "Fees paid", "green")}
           ${statCard(money(balance), "Outstanding balance", balance > 0 ? "red" : "green")}
         </div>
-
         <div class="panel">
           <div class="panel-header">Fee Summary</div>
           <div class="panel-body">${childrenMarkup()}</div>
@@ -1396,9 +1358,9 @@ function renderShell() {
         <div class="page-heading">
           <div>
             <h1 class="page-title">My Children</h1>
-            <p class="page-description">Students linked to your verified parent account. <span style="color:var(--green);font-weight:600;">Click on any child below to edit details or inspect full fee breakdowns.</span></p>
+            <p class="page-description">Children the school has linked to your account. <span style="color:var(--green);font-weight:600;">Click a child to see the fee breakdown and payment history.</span></p>
           </div>
-          <button class="button button-primary" onclick="openModal('childModal')">＋ Add Child</button>
+          <button class="button button-primary" onclick="openModal('childModal')">＋ Link a Child</button>
         </div>
 
         <div class="panel">
@@ -1409,24 +1371,20 @@ function renderShell() {
 
     function childrenMarkup() {
       if (!children.length) {
-        return '<div class="empty-state">No children are linked to this account yet. Click Add Child above.</div>';
+        return '<div class="empty-state">No children are linked to this account yet. Click "Link a Child" and enter their details; the school will confirm the request.</div>';
       }
-
       return children.map(child => {
         const balanceDue = Number(child.balance || 0) > 0;
         return `
-        <div class="child-card" onclick="openChildDetailsModal('${child.id}')" style="cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;" title="Click to view/edit student details and fee ledger">
-          <div class="avatar">${escapeHtml(child.initials || initials(child.name))}</div>
+        <div class="child-card" onclick="openChildDetailsModal('${escapeHtml(child.id)}')" style="cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;" title="Click to view fee breakdown and payment history">
+          <div class="avatar" style="background:${child.color};">${escapeHtml(child.initials || initials(child.name))}</div>
           <div style="flex:1;">
-            <div class="child-name" style="display:flex;align-items:center;gap:6px;">
-              ${escapeHtml(child.name)}
-              <span style="font-size:11px;background:#e2e8f0;color:#1e293b;padding:2px 6px;border-radius:4px;">✎ Edit</span>
-            </div>
+            <div class="child-name">${escapeHtml(child.name)}</div>
             <div class="child-meta">${escapeHtml(child.class || "Class not assigned")} • ${escapeHtml(child.adm || "No admission number")} ${child.boarding ? '• Boarder' : '• Day Scholar'}</div>
           </div>
           <div class="balance-block" style="text-align:right;">
-            <div class="balance-value" style="${balanceDue ? "color:var(--danger)" : "color:var(--green)"}">${money(child.balance)}</div>
-            <div class="balance-label">${balanceDue ? "Balance due" : "Fully paid"}</div>
+            ${child.noFee ? '<div class="balance-value" style="color:var(--muted);font-size:14px;">Fees not set yet</div>'
+                          : `<div class="balance-value" style="${balanceDue ? "color:var(--danger)" : "color:var(--green)"}">${money(child.balance)}</div><div class="balance-label">${balanceDue ? "Balance due" : "Fully paid"}</div>`}
           </div>
         </div>
       `;
@@ -1436,122 +1394,52 @@ function renderShell() {
     function openChildDetailsModal(childId) {
       const child = children.find(c => c.id === childId);
       if (!child) return;
-      activeEditingChildId = childId;
       document.getElementById("childModalTitle").textContent = `${child.name} — Profile & Fee Ledger`;
-      
-      const publication = JSON.parse(safeStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
-      let feeBreakdownHtml = '<p style="color:var(--muted);font-size:13px;">No published fee structure available.</p>';
+      const publication = published ? published.data : null;
+      let feeBreakdownHtml = '<p style="color:var(--muted);font-size:13px;">The school has not published a fee structure yet.</p>';
       if (publication && publication.levels) {
-        const normalize = v => String(v||'').replace(/[A-Z]$/,'').replace(/^Class /,'Grade ').trim().toLowerCase();
-        let matchGrade = null;
-        for (const lvl of publication.levels) {
-          matchGrade = lvl.grades.find(g => normalize(g.name) === normalize(child.class));
-          if (matchGrade) break;
-        }
-        if (matchGrade && matchGrade.fees) {
-          const rows = matchGrade.fees.filter(f => !f.boarderOnly || child.boarding).map(f => {
-            const tot = (f.amounts||[]).reduce((a,b)=>a+Number(b||0),0);
-            return `<tr><td>${escapeHtml(f.name)} ${f.boarderOnly?'<span style="font-size:10px;color:var(--gold)">(Boarders)</span>':''}</td><td style="text-align:right;font-weight:600;">${money(tot)}</td></tr>`;
+        const match = findPublishedGrade(publication, child);
+        if (match && match.grade.fees) {
+          const rows = match.grade.fees.filter(f => !f.boarderOnly || child.boarding).map(f => {
+            const tot = (f.amounts || []).reduce((a, b) => a + Number(b || 0), 0);
+            return `<tr><td>${escapeHtml(f.name)} ${f.boarderOnly ? '<span style="font-size:10px;color:var(--gold)">(Boarders)</span>' : ''}</td><td style="text-align:right;font-weight:600;">${money(tot)}</td></tr>`;
           }).join('');
-          feeBreakdownHtml = `<div class="table-wrap"><table style="width:100%;font-size:13px;"><thead><tr><th>Fee Item</th><th style="text-align:right;">Annual Total</th></tr></thead><tbody>${rows}<tr><td><strong>Total Expected</strong></td><td style="text-align:right;font-weight:700;color:var(--ink);">${money(child.total)}</td></tr></tbody></table></div>`;
+          feeBreakdownHtml = `<div class="table-wrap"><table style="width:100%;font-size:13px;"><thead><tr><th>Fee Item</th><th style="text-align:right;">Annual Total</th></tr></thead><tbody>${rows}<tr><td><strong>Total Expected</strong></td><td style="text-align:right;"><strong>${money(child.total)}</strong></td></tr></tbody></table></div>`;
+        } else {
+          feeBreakdownHtml = `<p style="color:var(--muted);font-size:13px;">${escapeHtml(child.class)} is not in the school's published fee structure yet. Please contact the school.</p>`;
         }
       }
-
       const childPayments = payments.filter(p => p.studentId === child.id);
-      const payRows = childPayments.length ? childPayments.map(p => `<tr><td>${escapeHtml(p.date||'—')}</td><td><strong>${escapeHtml(p.ref)}</strong></td><td style="color:var(--green);font-weight:600;">${money(p.amount)}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--muted);">No payments recorded yet.</td></tr>';
-
+      const payRows = childPayments.length ? childPayments.map(p => `<tr><td>${escapeHtml(p.date || '—')}</td><td><strong>${escapeHtml(p.ref)}</strong></td><td style="color:var(--green);font-weight:600;">${money(p.amount)}</td><td>${escapeHtml(p.status)}</td></tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted);">No payments yet.</td></tr>';
       document.getElementById("childModalBody").innerHTML = `
         <div style="margin-bottom:20px;padding:14px;background:var(--paper-dim);border-radius:10px;border:1px solid var(--line);">
-          <h4 style="margin:0 0 12px 0;color:var(--ink);font-size:14px;">✎ Edit Student Profile</h4>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size:12px;">Full Name</label>
-              <input class="form-input" id="editChildName" value="${escapeHtml(child.name)}">
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size:12px;">Admission No.</label>
-              <input class="form-input" id="editChildAdm" value="${escapeHtml(child.adm||'')}">
-            </div>
+          <h4 style="margin:0 0 12px 0;color:var(--ink);font-size:14px;">Student Profile</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13.5px;">
+            <div><span style="color:var(--muted);">Full name</span><br><strong>${escapeHtml(child.name)}</strong></div>
+            <div><span style="color:var(--muted);">Admission no.</span><br><strong>${escapeHtml(child.adm || '—')}</strong></div>
+            <div><span style="color:var(--muted);">Class</span><br><strong>${escapeHtml(child.class || '—')}</strong></div>
+            <div><span style="color:var(--muted);">Boarding</span><br><strong>${child.boarding ? 'Boarder' : 'Day Scholar'}</strong></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size:12px;">Class / Grade</label>
-              <input class="form-input" id="editChildClass" value="${escapeHtml(child.class||'Grade 4')}">
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size:12px;">Boarding Status</label>
-              <select class="form-input" id="editChildBoarding">
-                <option value="false" ${!child.boarding?'selected':''}>Day Scholar</option>
-                <option value="true" ${child.boarding?'selected':''}>Boarder (+Meal/Room Plan)</option>
-              </select>
-            </div>
-          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:10px;">These details are kept by the school. If anything is wrong, please contact the school office.</div>
         </div>
-
         <div style="margin-bottom:20px;">
           <h4 style="margin:0 0 8px 0;color:var(--ink);font-size:14px;">Assessment & Remaining Balance</h4>
           <div class="stats-grid" style="margin-bottom:12px;">
-            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Expected</div><div class="value" style="font-size:16px;">${money(child.total)}</div></div>
+            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Expected</div><div class="value" style="font-size:16px;">${child.noFee ? 'Not set' : money(child.total)}</div></div>
             <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Paid</div><div class="value" style="font-size:16px;color:var(--green);">${money(child.paid)}</div></div>
-            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Balance</div><div class="value" style="font-size:16px;${Number(child.balance)>0?'color:var(--danger)':''}">${money(child.balance)}</div></div>
+            <div class="stat-card" style="padding:10px;"><div class="label" style="font-size:11px;">Balance</div><div class="value" style="font-size:16px;${Number(child.balance) > 0 ? 'color:var(--danger)' : ''}">${money(child.balance)}</div></div>
           </div>
           ${feeBreakdownHtml}
         </div>
-
         <div>
           <h4 style="margin:0 0 8px 0;color:var(--ink);font-size:14px;">Payment History (${childPayments.length})</h4>
-          <div class="table-wrap"><table style="width:100%;font-size:12.5px;"><thead><tr><th>Date</th><th>Ref</th><th>Amount</th></tr></thead><tbody>${payRows}</tbody></table></div>
+          <div class="table-wrap"><table style="width:100%;font-size:12.5px;"><thead><tr><th>Date</th><th>Ref</th><th>Amount</th><th>Status</th></tr></thead><tbody>${payRows}</tbody></table></div>
         </div>
       `;
       openModal("childDetailsModal");
     }
 
-    function saveChildEdit() {
-      if (!activeEditingChildId) return;
-      const allStudents = JSON.parse(safeStorage.getItem("ff_students") || "[]");
-      const idx = allStudents.findIndex(s => s.id === activeEditingChildId);
-      if (idx !== -1) {
-        allStudents[idx].name = document.getElementById("editChildName").value.trim() || allStudents[idx].name;
-        allStudents[idx].adm = document.getElementById("editChildAdm").value.trim() || allStudents[idx].adm;
-        allStudents[idx].class = document.getElementById("editChildClass").value.trim() || allStudents[idx].class;
-        allStudents[idx].boarding = document.getElementById("editChildBoarding").value === "true";
-        allStudents[idx].initials = initials(allStudents[idx].name);
-        
-        // Recalculate total assessment if structure changed
-        const publication = JSON.parse(safeStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
-        if (publication) {
-          const normalize = v => String(v||'').replace(/[A-Z]$/,'').replace(/^Class /,'Grade ').trim().toLowerCase();
-          for (const lvl of publication.levels) {
-            const grade = lvl.grades.find(g => normalize(g.name) === normalize(allStudents[idx].class));
-            if (grade) {
-              const expected = grade.fees.filter(f => !f.boarderOnly || allStudents[idx].boarding).reduce((sum,f) => sum + (f.amounts||[]).reduce((a,n)=>a+Number(n||0),0), 0);
-              allStudents[idx].total = expected;
-              allStudents[idx].balance = Math.max(0, expected - Number(allStudents[idx].paid || 0));
-              break;
-            }
-          }
-        }
-        
-        safeStorage.setItem("ff_students", JSON.stringify(allStudents));
-        closeModal("childDetailsModal");
-        initialize();
-        renderDashboard();
-        renderChildren();
-      }
-    }
 
-    function deleteChildAccount() {
-      if (!activeEditingChildId) return;
-      if (confirm("Are you sure you want to remove this student record from your parent portal view?")) {
-        let allStudents = JSON.parse(safeStorage.getItem("ff_students") || "[]");
-        allStudents = allStudents.filter(s => s.id !== activeEditingChildId);
-        safeStorage.setItem("ff_students", JSON.stringify(allStudents));
-        closeModal("childDetailsModal");
-        initialize();
-        renderDashboard();
-        renderChildren();
-      }
-    }
 
     function initials(name) {
       return String(name || "")
@@ -1575,67 +1463,58 @@ function renderShell() {
               <td>${escapeHtml(payment.date || "—")}</td>
             </tr>
           `).join("")
-        : '<tr><td colspan="6" class="empty-state">No confirmed payments yet.</td></tr>';
-
+        : '<tr><td colspan="6" class="empty-state">No payments yet.</td></tr>';
       document.getElementById("view-payments").innerHTML = `
         <div class="page-heading">
           <div>
             <h1 class="page-title">Payments & Receipts</h1>
-            <p class="page-description">Confirmed fee payments and official receipts</p>
+            <p class="page-description">Your fee payments and official receipts</p>
           </div>
-          <button class="button button-success" onclick="openPaymentModal()">▣ Make Payment</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${payments.some(x => x.rawStatus === 'completed') ? '<button class="button button-outline" onclick="downloadAllReceipts()">↓ All receipts</button>' : ''}
+            <button class="button button-success" onclick="openPaymentModal()">▣ Make Payment</button>
+          </div>
         </div>
-
         <div class="panel">
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>Reference</th>
-                  <th>Student</th>
-                  <th>Amount</th>
-                  <th>Method</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Reference</th><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>
         </div>
-
         <div class="page-heading" style="margin-top:26px">
           <div>
             <h2>Receipt Previews</h2>
             <p class="page-description">Print or download confirmed fee receipts</p>
           </div>
         </div>
-
         <div class="receipt-grid">${receiptsMarkup()}</div>
       `;
     }
 
     function receiptsMarkup() {
-      if (!payments.length) {
+      const confirmed = payments.filter(x => x.rawStatus === 'completed');
+      if (!confirmed.length) {
         return '<div class="panel"><div class="empty-state">Receipts appear after a payment is confirmed.</div></div>';
       }
-
-      return payments.map(payment => `
+      return confirmed.map(payment => `
         <article class="receipt">
           <div class="receipt-heading">
             <div class="receipt-school">${escapeHtml(school.name || "School")}</div>
             <div class="receipt-title">OFFICIAL FEE RECEIPT</div>
           </div>
-          ${receiptRow("Receipt", payment.ref || payment.id)}
+          ${receiptRow("Receipt", payment.receiptNo || payment.ref)}
           ${receiptRow("Student", payment.studentName || "—")}
           ${receiptRow("Class", payment.class || "—")}
           ${receiptRow("Amount", money(payment.amount))}
           ${receiptRow("Method", payment.method || "M-Pesa")}
+          ${payment.mpesaCode ? receiptRow("M-Pesa code", payment.mpesaCode) : ""}
           ${receiptRow("Paybill", payment.paybill || school.paybill || "—")}
           ${receiptRow("Date", payment.date || "—")}
           <div class="receipt-actions">
-            <button class="button button-outline" onclick="printReceipt('${payment.id}')">▣ Print</button>
-            <button class="button button-primary" onclick="downloadReceipt('${payment.id}')">↓ Download</button>
+            <button class="button button-outline" onclick="printReceipt('${escapeHtml(payment.id)}')">▣ Print</button>
+            <button class="button button-primary" onclick="downloadReceipt('${escapeHtml(payment.id)}')">↓ Download</button>
           </div>
         </article>
       `).join("");
@@ -1648,6 +1527,28 @@ function renderShell() {
           <strong>${escapeHtml(value)}</strong>
         </div>
       `;
+    }
+    // (these two were called but never defined in the old page, so printing a receipt used to crash)
+    function receiptHtml(payment) {
+      const e = escapeHtml, line = (k, v) => `<tr><td style="color:#64748b;padding:6px 0;">${e(k)}</td><td style="text-align:right;font-weight:600;padding:6px 0;">${e(v)}</td></tr>`;
+      return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:30px auto;padding:30px;border:2px solid #0c2d57;border-radius:10px;page-break-inside:avoid;">
+        <div style="text-align:center;border-bottom:2px solid #e2e8f0;padding-bottom:14px;margin-bottom:14px;">
+          <div style="font-size:20px;font-weight:800;color:#0c2d57;">${e(school.name || 'School')}</div>
+          <div style="font-size:12px;color:#64748b;">${e([school.address, school.phone].filter(Boolean).join(' • '))}</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-top:10px;">OFFICIAL FEE RECEIPT</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          ${line('Receipt no.', payment.receiptNo || payment.ref)}${payment.mpesaCode ? line('M-Pesa code', payment.mpesaCode) : ''}
+          ${line('Student', payment.studentName)}${line('Admission no.', payment.adm)}${line('Class', payment.class)}
+          ${line('Method', payment.method)}${line('Date', payment.date)}
+          <tr><td style="padding:12px 0;border-top:2px solid #0c2d57;font-weight:700;">Amount paid</td><td style="text-align:right;padding:12px 0;border-top:2px solid #0c2d57;font-weight:800;font-size:18px;color:#059669;">${e(money(payment.amount))}</td></tr>
+        </table>
+        <p style="font-size:11px;color:#64748b;text-align:center;margin:14px 0 0;">Payment confirmed by FeeFlow. Keep this receipt for your records.</p>
+      </div>`;
+    }
+    function receiptsHtml(list) {
+      const body = list.filter(x => x.rawStatus === 'completed').map(receiptHtml).join('');
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>FeeFlow receipts</title></head><body style="margin:0">${body || '<p style="font-family:Arial;padding:30px;">No confirmed payments yet.</p>'}</body></html>`;
     }
 
     function normalizeGrade(value) {
@@ -1667,8 +1568,8 @@ function renderShell() {
     }
 
     function renderFeeReports() {
-      const publication = JSON.parse(safeStorage.getItem("ff_fee_published_" + parent.schoolId) || "null");
-      const termNames = JSON.parse(safeStorage.getItem("ff_fee_term_names_" + parent.schoolId) || "null") || ["Term 1", "Term 2", "Term 3"];
+      const publication = published ? published.data : null;
+      const termNames = (published && published.term_names) || ["Term 1", "Term 2", "Term 3"];
 
       const visibleChildren = children.filter(c => !hiddenReports.includes(c.id));
 
@@ -1815,7 +1716,7 @@ function renderShell() {
     function renderNotifications() {
       const markup = notifications.length
         ? notifications.map(notification => `
-            <div class="notification ${notification.unread ? "unread" : ""}" onclick="markNotificationRead('${notification.id}')" style="cursor:pointer">
+            <div class="notification ${notification.unread ? "unread" : ""}" onclick="viewNotificationPreview(${Number(notification.id)})" style="cursor:pointer">
               <div class="notification-title">${escapeHtml(notification.title)}</div>
               <div class="notification-message">${escapeHtml(notification.body)}</div>
               <div class="notification-time">${escapeHtml(notification.time || "Recently")}</div>
@@ -1840,32 +1741,43 @@ function renderShell() {
         <div class="page-heading">
           <div>
             <h1 class="page-title">Profile</h1>
-            <p class="page-description">Manage your verified parent account</p>
+            <p class="page-description">Manage your parent account</p>
           </div>
         </div>
-
         <div class="panel">
           <div class="panel-header">Account Information</div>
           <div class="panel-body">
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label" for="profileName">Full name</label>
-                <input class="form-input" id="profileName" value="${escapeHtml(parent.name)}">
+                <input class="form-input" id="profileName" value="${escapeHtml(parent.name)}" maxlength="80">
               </div>
               <div class="form-group">
                 <label class="form-label" for="profilePhone">Phone number</label>
-                <input class="form-input" id="profilePhone" placeholder="07XX XXX XXX" value="${escapeHtml(parent.phone || "")}">
+                <input class="form-input" id="profilePhone" value="+${escapeHtml(parent.phone || "")}" disabled>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Your phone number links you to your children. To change it, please contact the school.</div>
               </div>
               <div class="form-group full">
-                <label class="form-label" for="profileEmail">Email address</label>
+                <label class="form-label" for="profileEmail">Contact email</label>
                 <input class="form-input" id="profileEmail" type="email" value="${escapeHtml(parent.email || "")}">
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Sign-in email: ${escapeHtml(loginEmail)}</div>
               </div>
               <div class="form-group full">
                 <label class="form-label">School</label>
-                <input class="form-input" value="${escapeHtml(school.name || parent.schoolName || "School")}" disabled>
+                <input class="form-input" value="${escapeHtml(school.name || "School")}" disabled>
               </div>
             </div>
-            <button class="button button-primary" onclick="saveProfile()">Save Profile</button>
+            <button class="button button-primary" onclick="saveProfile()" id="saveProfileButton">Save Profile</button>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:20px;">
+          <div class="panel-header">Change Password</div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label" for="newPassword">New password</label><input class="form-input" id="newPassword" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
+              <div class="form-group"><label class="form-label" for="newPassword2">Confirm new password</label><input class="form-input" id="newPassword2" type="password" autocomplete="new-password" placeholder="Repeat password"></div>
+            </div>
+            <button class="button button-primary" onclick="changePassword()">Change Password</button>
           </div>
         </div>
       `;
@@ -1906,45 +1818,23 @@ function renderShell() {
       document.getElementById(id).classList.remove("open");
     }
 
-    function saveChild() {
+    async function saveChild() {
       const name = document.getElementById("childName").value.trim();
       const adm = document.getElementById("childAdm").value.trim();
       const childClass = document.getElementById("childClass").value.trim();
-
-      if (!name || !adm || !childClass) {
-        alert("Complete all child details.");
-        return;
-      }
-
-      const students = safeArray("ff_students");
-
-      if (students.some(item => item.schoolId === parent.schoolId && String(item.adm).toLowerCase() === adm.toLowerCase())) {
-        alert("That admission number is already registered at this school.");
-        return;
-      }
-
-      students.push({
-        id: "child_" + Date.now(),
-        parentId: parent.id,
-        schoolId: parent.schoolId,
-        name,
-        adm,
-        class: childClass,
-        total: 0,
-        paid: 0,
-        balance: 0,
-        status: "paid",
-        initials: initials(name),
-        color: "linear-gradient(135deg,#1768b2,#059669)"
-      });
-
-      safeStorage.setItem("ff_students", JSON.stringify(students));
-      document.getElementById("childName").value = "";
-      document.getElementById("childAdm").value = "";
-      document.getElementById("childClass").value = "";
-      closeModal("childModal");
-      initialize();
-      showView("children");
+      if (name.length < 2 || !adm || !childClass) { alert("Complete all child details."); return; }
+      const button = document.getElementById("addChildButton");
+      button.disabled = true;
+      try {
+        const { data: status, error } = await sb.rpc('claim_child', { p_parent_id: parent.id, p_admission_no: adm, p_child_name: name, p_class: childClass, p_gender: null });
+        if (error) throw error;
+        document.getElementById("childName").value = ""; document.getElementById("childAdm").value = ""; document.getElementById("childClass").value = "";
+        closeModal("childModal");
+        await refresh();
+        showView("children");
+        alert(status === 'active' ? `${name} is now linked to your account.` : `Request sent. ${school.name || 'The school'} will review it, and ${name} will appear here once approved.`);
+      } catch (e) { alert(FF.friendlyError(e)); }
+      finally { button.disabled = false; }
     }
 
     function showView(page) {
@@ -1954,21 +1844,32 @@ function renderShell() {
 
     function openPaymentModal() {
       if (!children.length) {
-        alert("Add a child before making a payment.");
+        alert("Link a child (and wait for the school to approve it) before making a payment.");
         return;
       }
-
+      clearInterval(payPollTimer);
       const studentSelect = document.getElementById("paymentStudent");
       studentSelect.innerHTML = children.map(child => `
-        <option value="${child.id}" data-balance="${Number(child.balance || 0)}">${escapeHtml(child.name)} — Balance ${money(child.balance)}</option>
+        <option value="${escapeHtml(child.id)}" data-balance="${Number(child.balance || 0)}">${escapeHtml(child.name)} — Balance ${money(child.balance)}</option>
       `).join("");
-
-      document.getElementById("paymentPhone").value = parent.phone || "";
+      const ph = String(parent.phone || "");
+      document.getElementById("paymentPhone").value = ph.startsWith("254") ? "0" + ph.slice(3) : ph;
       document.getElementById("paymentAmount").value = "";
-      const endpointNote = school.stkEndpoint ? '' : '<br><small style="color:#b45309;">Demo mode: no STK endpoint is configured, so no real M-Pesa charge will be made.</small>';
-      document.getElementById("paybillNotice").innerHTML = `Original school paybill: <strong>${escapeHtml(school.paybill || "Not configured")}</strong>${endpointNote}`;
+      setPayState(false);
+      document.getElementById("paybillNotice").innerHTML = `You can also pay from your M-Pesa menu: Paybill <strong>${escapeHtml(school.paybill || "Not configured")}</strong>, account number = your child's admission number.`;
       updatePaymentAmountHint();
       openModal("paymentModal");
+    }
+    function setPayState(waiting, label) {
+      for (const id of ["paymentStudent", "paymentAmount", "paymentPhone"]) document.getElementById(id).disabled = waiting;
+      const button = document.getElementById("payButton");
+      button.disabled = waiting;
+      button.textContent = waiting ? (label || "Waiting for M-Pesa…") : "Send STK Push";
+    }
+    function showPayNotice(html, tone) {
+      const box = document.getElementById("paybillNotice");
+      box.innerHTML = html;
+      box.style.background = tone === "error" ? "#fef2f2" : tone === "success" ? "#ecfdf5" : "";
     }
 
     function updatePaymentAmountHint() {
@@ -1983,135 +1884,61 @@ function renderShell() {
     async function makePayment() {
       const studentId = document.getElementById("paymentStudent").value;
       const amount = Number(document.getElementById("paymentAmount").value);
-      const rawPhone = document.getElementById("paymentPhone").value.trim();
-      const phone = normalizeKenyanPhone(rawPhone);
-      const button = document.getElementById("payButton");
-
-      if (!studentId || !amount || amount <= 0) {
-        alert("Choose a student and enter a valid amount.");
-        return;
-      }
-
-      if (!phone) {
-        alert("Enter a valid Safaricom number, e.g. 07XX XXX XXX or 7XX XXX XXX.");
-        return;
-      }
-
-      if (!school.paybill) {
-        alert("The school has not configured its official M-Pesa paybill.");
-        return;
-      }
-
-      // Optional: a school can set its own secure STK Push endpoint (server/serverless function).
-      // With none configured, the app runs in demo mode and simulates a confirmed payment.
-      const endpoint = (school.stkEndpoint || "").trim();
-      const demoMode = !endpoint;
-
+      const phone = normalizeKenyanPhone(document.getElementById("paymentPhone").value.trim());
+      if (!studentId || !(amount > 0)) { alert("Choose a student and enter a valid amount."); return; }
+      if (!phone) { alert("Enter a valid Safaricom number, e.g. 07XX XXX XXX or 7XX XXX XXX."); return; }
       const student = children.find(item => item.id === studentId);
       if (!student) return;
-      if (Number(student.balance) > 0 && amount > Number(student.balance)) {
-        alert("The payment amount cannot exceed the remaining balance of " + money(student.balance) + ".");
-        return;
-      }
-
-      button.disabled = true;
-      button.textContent = "Sending…";
-
+      if (Number(student.balance) <= 0) { alert(student.name + " has no balance to pay."); return; }
+      if (amount > Number(student.balance)) { alert("The payment amount cannot exceed the remaining balance of " + money(student.balance) + "."); return; }
+      setPayState(true, "Sending…");
+      showPayNotice("Sending the payment request to M-Pesa…");
       try {
-        let reference;
-        if (demoMode) {
-          await new Promise(resolve => setTimeout(resolve, 1200));
-          reference = "DEMO" + Date.now().toString(36).toUpperCase();
-        } else {
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              phone,
-              amount,
-              paybill: school.paybill,
-              accountReference: student.adm,
-              transactionDesc: `School fees for ${student.name}`,
-              studentId: student.id,
-              schoolId: school.id
-            })
-          });
-
-          const result = await response.json().catch(() => ({}));
-
-          if (!response.ok || result.success === false) {
-            throw new Error(result.message || "STK Push request failed.");
-          }
-
-          reference = result.reference || result.checkoutRequestId;
-          if (!reference) {
-            throw new Error("The payment service did not return a reference.");
-          }
+        const { data, error } = await sb.functions.invoke('mpesa-stk-push', { body: { student_id: studentId, amount, phone } });
+        if (error) {
+          const status = error.context && error.context.status;
+          throw Object.assign(new Error(status === 404
+            ? `Online payment is not available yet. Please pay from your M-Pesa menu: Paybill ${school.paybill || "(ask the school)"}, account number ${student.adm}.`
+            : await fnErrorMessage(error)), { handled: true });
         }
-
-        recordConfirmedPayment(student, amount, phone, reference);
-        closeModal("paymentModal");
-        initialize();
-        showView("payments");
-        alert(demoMode
-          ? "Demo payment recorded (no real M-Pesa charge was made). Your receipt is ready."
-          : "Payment confirmed. Your receipt is ready.");
-      } catch (error) {
-        alert(error.message || "Unable to complete the STK Push request.");
-      } finally {
-        button.disabled = false;
-        button.textContent = "Send STK Push";
+        if (!data || !data.payment_id) throw Object.assign(new Error("The payment service did not respond properly. Please try again."), { handled: true });
+        showPayNotice(`📱 <strong>Check your phone.</strong> Enter your M-Pesa PIN to pay <strong>${escapeHtml(money(amount))}</strong> for ${escapeHtml(student.name)}. Do not close this window.`);
+        setPayState(true, "Waiting for M-Pesa…");
+        waitForPayment(data.payment_id, student);
+      } catch (e) {
+        showPayNotice(escapeHtml(e.handled ? e.message : FF.friendlyError(e)), "error");
+        setPayState(false);
       }
     }
-
-    function recordConfirmedPayment(student, amount, phone, reference) {
-      const students = safeArray("ff_students");
-      const studentRecord = students.find(item => item.id === student.id);
-      if (!studentRecord) return;
-
-      studentRecord.paid = Number(studentRecord.paid || 0) + amount;
-      studentRecord.balance = Math.max(0, Number(studentRecord.total || 0) - studentRecord.paid);
-      studentRecord.status = studentRecord.balance === 0 ? "paid" : "partial";
-      safeStorage.setItem("ff_students", JSON.stringify(students));
-
-      const payment = {
-        id: "payment_" + Date.now(),
-        ref: reference,
-        studentId: studentRecord.id,
-        studentName: studentRecord.name,
-        class: studentRecord.class,
-        amount,
-        method: "M-Pesa STK",
-        status: "reconciled",
-        date: new Date().toLocaleString(),
-        schoolId: school.id,
-        schoolName: school.name,
-        paybill: school.paybill,
-        stkPhone: phone
-      };
-
-      const allPayments = safeArray("ff_payments");
-      allPayments.unshift(payment);
-      safeStorage.setItem("ff_payments", JSON.stringify(allPayments));
-
-      const allNotifications = safeArray("ff_notifications");
-      allNotifications.unshift({
-        id: Date.now(),
-        audience: "school",
-        schoolId: school.id,
-        parentId: parent.id,
-        studentId: studentRecord.id,
-        type: "payment",
-        title: "Payment Received — Receipt Ready",
-        body: `${money(amount)} received for ${studentRecord.name}. Receipt ${reference} is ready.`,
-        time: "Just now",
-        unread: true
-      });
-      safeStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
+    function waitForPayment(paymentId, student) {
+      let tries = 0;
+      clearInterval(payPollTimer);
+      payPollTimer = setInterval(async () => {
+        tries += 1;
+        const { data } = await sb.from('payments').select('status, receipt_no, mpesa_receipt, result_desc').eq('id', paymentId).maybeSingle();
+        if (data && data.status === 'completed') {
+          clearInterval(payPollTimer);
+          showPayNotice(`✓ <strong>Payment confirmed.</strong> Receipt ${escapeHtml(data.receipt_no || data.mpesa_receipt || "")}.`, "success");
+          await refresh();
+          setTimeout(() => { closeModal("paymentModal"); showView("payments"); }, 1200);
+          setPayState(false);
+        } else if (data && ["failed", "cancelled", "timeout"].includes(data.status)) {
+          clearInterval(payPollTimer);
+          showPayNotice(escapeHtml(data.result_desc || (data.status === "cancelled" ? "The payment was cancelled on your phone." : "The payment did not go through.")) + " You have not been charged. You can try again.", "error");
+          setPayState(false);
+        } else if (tries >= PAY_POLL_MAX) {
+          clearInterval(payPollTimer);
+          showPayNotice("We have not received confirmation yet. If M-Pesa has taken the money, it will appear under Payments shortly. <strong>Please do not pay again.</strong>");
+          setPayState(false);
+          refresh();
+        }
+      }, PAY_POLL_MS);
     }
+
 
     function printAllReceipts() {
       const printWindow = window.open("", "_blank", "width=760,height=820");
+      if (!printWindow) { alert("Please allow pop-ups to print your receipts."); return; }
       printWindow.document.write(receiptsHtml(payments));
       printWindow.document.close();
       printWindow.focus();
@@ -2132,10 +1959,10 @@ function renderShell() {
 
     function printReceipt(paymentId) {
       const payment = payments.find(item => item.id === paymentId);
-      if (!payment) return;
-
+      if (!payment || payment.rawStatus !== 'completed') return;     // only confirmed payments have receipts
       const printWindow = window.open("", "_blank", "width=760,height=820");
-      printWindow.document.write(receiptHtml(payment));
+      if (!printWindow) { alert("Please allow pop-ups to print your receipt."); return; }
+      printWindow.document.write(receiptsHtml([payment]));
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
@@ -2143,9 +1970,9 @@ function renderShell() {
 
     function downloadReceipt(paymentId) {
       const payment = payments.find(item => item.id === paymentId);
-      if (!payment) return;
+      if (!payment || payment.rawStatus !== 'completed') return;     // only confirmed payments have receipts
 
-      const blob = new Blob([receiptHtml(payment)], { type: "text/html" });
+      const blob = new Blob([receiptsHtml([payment])], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -2156,64 +1983,53 @@ function renderShell() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    function markNotificationRead(notificationId) {
-      const allNotifications = safeArray("ff_notifications");
-      const record = allNotifications.find(item => String(item.id) === String(notificationId));
-      if (record && record.parentId === parent.id) record.unread = false;
-      safeStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
-      notifications = allNotifications.filter(item => item.parentId === parent.id);
+    async function markNotificationRead(notificationId) {
+      const record = notifications.find(item => String(item.id) === String(notificationId));
+      if (!record || !record.unread) return;
+      const { error } = await sb.from('notifications').update({ unread: false }).eq('id', record.id);
+      if (error) { toast(FF.friendlyError(error)); return; }
+      record.unread = false;
+      renderNotifications();
+      updateNotificationBadge();
+    }
+    // (called by the old page but never defined, so deleting a notification used to crash)
+    async function deleteNotification(notificationId) {
+      const record = notifications.find(item => String(item.id) === String(notificationId));
+      if (!record) return;
+      const { error } = await sb.from('notifications').delete().eq('id', record.id);
+      if (error) { toast(FF.friendlyError(error)); return; }
+      notifications = notifications.filter(item => item !== record);
       renderNotifications();
       updateNotificationBadge();
     }
 
-    function markAllRead() {
-      const allNotifications = safeArray("ff_notifications");
-      allNotifications.forEach(item => {
-        if (item.parentId === parent.id) item.unread = false;
-      });
-      safeStorage.setItem("ff_notifications", JSON.stringify(allNotifications));
-      notifications.forEach(item => item.unread = false);
+    async function markAllRead() {
+      const { error } = await sb.from('notifications').update({ unread: false }).eq('audience', 'parent').eq('parent_id', parent.id).eq('unread', true);
+      if (error) { toast(FF.friendlyError(error)); return; }
+      notifications.forEach(item => { item.unread = false; });
       renderNotifications();
       updateNotificationBadge();
     }
 
-    function saveProfile() {
+    async function saveProfile() {
       const name = document.getElementById("profileName").value.trim();
-      const rawPhone = document.getElementById("profilePhone").value.trim();
       const email = document.getElementById("profileEmail").value.trim();
-      const phone = normalizeKenyanPhone(rawPhone);
-
-      if (!name) {
-        alert("Enter your full name.");
-        return;
-      }
-      if (!phone) {
-        alert("Enter a valid Safaricom number, e.g. 07XX XXX XXX or 7XX XXX XXX.");
-        return;
-      }
-      if (!/^\S+@\S+\.\S+$/.test(email)) {
-        alert("Enter a valid email address.");
-        return;
-      }
-
-      const parents = safeArray("ff_parents");
-      if (parents.some(item => item.id !== parent.id && String(item.email || "").toLowerCase() === email.toLowerCase())) {
-        alert("That email address is already used by another parent account.");
-        return;
-      }
-      const parentRecord = parents.find(item => item.id === parent.id);
-      if (!parentRecord) return;
-
-      parentRecord.name = name;
-      parentRecord.phone = phone;
-      parentRecord.email = email;
-      safeStorage.setItem("ff_parents", JSON.stringify(parents));
-
-      session.name = name;
-      safeStorage.setItem("ff_sessions", JSON.stringify([session]));
-      initialize();
-      showView("profile");
+      if (name.length < 2) { alert("Enter your full name."); return; }
+      if (!/^\S+@\S+\.\S+$/.test(email)) { alert("Enter a valid email address."); return; }
+      const { error } = await sb.from('parents').update({ full_name: name, email }).eq('id', parent.id);
+      if (error) { alert(FF.friendlyError(error)); return; }
+      parent.name = name; parent.full_name = name; parent.email = email;
+      renderShell(); renderAllViews(); showView("profile");
       alert("Profile updated successfully.");
+    }
+    async function changePassword() {
+      const pw = document.getElementById("newPassword").value, pw2 = document.getElementById("newPassword2").value;
+      if (pw.length < 8) { alert("Your password must be at least 8 characters."); return; }
+      if (pw !== pw2) { alert("The two passwords do not match."); return; }
+      const { error } = await sb.auth.updateUser({ password: pw });
+      if (error) { alert(FF.friendlyError(error)); return; }
+      document.getElementById("newPassword").value = ""; document.getElementById("newPassword2").value = "";
+      alert("Password changed.");
     }
 
     function requestLogout() {
@@ -2221,16 +2037,29 @@ function renderShell() {
     }
 
     function logout() {
-      // Clear only authentication state; school records and receipts remain intact.
-      safeStorage.setItem("ff_sessions", "[]");
-      session = null;
-      parent = null;
-      window.location.replace("portal.html");
+      clearInterval(payPollTimer);
+      FF.signOut();
     }
 
-    function switchAccount() {
-      safeStorage.setItem("ff_sessions", "[]");
-      window.location.replace("portal.html");
+    async function switchAccount() {
+      const ids = allParents.map(x => x.school_id);
+      const { data } = await sb.from('schools').select('id, name').in('id', ids);
+      const names = Object.fromEntries((data || []).map(x => [x.id, x.name]));
+      document.getElementById("app").innerHTML = `
+        <div class="access-page"><div class="access-card">
+          <div style="font-size:48px">🎓</div>
+          <h1 style="margin-top:12px">Choose a school</h1>
+          <p class="page-description" style="margin-bottom:18px">You are registered at more than one school.</p>
+          ${allParents.map(x => `<button class="button button-outline" style="width:100%;margin-top:9px" onclick="selectParent('${escapeHtml(x.id)}')">${escapeHtml(names[x.school_id] || 'School')}</button>`).join("")}
+        </div></div>`;
+    }
+    async function selectParent(parentId) {
+      const next = allParents.find(x => x.id === parentId);
+      if (!next) return;
+      safeStorage.setItem('ff_parent_active', next.id);
+      parent = next; parent.name = next.full_name;
+      try { await loadSchoolData(); renderShell(); renderAllViews(); subscribeRealtime(); }
+      catch (e) { renderMessagePage('Unable to load this school', FF.friendlyError(e)); }
     }
 
     document.addEventListener("change", event => {
@@ -2256,47 +2085,13 @@ function renderShell() {
       });
     });
 
-    window.addEventListener("error", event => {
-      console.error(event.error || event.message);
-      if (!document.querySelector(".app-shell") && !document.querySelector(".access-page")) {
-        document.getElementById("app").innerHTML = `
-          <div class="access-page">
-            <div class="access-card">
-              <h2>Unable to load Parent Portal</h2>
-              <p class="page-description">${escapeHtml(event.message || "An unexpected error occurred.")}</p>
-              <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
-              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
-            </div>
-          </div>
-        `;
-      }
-    });
-
+    window.addEventListener("error", event => { console.error(event.error || event.message); });
     function bootParentPortal() {
-      try {
-        initialize();
-      } catch (error) {
+      initialize().catch(error => {
         console.error(error);
-        const app = document.getElementById("app");
-        if (!app) return;
-        app.innerHTML = `
-          <div class="access-page">
-            <div class="access-card">
-              <h2>Unable to load Parent Portal</h2>
-              <p class="page-description">${escapeHtml(error.message || "An unexpected error occurred.")}</p>
-              <button class="button button-outline" onclick="resetParentPortalData()">Repair Local Session</button>
-              <a class="button button-primary" style="margin-top:10px;text-decoration:none" href="parent.html">Reload Dashboard</a>
-            </div>
-          </div>
-        `;
-      }
+        if (document.getElementById("app")) renderMessagePage("Unable to load your dashboard", FF.friendlyError(error));
+      });
     }
-
-    function resetParentPortalData() {
-      safeStorage.setItem("ff_sessions", "[]");
-      window.location.replace("portal.html");
-    }
-
     bootParentPortal();
   </script>
 </body>

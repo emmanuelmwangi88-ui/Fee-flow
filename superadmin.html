@@ -1,18 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>
-// Inline bridge fallback for isolated sandboxed iframe
-if (!window.__feeflowBridgeLoaded) {
-  window.__feeflowBridgeLoaded = true;
-  window.__memoryStorage = window.__memoryStorage || {};
-  window.safeStorage = {
-    getItem: function(key) { try { return window.localStorage.getItem(key); } catch(e) { return window.__memoryStorage[key] || null; } },
-    setItem: function(key, val) { try { window.localStorage.setItem(key, val); } catch(e) {} window.__memoryStorage[key] = String(val); },
-    removeItem: function(key) { try { window.localStorage.removeItem(key); } catch(e) {} delete window.__memoryStorage[key]; }
-  };
-}
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FeeFlow — Super Admin</title>
@@ -324,7 +312,7 @@ if (!window.__feeflowBridgeLoaded) {
                         <div class="card">
                             <div class="card-header">
                                 <div class="card-title">Schools Overview</div>
-                                <button class="btn btn-primary btn-sm" onclick="openModal('addSchool')"><i class="fas fa-plus"></i> Add School</button>
+                                <button class="btn btn-primary btn-sm" onclick="openAddSchool()"><i class="fas fa-plus"></i> Add School</button>
                             </div>
                             <div class="card-body" id="schoolsOverview"></div>
                         </div>
@@ -356,7 +344,7 @@ if (!window.__feeflowBridgeLoaded) {
                             <div class="page-title">Schools Management</div>
                             <div class="page-desc">Manage all schools on the platform</div>
                         </div>
-                        <button class="btn btn-primary" onclick="openModal('addSchool')"><i class="fas fa-plus"></i> Add School</button>
+                        <button class="btn btn-primary" onclick="openAddSchool()"><i class="fas fa-plus"></i> Add School</button>
                     </div>
 
                     <div class="card">
@@ -364,7 +352,7 @@ if (!window.__feeflowBridgeLoaded) {
                             <div class="card-title">All Schools <span id="schoolCount" style="color:var(--text-light);font-weight:400;font-size:13px;"></span></div>
                             <div class="filter-bar">
                                 <select class="filter-select" onchange="filterSchools(this.value)">
-                                    <option value="">All Status</option><option value="active">Active</option><option value="trial">Trial</option><option value="inactive">Inactive</option>
+                                    <option value="">All Status</option><option value="active">Active</option><option value="trial">Trial plan</option><option value="suspended">Suspended</option>
                                 </select>
                             </div>
                         </div>
@@ -466,19 +454,15 @@ if (!window.__feeflowBridgeLoaded) {
                             <div class="grid-2">
                                 <div class="form-group">
                                     <label class="form-label">Platform Name</label>
-                                    <input type="text" class="form-input" id="platformName" value="FeeFlow">
+                                    <input type="text" class="form-input" id="platformName" value="FeeFlow" maxlength="60">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Support Email</label>
-                                    <input type="email" class="form-input" value="support@feeflow.co.ke">
+                                    <input type="email" class="form-input" id="supportEmail" placeholder="support@yourdomain.co.ke">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Support Phone</label>
-                                    <input type="text" class="form-input" value="0700 123 456">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Default Paybill</label>
-                                    <input type="text" class="form-input" value="247247" disabled>
+                                    <input type="text" class="form-input" id="supportPhone" placeholder="07XX XXX XXX">
                                 </div>
                             </div>
                             <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
@@ -486,25 +470,20 @@ if (!window.__feeflowBridgeLoaded) {
                     </div>
 
                     <div class="card">
-                        <div class="card-header"><div class="card-title">API Configuration</div></div>
+                        <div class="card-header"><div class="card-title">Integrations</div></div>
                         <div class="card-body p">
-                            <div class="form-group">
-                                <label class="form-label">M-Pesa Consumer Key</label>
-                                <input type="password" class="form-input" value="••••••••••••••••••••">
+                            <div class="alert alert-info" style="margin-bottom:16px;">
+                                <i class="fas fa-lock" style="font-size:18px;margin-top:1px;"></i>
+                                <div>API keys and secrets are never typed into this page. They are stored securely on the server and used only by server functions.</div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">M-Pesa Consumer Secret</label>
-                                <input type="password" class="form-input" value="••••••••••••••••••••">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Callback URL</label>
-                                <input type="text" class="form-input" value="https://api.feeflow.co.ke/webhooks/mpesa">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Africa's Talking API Key</label>
-                                <input type="password" class="form-input" value="••••••••••••••••">
-                            </div>
-                            <button class="btn btn-green" onclick="testAPI()"><i class="fas fa-plug"></i> Test Connection</button>
+                            <table class="table" style="width:100%;">
+                                <thead><tr><th>Service</th><th>Purpose</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Supabase</td><td>Database, logins and security rules</td><td><span class="badge active"><i class="fas fa-circle"></i> Connected</span></td></tr>
+                                    <tr><td>M-Pesa (Daraja)</td><td>STK Push fee payments</td><td><span class="badge trial"><i class="fas fa-circle"></i> Not connected yet</span></td></tr>
+                                    <tr><td>Africa's Talking</td><td>SMS fee reminders</td><td><span class="badge trial"><i class="fas fa-circle"></i> Not connected yet</span></td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -534,7 +513,7 @@ if (!window.__feeflowBridgeLoaded) {
 <div class="modal-overlay" id="modal-addSchool">
     <div class="modal-box">
         <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-school" style="margin-right:8px;color:var(--primary);"></i> Add New School</div>
+            <div class="modal-title"><i class="fas fa-school" style="margin-right:8px;color:var(--primary);"></i> <span id="modalSchoolTitleText">Add New School</span></div>
             <button class="modal-close" onclick="closeModal('addSchool')"><i class="fas fa-times"></i></button>
         </div>
         <div class="modal-body">
@@ -552,9 +531,9 @@ if (!window.__feeflowBridgeLoaded) {
                     <input type="text" class="form-input" id="newSchoolLocation" placeholder="e.g. Kisumu">
                 </div>
             </div>
-            <div class="grid-2">
-                <div class="form-group"><label class="form-label">Admin Username</label><input type="text" class="form-input" id="newSchoolAdminUsername" placeholder="School administrator username"></div>
-                <div class="form-group"><label class="form-label">Admin Password</label><input type="password" class="form-input" id="newSchoolAdminPassword" placeholder="Create a secure password"></div>
+            <div class="grid-2" id="adminCredsRow">
+                <div class="form-group"><label class="form-label">Admin Email <span style="color:var(--danger);">*</span></label><input type="email" class="form-input" id="newSchoolAdminEmail" placeholder="admin@school.ac.ke" autocomplete="off"></div>
+                <div class="form-group"><label class="form-label">Temporary Password <span style="color:var(--danger);">*</span></label><input type="password" class="form-input" id="newSchoolAdminPassword" placeholder="At least 10 characters" autocomplete="new-password"></div>
             </div>
             <div class="form-group">
                 <label class="form-label">School Level</label>
@@ -568,10 +547,24 @@ if (!window.__feeflowBridgeLoaded) {
                     <option>Premium (KES 12,000/mo)</option><option selected>Standard (KES 6,000/mo)</option><option>Trial (14 days)</option>
                 </select>
             </div>
+            <div id="editOnlyBlock" style="display:none;">
+                <div class="form-group">
+                    <label class="form-label">Account Status</label>
+                    <select class="form-input" id="editSchoolStatus"><option value="active">Active</option><option value="suspended">Suspended</option></select>
+                </div>
+                <div class="form-group" style="border-top:1px solid var(--border);padding-top:14px;margin-top:6px;">
+                    <label class="form-label">Reset the school administrator's password</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="password" class="form-input" id="resetAdminPassword" placeholder="New password (min. 10 characters)" autocomplete="new-password">
+                        <button class="btn btn-outline" onclick="resetAdminPassword()" id="resetAdminBtn" style="white-space:nowrap;">Reset</button>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Share the new password with the administrator securely. They can change it after signing in.</div>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-outline" onclick="closeModal('addSchool')">Cancel</button>
-            <button class="btn btn-primary" onclick="addSchool()"><i class="fas fa-plus"></i> Add School</button>
+            <button class="btn btn-primary" onclick="addSchool()" id="saveSchoolBtn"><i class="fas fa-plus"></i> Add School</button>
         </div>
     </div>
 </div>
@@ -579,226 +572,252 @@ if (!window.__feeflowBridgeLoaded) {
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script src="js/config.js"></script>
+<script src="js/ff-client.js"></script>
 <script>
+'use strict';
 // ============================================================
-// AUTH CHECK
+// FeeFlow Super Admin dashboard (Supabase)
+// The Super Admin sees schools, parent accounts and platform TOTALS. Individual students and
+// payments are private to each school: the database does not allow this role to read them.
 // ============================================================
-function checkAuth() {
-    const sessions=JSON.parse(safeStorage.getItem('ff_sessions')||'[]');
-    let superSession=sessions.length===1?sessions.find(s=>s.type==='super'&&Date.now()-s.timestamp<86400000):null;
-    if(!superSession && typeof window.ensureDemoSession === 'function') {
-        superSession = window.ensureDemoSession('super');
-    }
-    if(!superSession){window.location.replace('portal.html');return;}
-    document.getElementById('authCheck').style.display='block';
-    loadData();
+if (!window.FF) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center;">FeeFlow could not load. Check your internet connection and refresh the page.</div>';
+    throw new Error('FeeFlow client failed to load');
+}
+const sb = FF.sb;
+const esc = FF.escapeHtml;
+const PLAN_PRICE = { Premium: 12000, Standard: 6000, Trial: 0 };
+
+let me = null;
+let platformData = { schools: [], parents: [], notifs: [], settings: {} };
+let editingSchoolId = null;
+
+// ---------- helpers ----------
+const val = (id) => (document.getElementById(id).value || '').trim();
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const statusLabel = (s) => ({ active: 'Active', suspended: 'Suspended' }[s] || 'Active');
+const statusClass = (s) => (s === 'suspended' ? 'inactive' : 'active');
+function timeAgo(iso) {
+    if (!iso) return 'Recently';
+    const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (sec < 60) return 'Just now';
+    if (sec < 3600) return Math.floor(sec / 60) + ' min ago';
+    if (sec < 86400) return Math.floor(sec / 3600) + ' hr ago';
+    if (sec < 172800) return 'Yesterday';
+    return new Date(iso).toLocaleDateString();
+}
+async function fnErrorMessage(error) {           // Edge Function errors carry our readable message in the response body
+    try { const body = await error.context.json(); if (body && body.error) return body.error; } catch (e) { /* fall through */ }
+    return FF.friendlyError(error);
+}
+function setBusy(btnId, busy, label) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + esc(label); }
+    else { btn.disabled = false; if (btn.dataset.html) btn.innerHTML = btn.dataset.html; }
 }
 
-function logout() {
-    const sessions = JSON.parse(safeStorage.getItem('ff_sessions') || '[]');
-    safeStorage.setItem('ff_sessions', '[]');
-    window.location.href = 'portal.html';
+// ============================================================
+// AUTH
+// ============================================================
+async function checkAuth() {
+    me = await FF.requireRole('super_admin');
+    if (!me) return;                               // sent back to the login page
+    document.getElementById('userName').textContent = me.full_name || me.email || 'Super Admin';
+    document.getElementById('authCheck').style.display = 'block';
+    await loadData();
 }
+function logout() { FF.signOut(); }
 
 // ============================================================
 // DATA LOADING
 // ============================================================
-let platformData = {};
+async function loadData() {
+    const [schoolsR, overviewR, parentsR, notifR, settingsR] = await Promise.all([
+        sb.from('schools').select('id, name, location, level, paybill, plan, status, created_at').order('created_at', { ascending: false }),
+        sb.rpc('platform_overview'),
+        sb.rpc('platform_parents'),
+        sb.from('notifications').select('id, title, body, unread, created_at').eq('audience', 'super').order('created_at', { ascending: false }).limit(100),
+        sb.from('platform_settings').select('key, value')
+    ]);
+    const failed = [schoolsR, overviewR, parentsR, notifR, settingsR].find(r => r.error);
+    if (failed) showToast(FF.friendlyError(failed.error), 'error');
 
-function loadData() {
-    // Get all schools
-    const schools = JSON.parse(safeStorage.getItem('ff_schools') || '[]');
-    const parents = JSON.parse(safeStorage.getItem('ff_parents') || '[]');
-    const students = JSON.parse(safeStorage.getItem('ff_students') || '[]');
-    const payments = []; // School payment transactions are intentionally private from Super Admin.
-    const receipts = JSON.parse(safeStorage.getItem('ff_receipts') || '[]');
-    const notifs = JSON.parse(safeStorage.getItem('ff_notifications') || '[]').filter(n => n.audience === 'super' || n.audience === 'platform');
-
-    platformData = { schools, parents, students, payments, receipts, notifs };
+    const overview = {};
+    (overviewR.data || []).forEach(o => { overview[o.school_id] = o; });
+    const schools = (schoolsR.data || []).map(s => ({
+        ...s,
+        students: Number((overview[s.id] || {}).students || 0),
+        parentCount: Number((overview[s.id] || {}).parents || 0),
+        collectionRate: Number((overview[s.id] || {}).collection_rate || 0)
+    }));
+    platformData = {
+        schools,
+        parents: parentsR.data || [],
+        notifs: notifR.data || [],
+        settings: Object.fromEntries((settingsR.data || []).map(r => [r.key, r.value]))
+    };
 
     renderSchoolsOverview();
     renderRecentActivity();
     renderCollectionProgress();
-    renderSchoolsTable();
+    renderSchoolsTable(currentSchoolFilter);
+    renderParentFilter();
     renderParents();
     renderNotifications();
+    applySettings();
     updateStats();
 }
 
 function updateStats() {
-    const { schools, students, parents } = platformData;
-    const planPrice={Premium:12000,Standard:6000,Trial:0,Unassigned:0};
-    const activeSchools=schools.filter(s=>(s.status||'active')!=='inactive');
-    const monthlyHosting=activeSchools.reduce((a,s)=>a+(planPrice[s.plan]||0),0);
-    document.getElementById('statSchools').textContent=activeSchools.length;
-    document.getElementById('statStudents').textContent=students.length.toLocaleString();
-    document.getElementById('statRevenue').textContent='KES '+monthlyHosting.toLocaleString();
-    document.getElementById('statMonthly').textContent='KES '+(monthlyHosting*12).toLocaleString();
-    if(document.getElementById('revenueGross'))document.getElementById('revenueGross').textContent='KES '+monthlyHosting.toLocaleString();
-    if(document.getElementById('revenueCollected'))document.getElementById('revenueCollected').textContent='KES '+monthlyHosting.toLocaleString();
-    if(document.getElementById('revenuePending'))document.getElementById('revenuePending').textContent='KES 0';
-    document.getElementById('parentCount').textContent=parents.length;
-    const plans=document.getElementById('plansBody');if(plans){const groups={};schools.forEach(s=>groups[s.plan||'Unassigned']=(groups[s.plan||'Unassigned']||0)+1);plans.innerHTML=Object.keys(groups).length?Object.entries(groups).map(([plan,count])=>`<tr><td>${plan}</td><td>${count}</td><td>Configured per school</td><td>—</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No subscription data available.</td></tr>';}
+    const { schools, parents } = platformData;
+    const active = schools.filter(s => s.status === 'active');
+    const monthlyHosting = active.reduce((a, s) => a + (PLAN_PRICE[s.plan] || 0), 0);
+    const totalStudents = schools.reduce((a, s) => a + s.students, 0);
+    document.getElementById('statSchools').textContent = active.length;
+    document.getElementById('statStudents').textContent = totalStudents.toLocaleString();
+    document.getElementById('statRevenue').textContent = 'KES ' + monthlyHosting.toLocaleString();
+    document.getElementById('statMonthly').textContent = 'KES ' + (monthlyHosting * 12).toLocaleString();
+    document.getElementById('revenueGross').textContent = 'KES ' + monthlyHosting.toLocaleString();
+    document.getElementById('revenueCollected').textContent = 'KES ' + monthlyHosting.toLocaleString();
+    document.getElementById('revenuePending').textContent = 'KES 0';
+    document.getElementById('parentCount').textContent = parents.length;
 
+    const groups = {};
+    active.forEach(s => { groups[s.plan] = (groups[s.plan] || 0) + 1; });
+    document.getElementById('plansBody').innerHTML = Object.keys(groups).length
+        ? Object.entries(groups).map(([plan, count]) => `<tr><td>${esc(plan)}</td><td>${count}</td><td>KES ${(PLAN_PRICE[plan] || 0).toLocaleString()}/mo</td><td>KES ${((PLAN_PRICE[plan] || 0) * count).toLocaleString()}/mo</td></tr>`).join('')
+        : '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No subscription data available.</td></tr>';
 }
 
 // ============================================================
-// RENDER FUNCTIONS
+// RENDER FUNCTIONS (all dynamic text is escaped)
 // ============================================================
 function renderSchoolsOverview() {
     const { schools } = platformData;
     const colors = ['linear-gradient(135deg,#0c2d57,#1a6dcc)', 'linear-gradient(135deg,#f59e0b,#d97706)', 'linear-gradient(135deg,#7c3aed,#8b5cf6)'];
-    const container = document.getElementById('schoolsOverview');
-    container.innerHTML = schools.map((s, i) => `
+    document.getElementById('schoolsOverview').innerHTML = schools.length ? schools.map((s, i) => `
         <div class="school-card" onclick="showSection('schools')">
             <div class="school-card-header">
-                <div class="school-icon" style="background:${colors[i % colors.length]};">
-                    <i class="fas fa-school"></i>
-                </div>
+                <div class="school-icon" style="background:${colors[i % colors.length]};"><i class="fas fa-school"></i></div>
                 <div>
-                    <div class="school-name">${s.name}</div>
-                    <div class="school-meta">${s.location} • ${s.level}</div>
+                    <div class="school-name">${esc(s.name)}</div>
+                    <div class="school-meta">${esc(s.location || 'Location not set')} • ${esc(s.level || 'School')}</div>
                 </div>
-                <span class="badge ${s.status || 'active'}" style="margin-left:auto;"><i class="fas fa-circle"></i> ${(s.status || 'active').charAt(0).toUpperCase() + (s.status || 'active').slice(1)}</span>
+                <span class="badge ${statusClass(s.status)}" style="margin-left:auto;"><i class="fas fa-circle"></i> ${statusLabel(s.status)}</span>
             </div>
             <div class="school-stats">
-                <div class="school-stat"><div class="school-stat-label">Students</div><div class="school-stat-value">${s.students?.toLocaleString() || '—'}</div></div>
-                <div class="school-stat"><div class="school-stat-label">Collection</div><div class="school-stat-value" style="color:var(--emerald);">${s.collectionRate || 0}%</div></div>
-                <div class="school-stat"><div class="school-stat-label">Plan</div><div class="school-stat-value">${s.plan || 'Standard'}</div></div>
-                <div class="school-stat"><div class="school-stat-label">Paybill</div><div class="school-stat-value">${s.paybill || '—'}</div></div>
+                <div class="school-stat"><div class="school-stat-label">Students</div><div class="school-stat-value">${s.students.toLocaleString()}</div></div>
+                <div class="school-stat"><div class="school-stat-label">Collection</div><div class="school-stat-value" style="color:var(--emerald);">${s.collectionRate}%</div></div>
+                <div class="school-stat"><div class="school-stat-label">Plan</div><div class="school-stat-value">${esc(s.plan)}</div></div>
+                <div class="school-stat"><div class="school-stat-label">Paybill</div><div class="school-stat-value">${esc(s.paybill || '—')}</div></div>
             </div>
-        </div>
-    `).join('');
+        </div>`).join('')
+        : '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No schools yet. Click "Add School" to onboard the first one.</p>';
 }
 
 function renderRecentActivity() {
     const { notifs } = platformData;
-    const container = document.getElementById('recentActivity');
-    container.innerHTML = (notifs.slice(0, 6)).map(n => `
+    document.getElementById('recentActivity').innerHTML = notifs.slice(0, 6).map(n => `
         <div class="notif-item ${n.unread ? 'unread' : ''}" style="border-bottom:1px solid var(--border);padding:12px 16px;">
-            <div class="notif-title">${n.title}</div>
-            <div class="notif-body">${n.body}</div>
-            <div class="notif-time">${n.time || 'Recently'}</div>
-        </div>
-    `).join('') || '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No recent activity</p>';
+            <div class="notif-title">${esc(n.title)}</div>
+            <div class="notif-body">${esc(n.body)}</div>
+            <div class="notif-time">${esc(timeAgo(n.created_at))}</div>
+        </div>`).join('') || '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No recent activity</p>';
 }
 
 function renderCollectionProgress() {
     const { schools } = platformData;
-    const container = document.getElementById('collectionProgress');
-    const data = schools;
     const colors = ['linear-gradient(90deg,#059669,#10b981)', 'linear-gradient(90deg,#3b82f6,#60a5fa)', 'linear-gradient(90deg,#f59e0b,#fbbf24)'];
-    container.innerHTML = data.map((s, i) => `
+    document.getElementById('collectionProgress').innerHTML = schools.map((s, i) => `
         <div>
             <div class="progress-item-header">
-                <span class="progress-name">${s.name}</span>
-                <span class="progress-pct" style="color:${s.collectionRate >= 80 ? 'var(--emerald)' : s.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'}">${s.collectionRate || 0}%</span>
+                <span class="progress-name">${esc(s.name)}</span>
+                <span class="progress-pct" style="color:${s.collectionRate >= 80 ? 'var(--emerald)' : s.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'}">${s.collectionRate}%</span>
             </div>
-            <div class="progress-track">
-                <div class="progress-fill" style="width:${s.collectionRate || 0}%;background:${colors[i % colors.length]};"></div>
-            </div>
-        </div>
-    `).join('');
+            <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, s.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
+        </div>`).join('');
 }
 
+let currentSchoolFilter = '';
 function renderSchoolsTable(filter = '') {
+    currentSchoolFilter = filter;
     const { schools } = platformData;
-    const data = filter ? schools.filter(s => (s.status || 'active') === filter) : schools;
-    const table = document.getElementById('schoolsTable');
+    const data = schools.filter(s => !filter || (filter === 'trial' ? s.plan === 'Trial' : s.status === filter));
     document.getElementById('schoolCount').textContent = `(${data.length})`;
-    table.innerHTML = `
+    document.getElementById('schoolsTable').innerHTML = `
         <thead><tr><th>School</th><th>Location</th><th>Level</th><th>Students</th><th>Collection</th><th>Plan</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-            ${data.map(s => `
+            ${data.length ? data.map(s => `
                 <tr>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px;">
                             <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;color:white;font-size:14px;"><i class="fas fa-school"></i></div>
-                            <div><div style="font-weight:600;">${s.name}</div><div style="font-size:11px;color:var(--text-light);">Paybill: ${s.paybill}</div></div>
+                            <div><div style="font-weight:600;">${esc(s.name)}</div><div style="font-size:11px;color:var(--text-light);">Paybill: ${esc(s.paybill || '—')}</div></div>
                         </div>
                     </td>
-                    <td>${s.location || '—'}</td>
-                    <td>${s.level || '—'}</td>
-                    <td>${s.students?.toLocaleString() || '—'}</td>
-                    <td><span style="font-weight:600;color:${(s.collectionRate || 0) >= 80 ? 'var(--emerald)' : 'var(--warning)'};">${s.collectionRate || 0}%</span></td>
-                    <td>${s.plan || 'Standard'}</td>
-                    <td><span class="badge ${s.status || 'active'}"><i class="fas fa-circle"></i> ${(s.status || 'active').charAt(0).toUpperCase() + (s.status || 'active').slice(1)}</span></td>
+                    <td>${esc(s.location || '—')}</td>
+                    <td>${esc(s.level || '—')}</td>
+                    <td>${s.students.toLocaleString()}</td>
+                    <td><span style="font-weight:600;color:${s.collectionRate >= 80 ? 'var(--emerald)' : 'var(--warning)'};">${s.collectionRate}%</span></td>
+                    <td>${esc(s.plan)}</td>
+                    <td><span class="badge ${statusClass(s.status)}"><i class="fas fa-circle"></i> ${statusLabel(s.status)}</span></td>
                     <td>
-                        <button class="btn btn-outline btn-sm" onclick="viewSchool('${s.id}')"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-outline btn-sm" onclick="editSchool('${s.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-outline btn-sm" onclick="viewSchool('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-outline btn-sm" onclick="editSchool('${esc(s.id)}')" aria-label="Edit ${esc(s.name)}"><i class="fas fa-edit"></i></button>
                     </td>
-                </tr>
-            `).join('')}
-        </tbody>
-    `;
+                </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">No schools match.</td></tr>'}
+        </tbody>`;
 }
 
+function renderParentFilter() {
+    const select = document.getElementById('parentSchoolFilter');
+    const keep = select.value;
+    select.innerHTML = '<option value="">All Schools</option>' + platformData.schools.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+    select.value = keep;
+}
 function renderParents() {
-    const { parents, schools } = platformData;
-    const schoolSelect = document.getElementById('parentSchoolFilter');
-    schoolSelect.innerHTML = '<option value="">All Schools</option>' + schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-
-    const tbody = document.getElementById('parentsBody');
-    tbody.innerHTML = parents.length === 0 ? '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">No parent accounts registered yet.</td></tr>' : parents.map(p => `
-        <tr>
-            <td style="font-weight:600;">${p.name}</td>
-            <td>+254 ${(p.phone || '').replace(/ /g, '')}</td>
-            <td>${p.schoolName || schools.find(s => s.id === p.schoolId)?.name || '—'}</td>
-            <td>${p.children?.length || 0}</td>
-            <td style="color:var(--text-light);font-size:12px;">${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</td>
-        </tr>
-    `).join('');
+    const filter = document.getElementById('parentSchoolFilter').value;
+    const rows = platformData.parents.filter(p => !filter || p.school_id === filter);
+    document.getElementById('parentsBody').innerHTML = rows.length === 0
+        ? '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">No parent accounts registered yet.</td></tr>'
+        : rows.map(p => `
+            <tr>
+                <td style="font-weight:600;">${esc(p.full_name)}</td>
+                <td>+${esc(p.phone)}</td>
+                <td>${esc(p.school_name || '—')}</td>
+                <td>${Number(p.children || 0)}</td>
+                <td style="color:var(--text-light);font-size:12px;">${p.created_at ? esc(new Date(p.created_at).toLocaleDateString()) : '—'}</td>
+            </tr>`).join('');
 }
-
-function filterParents() {
-    renderParents();
-}
-
-function renderTransactions() {
-    const { payments } = platformData;
-    const tbody = document.getElementById('transactionsBody');
-    tbody.innerHTML = payments.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No transactions yet.</td></tr>' : payments.map(p => `
-        <tr>
-            <td style="font-family:'Space Grotesk',sans-serif;font-weight:600;">${p.ref || p.id}</td>
-            <td>${p.schoolName || platformData.schools.find(s=>s.id===p.schoolId)?.name || '—'}</td>
-            <td>${p.studentName || '—'}</td>
-            <td style="font-weight:700;">KES ${(p.amount || 0).toLocaleString()}</td>
-            <td><i class="fas fa-mobile-alt" style="color:var(--emerald);margin-right:4px;"></i> ${p.method || 'M-Pesa'}</td>
-            <td><span class="badge ${p.status || 'pending'}"><i class="fas fa-circle"></i> ${(p.status || 'pending').charAt(0).toUpperCase() + (p.status || 'pending').slice(1)}</span></td>
-            <td style="color:var(--text-light);font-size:12px;">${p.date || '—'}</td>
-        </tr>
-    `).join('');
-}
+function filterParents() { renderParents(); }
 
 function renderNotifications() {
     const { notifs } = platformData;
-    const container = document.getElementById('notifList');
-    const unread = notifs.filter(n => n.unread);
-    document.getElementById('notifDot').style.display = unread.length > 0 ? 'block' : 'none';
-    
-    container.innerHTML = notifs.length === 0 ? '<p style="padding:30px;text-align:center;color:var(--text-light);font-size:13px;">No notifications</p>' : notifs.map(n => `
-        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markRead(${n.id})">
-            <div class="notif-title">${n.title}</div>
-            <div class="notif-body">${n.body}</div>
-            <div class="notif-time">${n.time || 'Recently'}</div>
-        </div>
-    `).join('');
+    document.getElementById('notifDot').style.display = notifs.some(n => n.unread) ? 'block' : 'none';
+    document.getElementById('notifList').innerHTML = notifs.length === 0
+        ? '<p style="padding:30px;text-align:center;color:var(--text-light);font-size:13px;">No notifications</p>'
+        : notifs.map(n => `
+            <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markRead(${Number(n.id)})">
+                <div class="notif-title">${esc(n.title)}</div>
+                <div class="notif-body">${esc(n.body)}</div>
+                <div class="notif-time">${esc(timeAgo(n.created_at))}</div>
+            </div>`).join('');
 }
-
-function markRead(id) {
-    const notifs = JSON.parse(safeStorage.getItem('ff_notifications') || '[]');
-    const n = notifs.find(x => x.id === id);
-    if (n) n.unread = false;
-    safeStorage.setItem('ff_notifications', JSON.stringify(notifs));
-    platformData.notifs = notifs;
+async function markRead(id) {
+    const n = platformData.notifs.find(x => x.id === id);
+    if (!n || !n.unread) return;
+    const { error } = await sb.from('notifications').update({ unread: false }).eq('id', id);
+    if (error) return showToast(FF.friendlyError(error), 'error');
+    n.unread = false;
     renderNotifications();
 }
-
-function markAllRead() {
-    const notifs = JSON.parse(safeStorage.getItem('ff_notifications') || '[]');
-    notifs.forEach(n => n.unread = false);
-    safeStorage.setItem('ff_notifications', JSON.stringify(notifs));
-    platformData.notifs = notifs;
+async function markAllRead() {
+    const { error } = await sb.from('notifications').update({ unread: false }).eq('audience', 'super').eq('unread', true);
+    if (error) return showToast(FF.friendlyError(error), 'error');
+    platformData.notifs.forEach(n => { n.unread = false; });
     renderNotifications();
     showToast('All marked as read');
 }
@@ -812,58 +831,145 @@ function navigate(section, el) {
     if (el) el.classList.add('active');
     document.getElementById('sec-' + section).classList.add('active');
     document.getElementById('pageTitle').textContent = section.charAt(0).toUpperCase() + section.slice(1);
-    
     if (section === 'notifications') renderNotifications();
 }
-
-function showSection(section) {
-    navigate(section, null);
-}
-
-function filterSchools(filter) {
-    renderSchoolsTable(filter);
-}
+function showSection(section) { navigate(section, null); }
+function filterSchools(filter) { renderSchoolsTable(filter); }
 
 // ============================================================
-// MODALS & ACTIONS
-let editingSchoolId = null;
+// SCHOOLS: add / edit / view / reset admin password
 // ============================================================
 function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
 function closeModal(id) { document.getElementById('modal-' + id).classList.remove('open'); }
 
-function addSchool() {
-    const name=document.getElementById('newSchoolName').value.trim(); if(!name){alert('Please enter school name');return;}
-    const schools=JSON.parse(safeStorage.getItem('ff_schools')||'[]');
-    const username=document.getElementById('newSchoolAdminUsername').value.trim(),adminPassword=document.getElementById('newSchoolAdminPassword').value;
-    if(!username||!adminPassword){alert('Create an administrator username and password for this school');return;}
-    const data={name,location:document.getElementById('newSchoolLocation').value.trim(),paybill:document.getElementById('newSchoolPaybill').value.trim(),level:document.getElementById('newSchoolLevel').value,plan:document.getElementById('newSchoolPlan').value.split(' ')[0],adminUsername:username,adminPassword};
-    if(editingSchoolId){const school=schools.find(s=>s.id===editingSchoolId);Object.assign(school,data);editingSchoolId=null;}
-    else schools.push({id:'s_'+Date.now(),...data,students:0,collectionRate:0,status:'active'});
-    safeStorage.setItem('ff_schools',JSON.stringify(schools));const ns=JSON.parse(safeStorage.getItem('ff_notifications')||'[]');ns.unshift({id:Date.now(),audience:'super',type:'platform',title:'School saved',body:name+' hosting account was saved.',time:'Just now',unread:true});safeStorage.setItem('ff_notifications',JSON.stringify(ns));closeModal('addSchool');loadData();showToast('School saved successfully','success');
+function setModalMode(editing) {
+    document.getElementById('adminCredsRow').style.display = editing ? 'none' : '';
+    document.getElementById('editOnlyBlock').style.display = editing ? 'block' : 'none';
+    document.getElementById('modalSchoolTitleText').textContent = editing ? 'Edit School' : 'Add New School';
+    document.getElementById('saveSchoolBtn').innerHTML = editing ? '<i class="fas fa-save"></i> Save Changes' : '<i class="fas fa-plus"></i> Add School';
 }
-function editSchool(id){const s=platformData.schools.find(x=>x.id===id);if(!s)return;editingSchoolId=id;document.getElementById('newSchoolName').value=s.name||'';document.getElementById('newSchoolLocation').value=s.location||'';document.getElementById('newSchoolPaybill').value=s.paybill||'';document.getElementById('newSchoolAdminUsername').value=s.adminUsername||'';document.getElementById('newSchoolAdminPassword').value=s.adminPassword||'';document.getElementById('newSchoolLevel').value=s.level||'Primary & Secondary';openModal('addSchool');}
-function viewSchool(id){const s=platformData.schools.find(x=>x.id===id);if(!s)return;const students=platformData.students.filter(x=>x.schoolId===id),parents=platformData.parents.filter(x=>x.schoolId===id);const price={Premium:12000,Standard:6000,Trial:0}[s.plan]||0;alert(`${s.name}
-Location: ${s.location||'Not set'}
-Students: ${students.length}
-Parents: ${parents.length}
-Hosting plan: ${s.plan||'Unassigned'}
-Monthly hosting fee: KES ${price.toLocaleString()}
-Status: ${s.status||'active'}`);}
+function openAddSchool() {
+    editingSchoolId = null;
+    ['newSchoolName', 'newSchoolPaybill', 'newSchoolLocation', 'newSchoolAdminEmail', 'newSchoolAdminPassword', 'resetAdminPassword'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('newSchoolLevel').selectedIndex = 2;
+    document.getElementById('newSchoolPlan').selectedIndex = 1;
+    setModalMode(false);
+    openModal('addSchool');
+}
+function planOf(selectId) { return val(selectId).split(' ')[0]; }
 
-function exportTransactions() { showToast('Transactions exported to CSV', 'info'); }
+async function addSchool() {
+    const name = val('newSchoolName');
+    const paybill = val('newSchoolPaybill');
+    if (name.length < 2) return showToast('Please enter the school name', 'warning');
+    if (paybill && !/^[0-9]{5,7}$/.test(paybill)) return showToast('Paybill must be 5 to 7 digits', 'warning');
+    const fields = { name, location: val('newSchoolLocation'), paybill, level: val('newSchoolLevel'), plan: planOf('newSchoolPlan') };
 
-function saveSettings() {
-    showToast('Settings saved successfully', 'success');
-    safeStorage.setItem('ff_platformSettings', JSON.stringify({ name: document.getElementById('platformName').value }));
+    if (editingSchoolId) return saveSchoolEdit(fields);
+
+    const email = val('newSchoolAdminEmail').toLowerCase();
+    const password = document.getElementById('newSchoolAdminPassword').value;
+    if (!EMAIL_RE.test(email)) return showToast("Enter the administrator's email address", 'warning');
+    if (password.length < 10) return showToast('The temporary password must be at least 10 characters', 'warning');
+
+    setBusy('saveSchoolBtn', true, 'Creating…');
+    try {
+        const { error } = await sb.functions.invoke('admin-create-school', { body: { ...fields, admin_email: email, admin_password: password } });
+        if (error) throw Object.assign(new Error(await fnErrorMessage(error)), { handled: true });
+        document.getElementById('newSchoolAdminPassword').value = '';          // don't leave the temporary password in the form
+        closeModal('addSchool');
+        showToast(`${name} created. The administrator can sign in with ${email}.`, 'success');
+        await loadData();
+    } catch (e) {
+        showToast(e.handled ? e.message : FF.friendlyError(e), 'error');
+    } finally {
+        setBusy('saveSchoolBtn', false);
+    }
 }
 
-function testAPI() {
-    showToast('Testing API connection...', 'info');
-    setTimeout(() => showToast('Connection successful!', 'success'), 1500);
+async function saveSchoolEdit(fields) {
+    setBusy('saveSchoolBtn', true, 'Saving…');
+    try {
+        const { error } = await sb.from('schools').update({
+            name: fields.name, location: fields.location || null, paybill: fields.paybill || null,
+            level: fields.level, plan: fields.plan, status: document.getElementById('editSchoolStatus').value
+        }).eq('id', editingSchoolId);
+        if (error) throw error;
+        closeModal('addSchool');
+        showToast(`${fields.name} updated`, 'success');
+        editingSchoolId = null;
+        await loadData();
+    } catch (e) {
+        showToast(FF.friendlyError(e), 'error');
+    } finally {
+        setBusy('saveSchoolBtn', false);
+    }
+}
+
+function editSchool(id) {
+    const s = platformData.schools.find(x => x.id === id);
+    if (!s) return;
+    editingSchoolId = id;
+    document.getElementById('newSchoolName').value = s.name || '';
+    document.getElementById('newSchoolLocation').value = s.location || '';
+    document.getElementById('newSchoolPaybill').value = s.paybill || '';
+    const level = document.getElementById('newSchoolLevel');
+    level.value = s.level || level.options[2].value;
+    const plan = document.getElementById('newSchoolPlan');
+    Array.from(plan.options).forEach((o, i) => { if (o.value.split(' ')[0] === s.plan) plan.selectedIndex = i; });
+    document.getElementById('editSchoolStatus').value = s.status || 'active';
+    document.getElementById('resetAdminPassword').value = '';
+    setModalMode(true);
+    openModal('addSchool');
+}
+
+async function resetAdminPassword() {
+    const password = document.getElementById('resetAdminPassword').value;
+    if (!editingSchoolId) return;
+    if (password.length < 10) return showToast('The new password must be at least 10 characters', 'warning');
+    setBusy('resetAdminBtn', true, 'Resetting…');
+    try {
+        const { error } = await sb.functions.invoke('admin-reset-password', { body: { school_id: editingSchoolId, new_password: password } });
+        if (error) throw Object.assign(new Error(await fnErrorMessage(error)), { handled: true });
+        document.getElementById('resetAdminPassword').value = '';
+        showToast("The administrator's password was reset. Share it with them securely.", 'success');
+    } catch (e) {
+        showToast(e.handled ? e.message : FF.friendlyError(e), 'error');
+    } finally {
+        setBusy('resetAdminBtn', false);
+    }
+}
+
+function viewSchool(id) {
+    const s = platformData.schools.find(x => x.id === id);
+    if (!s) return;
+    alert(`${s.name}\nLocation: ${s.location || 'Not set'}\nStudents: ${s.students}\nParent accounts: ${s.parentCount}\nFee collection: ${s.collectionRate}%\nHosting plan: ${s.plan}\nMonthly hosting fee: KES ${(PLAN_PRICE[s.plan] || 0).toLocaleString()}\nStatus: ${statusLabel(s.status)}`);
 }
 
 // ============================================================
-// TOAST
+// SETTINGS (platform_settings table)
+// ============================================================
+function applySettings() {
+    const st = platformData.settings;
+    if (st.name) document.getElementById('platformName').value = st.name;
+    if (st.support_email) document.getElementById('supportEmail').value = st.support_email;
+    if (st.support_phone) document.getElementById('supportPhone').value = st.support_phone;
+}
+async function saveSettings() {
+    const name = val('platformName');
+    const email = val('supportEmail');
+    if (name.length < 2) return showToast('Enter the platform name', 'warning');
+    if (email && !EMAIL_RE.test(email)) return showToast('Enter a valid support email', 'warning');
+    const { error } = await sb.from('platform_settings').upsert([
+        { key: 'name', value: name }, { key: 'support_email', value: email }, { key: 'support_phone', value: val('supportPhone') }
+    ], { onConflict: 'key' });
+    if (error) return showToast(FF.friendlyError(error), 'error');
+    Object.assign(platformData.settings, { name, support_email: email, support_phone: val('supportPhone') });
+    showToast('Settings saved successfully', 'success');
+}
+
+// ============================================================
+// TOAST (text is never interpreted as HTML)
 // ============================================================
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -871,16 +977,19 @@ function showToast(message, type = 'info') {
     toast.className = 'toast ' + type;
     const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
     const colors = { info: 'var(--info)', success: 'var(--emerald)', error: 'var(--danger)', warning: 'var(--warning)' };
-    toast.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:16px;"></i> ${message}`;
+    const icon = document.createElement('i');
+    icon.className = 'fas ' + (icons[type] || icons.info);
+    icon.style.cssText = 'color:' + (colors[type] || colors.info) + ';font-size:16px;';
+    toast.appendChild(icon);
+    toast.appendChild(document.createTextNode(' ' + message));
     container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, type === 'error' ? 6000 : 3500);
 }
 
 // ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', checkAuth);
-
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });

@@ -194,7 +194,7 @@
 
     <!-- Right Panel -->
     <div class="login-right">
-        <!-- STEP 1: Login -->
+        <!-- STEP 1: Sign in (parents, school admins and the platform admin) -->
         <div id="stepLogin">
             <h2>Welcome Back</h2>
             <p class="subtitle">Sign in to your account</p>
@@ -212,101 +212,43 @@
                 <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                 <span id="loginErrorText"></span>
             </div>
+            <div class="info-notice" id="loginNotice" role="status" style="display:none;margin-bottom:16px;">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                <div id="loginNoticeText"></div>
+            </div>
 
-            <!-- Login Form -->
             <div id="loginForm">
                 <div class="info-notice">
                     <i class="fas fa-info-circle" aria-hidden="true"></i>
-                    <div>Secure portal access. School credentials are issued when a school is created by Super Admin.</div>
+                    <div>Parents, school administrators and the platform administrator all sign in here. You will be taken to the right dashboard automatically.</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="loginType">Select Account Type</label>
-                    <select class="form-input" id="loginType" onchange="updateLoginFields()">
-                        <option value="parent">👨‍👩‍👧 Parent Account</option>
-                        <option value="admin">🏫 School Admin</option>
-                        <option value="super">👑 Super Admin (Platform)</option>
-                    </select>
+                    <label class="form-label" for="loginEmail">Email Address</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com" autocomplete="email">
                 </div>
 
-                <div id="schoolSelectGroup" class="form-group">
-                    <label class="form-label" for="loginSchoolSearch">Search and Select School</label>
-                    <input type="text" class="form-input" id="loginSchoolSearch" placeholder="Type a school name or location..." oninput="searchLoginSchools(this.value)" onfocus="searchLoginSchools(this.value)" autocomplete="off">
-                    <input type="hidden" id="loginSchool" value="">
-                    <div class="school-search-results" id="loginSchoolResults"></div>
-                    <div id="loginSelectedSchool" style="display:none;margin-top:8px;padding:10px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;font-size:13px;"></div>
-                </div>
-
-                <div class="form-group" id="parentPhoneGroup">
-                    <label class="form-label" for="loginPhone">Phone Number</label>
-                    <div class="phone-input-group">
-                        <span class="phone-prefix">+254</span>
-                        <input type="tel" class="form-input" id="loginPhone" placeholder="7XX XXX XXX" maxlength="9" autocomplete="tel-national">
-                    </div>
-                </div>
-
-                <div id="adminUsernameGroup" style="display:none;" class="form-group">
-                    <label class="form-label" for="loginUsername">Username</label>
-                    <input type="text" class="form-input" id="loginUsername" placeholder="Enter your username" autocomplete="username">
-                </div>
-
-                <div id="adminPasswordGroup" style="display:none;" class="form-group">
+                <div class="form-group">
                     <label class="form-label" for="loginPassword">Password</label>
                     <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
                 </div>
 
-                <button class="btn-primary" onclick="sendOTP()" id="loginSubmitBtn">
-                    <i class="fas fa-paper-plane" style="margin-right:8px;" aria-hidden="true"></i> Continue
+                <button class="btn-primary" onclick="signIn()" id="loginSubmitBtn">
+                    <i class="fas fa-sign-in-alt" style="margin-right:8px;" aria-hidden="true"></i> Sign In
                 </button>
+
+                <p class="footer-note"><a href="#" onclick="forgotPassword();return false;">Forgot your password?</a></p>
             </div>
         </div>
 
-        <!-- STEP 2: OTP (parent login only) -->
-        <div id="stepOTP" style="display:none;">
-            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back</button>
-
-            <div class="step-indicator">
-                <div class="step done"><div class="step-dot"><i class="fas fa-check" style="font-size:10px;" aria-hidden="true"></i></div> Phone</div>
-                <div class="step-line"></div>
-                <div class="step active"><div class="step-dot">2</div> OTP</div>
-                <div class="step-line"></div>
-                <div class="step"><div class="step-dot">3</div> Dashboard</div>
-            </div>
-
-            <h2>Verify Identity</h2>
-            <p class="subtitle">Enter the 6-digit code sent to <strong id="sentToPhone">+254 7XX XXX XXX</strong></p>
-
-            <div class="otp-group" role="group" aria-label="One-time passcode">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 0, 'stepOTP')" data-idx="0">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 1, 'stepOTP')" data-idx="1">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 2, 'stepOTP')" data-idx="2">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 3, 'stepOTP')" data-idx="3">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 4, 'stepOTP')" data-idx="4">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 5, 'stepOTP')" data-idx="5">
-            </div>
-
-            <div class="info-notice" style="margin-bottom:16px;">
-                <i class="fas fa-key" aria-hidden="true"></i>
-                <div>Verification is completed using the account information entered.</div>
-            </div>
-
-            <button class="btn-primary" onclick="verifyLoginOTP()">
-                <i class="fas fa-sign-in-alt" style="margin-right:8px;" aria-hidden="true"></i> Verify &amp; Login
-            </button>
-
-            <p class="footer-note">Didn't receive the code? <a href="#" onclick="resendOTP();return false;">Resend</a></p>
-        </div>
-
-        <!-- STEP 3: Register Parent -->
+        <!-- STEP 2: Register parent -->
         <div id="stepRegister" style="display:none;">
             <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back</button>
 
             <div class="step-indicator">
-                <div class="step active"><div class="step-dot">1</div> Register</div>
+                <div class="step active"><div class="step-dot">1</div> Create Account</div>
                 <div class="step-line"></div>
-                <div class="step"><div class="step-dot">2</div> Verify</div>
-                <div class="step-line"></div>
-                <div class="step"><div class="step-dot">3</div> Add Children</div>
+                <div class="step"><div class="step-dot">2</div> Add Children</div>
             </div>
 
             <h2>Create Parent Account</h2>
@@ -326,13 +268,24 @@
                 <label class="form-label" for="regPhone">Phone Number</label>
                 <div class="phone-input-group">
                     <span class="phone-prefix">+254</span>
-                    <input type="tel" class="form-input" id="regPhone" placeholder="7XX XXX XXX" maxlength="9" autocomplete="tel-national">
+                    <input type="tel" class="form-input" id="regPhone" placeholder="7XX XXX XXX" maxlength="11" autocomplete="tel-national">
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="regEmail">Email Address</label>
                 <input type="email" class="form-input" id="regEmail" placeholder="parent@example.com" autocomplete="email">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="regPassword">Password</label>
+                    <input type="password" class="form-input" id="regPassword" placeholder="At least 8 characters" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="regPassword2">Confirm Password</label>
+                    <input type="password" class="form-input" id="regPassword2" placeholder="Repeat password" autocomplete="new-password">
+                </div>
             </div>
 
             <div class="form-group" id="registerSchoolGroup">
@@ -345,66 +298,42 @@
                     <div style="font-size:12px;color:var(--text-light);" id="selectedSchoolMeta"></div>
                 </div>
             </div>
-            <button class="btn-primary" onclick="sendRegistrationOTP()">
-                <i class="fas fa-user-plus" style="margin-right:8px;" aria-hidden="true"></i> Register &amp; Continue
+
+            <button class="btn-primary" onclick="registerParent()" id="registerBtn">
+                <i class="fas fa-user-plus" style="margin-right:8px;" aria-hidden="true"></i> Create Account &amp; Continue
             </button>
         </div>
 
-        <!-- STEP 4: Verify Registration -->
+        <!-- STEP 3: Confirm email (only shown when the project requires email confirmation) -->
         <div id="stepVerifyReg" style="display:none;">
             <button class="back-btn" onclick="goBackToReg()"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back</button>
-
-            <div class="step-indicator">
-                <div class="step done"><div class="step-dot"><i class="fas fa-check" style="font-size:10px;" aria-hidden="true"></i></div> Register</div>
-                <div class="step-line"></div>
-                <div class="step active"><div class="step-dot">2</div> Verify</div>
-                <div class="step-line"></div>
-                <div class="step"><div class="step-dot">3</div> Add Children</div>
+            <div style="text-align:center;margin:12px 0 20px;">
+                <div style="width:64px;height:64px;border-radius:50%;background:#eff6ff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto;">
+                    <i class="fas fa-envelope-open-text" aria-hidden="true"></i>
+                </div>
             </div>
-
-            <h2>Verify Phone</h2>
-            <p class="subtitle">Enter the 6-digit code sent to <strong id="regSentPhone">+254 7XX XXX XXX</strong></p>
-
-            <div class="error-msg" id="verifyRegError" role="alert">
-                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
-                <span id="verifyRegErrorText"></span>
-            </div>
-
-            <div class="otp-group" role="group" aria-label="One-time passcode">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 0, 'stepVerifyReg')" data-idx="0">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 1, 'stepVerifyReg')" data-idx="1">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 2, 'stepVerifyReg')" data-idx="2">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 3, 'stepVerifyReg')" data-idx="3">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 4, 'stepVerifyReg')" data-idx="4">
-                <input type="text" inputmode="numeric" class="otp-input" maxlength="1" oninput="otpMove(this, 5, 'stepVerifyReg')" data-idx="5">
-            </div>
-
-            <div class="info-notice" style="margin-bottom:16px;">
-                <i class="fas fa-key" aria-hidden="true"></i>
-                <div>Your registration details will be verified and saved once confirmed.</div>
-            </div>
-
-            <button class="btn-primary" onclick="verifyRegistration()">
-                <i class="fas fa-check" style="margin-right:8px;" aria-hidden="true"></i> Verify &amp; Continue
+            <h2 style="text-align:center;">Check Your Email</h2>
+            <p class="subtitle" style="text-align:center;">We sent a confirmation link to <strong id="confirmEmailAddress"></strong>. Open it, then sign in here to finish setting up your account.</p>
+            <button class="btn-primary" onclick="goBack()">
+                <i class="fas fa-sign-in-alt" style="margin-right:8px;" aria-hidden="true"></i> Go to Sign In
             </button>
-
-            <p class="footer-note">Didn't receive the code? <a href="#" onclick="resendOTP();return false;">Resend</a></p>
         </div>
 
-        <!-- STEP 5: Add Children -->
+        <!-- STEP 4: Add children -->
         <div id="stepAddChildren" style="display:none;">
-            <button class="back-btn" onclick="goBackToVerify()"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back</button>
-
             <div class="step-indicator">
-                <div class="step done"><div class="step-dot"><i class="fas fa-check" style="font-size:10px;" aria-hidden="true"></i></div> Register</div>
+                <div class="step done"><div class="step-dot"><i class="fas fa-check" style="font-size:10px;" aria-hidden="true"></i></div> Create Account</div>
                 <div class="step-line"></div>
-                <div class="step done"><div class="step-dot"><i class="fas fa-check" style="font-size:10px;" aria-hidden="true"></i></div> Verify</div>
-                <div class="step-line"></div>
-                <div class="step active"><div class="step-dot">3</div> Add Children</div>
+                <div class="step active"><div class="step-dot">2</div> Add Children</div>
             </div>
 
             <h2>Add Your Children</h2>
-            <p class="subtitle">Link your children's student accounts to your profile</p>
+            <p class="subtitle">Enter each child's details exactly as the school has them. The school confirms every link before fees are shown.</p>
+
+            <div class="error-msg" id="childError" role="alert">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                <span id="childErrorText"></span>
+            </div>
 
             <div class="form-group">
                 <label class="form-label" for="childName">Child's Full Name</label>
@@ -424,8 +353,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="childAdm">ADM / Student No.</label>
-                    <input type="text" class="form-input" id="childAdm" placeholder="Enter admission number">
+                    <label class="form-label" for="childAdm">Admission Number</label>
+                    <input type="text" class="form-input" id="childAdm" placeholder="e.g. ADM-1042">
                 </div>
             </div>
 
@@ -436,7 +365,7 @@
                 </select>
             </div>
 
-            <button class="btn-primary" onclick="addChild()" style="margin-bottom:12px;">
+            <button class="btn-primary" onclick="addChild()" id="addChildBtn" style="margin-bottom:12px;">
                 <i class="fas fa-plus" style="margin-right:8px;" aria-hidden="true"></i> Add Child
             </button>
             <button class="btn-primary btn-secondary" onclick="finishRegistration()" id="finishBtn" disabled>
@@ -445,235 +374,129 @@
 
             <div class="child-list" id="childList"></div>
         </div>
+
+        <!-- STEP 5: Set a new password (arrives from the password-reset email) -->
+        <div id="stepNewPassword" style="display:none;">
+            <h2>Set a New Password</h2>
+            <p class="subtitle">Choose a new password for your FeeFlow account</p>
+
+            <div class="error-msg" id="newPasswordError" role="alert">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                <span id="newPasswordErrorText"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="newPassword">New Password</label>
+                <input type="password" class="form-input" id="newPassword" placeholder="At least 8 characters" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="newPassword2">Confirm New Password</label>
+                <input type="password" class="form-input" id="newPassword2" placeholder="Repeat new password" autocomplete="new-password">
+            </div>
+            <button class="btn-primary" onclick="updatePassword()" id="newPasswordBtn">
+                <i class="fas fa-lock" style="margin-right:8px;" aria-hidden="true"></i> Update Password
+            </button>
+        </div>
     </div>
 </div>
 
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script src="js/config.js"></script>
+<script src="js/ff-client.js"></script>
 <script>
+'use strict';
 // ============================================================
-// DATA STORE
+// FeeFlow sign-in & registration (Supabase Auth)
+// Everyone signs in with email + password. The database says which role the account has,
+// and we send them to the right dashboard. Roles can never be chosen or changed from here.
 // ============================================================
-const DEFAULT_SCHOOLS = [];
-const DEMO_OTP = '123456'; // demo-only stand-in for a real Africa's Talking OTP send/verify call
-
-function initStore() {
-    const defaults = {
-        ff_schools: DEFAULT_SCHOOLS,
-        ff_parents: [],
-        ff_students: [],
-        ff_payments: [],
-        ff_notifications: [],
-        ff_sessions: [],
-        ff_receipts: [],
-    };
-    Object.entries(defaults).forEach(([key, value]) => {
-        if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify(value));
-    });
+if (!window.FF) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center;">FeeFlow could not load. Check your internet connection and refresh the page.</div>';
+    throw new Error('FeeFlow client failed to load');
 }
-initStore();
-const SCHOOLS = JSON.parse(localStorage.getItem('ff_schools') || '[]');
+const sb = FF.sb;
+const escapeHtml = FF.escapeHtml;
+const STEPS = ['stepLogin', 'stepRegister', 'stepVerifyReg', 'stepAddChildren', 'stepNewPassword'];
+const CHILD_COLORS = ['#1a6dcc', '#0ea5a4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'];
 
-// NOTE: Super Admin / school admin credential checks below are placeholders for
-// this front-end demo only. In production, auth must be verified server-side —
-// never ship a real password check in client-side JS.
-const DEMO_SUPER_ADMIN_PASSWORD = '#SADMIN888';
-
-let pendingLogin = {};
-let pendingRegistration = {};
+let SCHOOLS = [];
+let schoolsError = '';
+let schoolsLoaded = false;
+let currentParentId = null;
 let registeredChildren = [];
+let recoveryMode = /type=recovery/.test(location.hash);
 
-// ============================================================
-// TAB SWITCHING
-// ============================================================
-function switchTab(el, tab) {
-    document.querySelectorAll('.role-tab').forEach(t => {
-        t.classList.remove('active');
-        t.setAttribute('aria-selected', 'false');
-    });
-    el.classList.add('active');
-    el.setAttribute('aria-selected', 'true');
+function go(url) { location.replace(url); }
 
-    document.getElementById('stepLogin').style.display = tab === 'login' ? 'block' : 'none';
-    document.getElementById('stepRegister').style.display = tab === 'register' ? 'block' : 'none';
-    document.getElementById('stepOTP').style.display = 'none';
-    document.getElementById('stepVerifyReg').style.display = 'none';
-    document.getElementById('stepAddChildren').style.display = 'none';
-
-    hideError('loginError');
-    hideError('registerError');
-    clearOTP();
+// ---------- small UI helpers ----------
+function showStep(id) {
+    STEPS.forEach(s => { document.getElementById(s).style.display = s === id ? 'block' : 'none'; });
 }
-
-function goBack() {
-    document.getElementById('stepOTP').style.display = 'none';
-    document.getElementById('stepVerifyReg').style.display = 'none';
-    document.getElementById('stepRegister').style.display = 'none';
-    document.getElementById('stepLogin').style.display = 'block';
-    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('.role-tab[data-tab="login"]').classList.add('active');
-    clearOTP();
-    hideError('loginError');
-}
-
-function goBackToReg() {
-    document.getElementById('stepVerifyReg').style.display = 'none';
-    document.getElementById('stepRegister').style.display = 'block';
-    clearOTP();
-}
-
-function goBackToVerify() {
-    document.getElementById('stepAddChildren').style.display = 'none';
-    document.getElementById('stepVerifyReg').style.display = 'block';
-}
-
-// ============================================================
-// LOGIN FORM
-// ============================================================
-function updateLoginFields() {
-    const type = document.getElementById('loginType').value;
-    document.getElementById('schoolSelectGroup').style.display = type !== 'super' ? 'block' : 'none';
-    document.getElementById('parentPhoneGroup').style.display = type === 'parent' ? 'block' : 'none';
-    document.getElementById('adminUsernameGroup').style.display = type === 'admin' ? 'block' : 'none';
-    document.getElementById('adminPasswordGroup').style.display = (type === 'admin' || type === 'super') ? 'block' : 'none';
-    document.getElementById('loginSchool').value = '';
-    document.getElementById('loginSchoolSearch').value = '';
-    document.getElementById('loginSelectedSchool').style.display = 'none';
-    document.getElementById('loginSchoolResults').classList.remove('show');
-}
-
-function renderSchoolResults(matches, onSelect) {
-    if (!matches.length) return `<div class="school-empty">No matching schools found.</div>`;
-    return matches.map(s => `
-        <div class="school-result" role="button" tabindex="0" onclick="${onSelect}('${s.id}')">
-            <div class="school-result-name">${escapeHtml(s.name)}</div>
-            <div class="school-result-meta">${escapeHtml(s.location || 'Location not set')} • ${escapeHtml(s.level || 'School')}${s.paybill ? ' • Paybill: ' + escapeHtml(s.paybill) : ''}</div>
-        </div>`).join('');
-}
-
-function searchLoginSchools(query) {
-    const results = document.getElementById('loginSchoolResults');
-    const q = (query || '').trim().toLowerCase();
-    const matches = SCHOOLS.filter(s => !q || s.name.toLowerCase().includes(q) || (s.location || '').toLowerCase().includes(q));
-    results.innerHTML = renderSchoolResults(matches, 'selectLoginSchool');
-    results.classList.add('show');
-}
-
-function selectLoginSchool(id) {
-    const school = SCHOOLS.find(s => s.id === id);
-    if (!school) return;
-    document.getElementById('loginSchool').value = school.id;
-    document.getElementById('loginSchoolSearch').value = school.name;
-    const selected = document.getElementById('loginSelectedSchool');
-    selected.innerHTML = `<strong><i class="fas fa-school" style="margin-right:6px;" aria-hidden="true"></i>${escapeHtml(school.name)}</strong><div style="font-size:11px;color:var(--text-light);margin-top:2px;">${escapeHtml(school.location || '')} • ${escapeHtml(school.level || 'School')}</div>`;
-    selected.style.display = 'block';
-    document.getElementById('loginSchoolResults').classList.remove('show');
-}
-
 function showError(fieldId, msg) {
     document.getElementById(fieldId + 'Text').textContent = msg;
     document.getElementById(fieldId).classList.add('show');
 }
-
-function hideError(fieldId) {
-    document.getElementById(fieldId).classList.remove('show');
+function hideError(fieldId) { document.getElementById(fieldId).classList.remove('show'); }
+function showNotice(msg) {
+    document.getElementById('loginNoticeText').textContent = msg;
+    document.getElementById('loginNotice').style.display = 'flex';
 }
-
-function normalizePhone(raw) {
-    return (raw || '').replace(/\D/g, '');
-}
-
-function isValidKenyanLocalNumber(digits) {
-    // Expects the 9-digit local part after +254, e.g. 712345678 or 112345678
-    return /^[17]\d{8}$/.test(digits);
-}
-
-function sendOTP() {
-    hideError('loginError');
-    const type = document.getElementById('loginType').value;
-    const phone = normalizePhone(document.getElementById('loginPhone')?.value);
-    const username = (document.getElementById('loginUsername')?.value || '').trim();
-    const password = document.getElementById('loginPassword')?.value || '';
-    const schoolId = document.getElementById('loginSchool')?.value || '';
-
-    if (type === 'super') {
-        if (password !== DEMO_SUPER_ADMIN_PASSWORD) { showError('loginError', 'Incorrect Super Admin password'); return; }
-        localStorage.setItem('ff_sessions', JSON.stringify([{ id: 'sess_' + Date.now(), type: 'super', schoolId: null, name: 'Super Admin', timestamp: Date.now() }]));
-        location.href = 'superadmin.html';
-        return;
-    }
-
-    if (!schoolId) { showError('loginError', 'Search for and select a school'); return; }
-    const school = SCHOOLS.find(s => s.id === schoolId);
-
-    if (type === 'admin') {
-        if (!username) { showError('loginError', 'Enter your username'); return; }
-        if (!school?.adminUsername || username !== school.adminUsername || password !== school.adminPassword) {
-            showError('loginError', 'Invalid credentials for the selected school');
-            return;
-        }
-        localStorage.setItem('ff_sessions', JSON.stringify([{ id: 'sess_' + Date.now(), type: 'admin', schoolId, name: school.name, timestamp: Date.now() }]));
-        location.href = 'schooladmin.html';
-        return;
-    }
-
-    // Parent login: validate phone + existing account, then require 
-    if (!isValidKenyanLocalNumber(phone)) { showError('loginError', 'Enter a valid phone number, e.g. 712 345 678'); return; }
-    const parent = JSON.parse(localStorage.getItem('ff_parents') || '[]').find(p => p.phone === phone && p.schoolId === schoolId);
-    if (!parent) { showError('loginError', 'No parent account was found at the selected school. Please register first.'); return; }
-
-    pendingLogin = { type: 'parent', phone, schoolId, parentId: parent.id };
-    document.getElementById('sentToPhone').textContent = '+254 ' + formatPhoneDisplay(phone);
-    document.getElementById('stepLogin').style.display = 'none';
-    document.getElementById('stepOTP').style.display = 'block';
-    clearOTP();
-    focusFirstOtp('stepOTP');
-}
-
-function verifyLoginOTP() {
-    hideError('loginError');
-    const code = readOtp('stepOTP');
-    if (code !== DEMO_OTP) { alert('Verification code is invalid.'); return; }
-
-    const parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
-    const parent = parents.find(p => p.id === pendingLogin.parentId);
-    if (!parent) { alert('Account not found. Please try again.'); goBack(); return; }
-
-    const session = { id: 'sess_' + Date.now(), type: 'parent', parentId: parent.id, schoolId: parent.schoolId, name: parent.name, timestamp: Date.now() };
-    localStorage.setItem('ff_sessions', JSON.stringify([session]));
-    window.location.href = 'parent.html';
-}
-
-function resendOTP() {
-    alert('OTP resent successfully!');
-}
-
-function formatPhoneDisplay(digits) {
-    if (digits.length !== 9) return digits;
-    return `${digits.slice(0,3)} ${digits.slice(3,6)} ${digits.slice(6)}`;
-}
-
-function otpMove(el, idx, containerId) {
-    el.value = el.value.replace(/\D/g, '').slice(0, 1);
-    const inputs = document.querySelectorAll(`#${containerId} .otp-input`);
-    if (el.value.length === 1) {
-        el.classList.add('filled');
-        if (idx < inputs.length - 1) inputs[idx + 1].focus();
+function hideNotice() { document.getElementById('loginNotice').style.display = 'none'; }
+function val(id) { return (document.getElementById(id).value || '').trim(); }
+function setBusy(btnId, busy, label) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    if (busy) {
+        btn.dataset.html = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;" aria-hidden="true"></i> ' + escapeHtml(label);
     } else {
-        el.classList.remove('filled');
+        btn.disabled = false;
+        if (btn.dataset.html) btn.innerHTML = btn.dataset.html;
     }
 }
+function normalizePhone(raw) { return (raw || '').replace(/\D/g, '').replace(/^0/, ''); }
+function isValidKenyanLocalNumber(digits) { return /^[17]\d{8}$/.test(digits); }   // the 9 digits after +254
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-function readOtp(containerId) {
-    return Array.from(document.querySelectorAll(`#${containerId} .otp-input`)).map(i => i.value).join('');
+// ---------- tabs / navigation between steps ----------
+function switchTab(el, tab) {
+    document.querySelectorAll('.role-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+    el.classList.add('active');
+    el.setAttribute('aria-selected', 'true');
+    hideError('loginError'); hideError('registerError'); hideNotice();
+    showStep(tab === 'login' ? 'stepLogin' : 'stepRegister');
 }
-
-function focusFirstOtp(containerId) {
-    const first = document.querySelector(`#${containerId} .otp-input`);
-    if (first) first.focus();
+function goBack() {
+    showStep('stepLogin');
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.role-tab[data-tab="login"]').classList.add('active');
+    hideError('loginError');
 }
+function goBackToReg() { showStep('stepRegister'); }
 
-// ============================================================
-// PARENT REGISTRATION
-// ============================================================
+// ---------- schools (public list: id, name, location, level) ----------
+async function loadSchools() {
+    try {
+        const { data, error } = await sb.from('schools').select('id, name, location, level').order('name');
+        if (error) throw error;
+        SCHOOLS = data || [];
+    } catch (e) { schoolsError = FF.friendlyError(e); }
+    schoolsLoaded = true;
+    const box = document.getElementById('schoolSearchResults');
+    if (box && box.classList.contains('show')) searchSchools(document.getElementById('schoolSearch').value);   // refresh an open list
+}
+function renderSchoolResults(matches, onSelect) {
+    if (!schoolsLoaded) return `<div class="school-empty"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Loading schools…</div>`;
+    if (schoolsError) return `<div class="school-empty">${escapeHtml(schoolsError)}</div>`;
+    if (!SCHOOLS.length) return `<div class="school-empty">No schools have been registered on FeeFlow yet.</div>`;
+    if (!matches.length) return `<div class="school-empty">No matching schools found.</div>`;
+    return matches.map(s => `
+        <div class="school-result" role="button" tabindex="0" onclick="${onSelect}('${escapeHtml(s.id)}')">
+            <div class="school-result-name">${escapeHtml(s.name)}</div>
+            <div class="school-result-meta">${escapeHtml(s.location || 'Location not set')} • ${escapeHtml(s.level || 'School')}</div>
+        </div>`).join('');
+}
 function searchSchools(query) {
     const results = document.getElementById('schoolSearchResults');
     const q = (query || '').trim().toLowerCase();
@@ -681,214 +504,225 @@ function searchSchools(query) {
     results.innerHTML = renderSchoolResults(matches, 'selectSchool');
     results.classList.add('show');
 }
-
 function selectSchool(id) {
     const school = SCHOOLS.find(s => s.id === id);
     if (!school) return;
-
     document.getElementById('schoolSearch').value = school.name;
     document.getElementById('selectedSchoolName').textContent = school.name;
-    document.getElementById('selectedSchoolMeta').textContent = `${school.location || 'Location not set'} • ${school.level || 'School'}${school.paybill ? ' • Paybill: ' + school.paybill : ''}`;
+    document.getElementById('selectedSchoolMeta').textContent = `${school.location || 'Location not set'} • ${school.level || 'School'}`;
     document.getElementById('selectedSchool').style.display = 'block';
     document.getElementById('schoolSearchResults').classList.remove('show');
-
     document.getElementById('regSchool').value = id;
 }
 
-function sendRegistrationOTP() {
-    hideError('registerError');
-    const name = document.getElementById('regName').value.trim();
-    const phone = normalizePhone(document.getElementById('regPhone').value);
-    const email = document.getElementById('regEmail').value.trim();
-    const schoolId = document.getElementById('regSchool').value;
+// ---------- sign in ----------
+async function signIn() {
+    hideError('loginError'); hideNotice();
+    const email = val('loginEmail').toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    if (!EMAIL_RE.test(email)) return showError('loginError', 'Enter a valid email address.');
+    if (!password) return showError('loginError', 'Enter your password.');
+    setBusy('loginSubmitBtn', true, 'Signing in…');
+    try {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await routeAfterLogin(data.user);
+    } catch (e) {
+        showError('loginError', FF.friendlyError(e));
+    } finally {
+        setBusy('loginSubmitBtn', false);
+    }
+}
 
-    if (!name) { showError('registerError', 'Enter your full name'); return; }
-    if (!isValidKenyanLocalNumber(phone)) { showError('registerError', 'Enter a valid phone number, e.g. 712 345 678'); return; }
-    if (!/^\S+@\S+\.\S+$/.test(email)) { showError('registerError', 'Enter a valid email address'); return; }
-    if (!schoolId) { showError('registerError', 'Search for and select your school'); return; }
+async function routeAfterLogin(user) {
+    const profile = await FF.getProfile();
+    if (profile) { go(FF.routeFor(profile.role)); return; }
 
-    const parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
-    if (parents.some(p => p.phone === phone && p.schoolId === schoolId)) {
-        showError('registerError', 'This parent account already exists. Please log in instead.');
+    // No profile yet: a parent who registered while email confirmation was required finishes here.
+    const reg = user && user.user_metadata && user.user_metadata.reg;
+    if (reg && reg.school_id) {
+        currentParentId = await completeRegistration(user, reg);
+        registeredChildren = [];
+        renderChildList();
+        showStep('stepAddChildren');
         return;
     }
-
-    const school = SCHOOLS.find(s => s.id === schoolId);
-    // Stage the registration — the account itself is only created after OTP verification.
-    pendingRegistration = { name, phone, email, schoolId, schoolName: school?.name || '' };
-
-    document.getElementById('regSentPhone').textContent = '+254 ' + formatPhoneDisplay(phone);
-    document.getElementById('stepRegister').style.display = 'none';
-    document.getElementById('stepVerifyReg').style.display = 'block';
-    clearOTP();
-    focusFirstOtp('stepVerifyReg');
+    await sb.auth.signOut();
+    throw new Error('This account is not set up yet. Please contact your school or FeeFlow support.');
 }
 
-function verifyRegistration() {
-    hideError('verifyRegError');
-    const code = readOtp('stepVerifyReg');
-    if (code !== DEMO_OTP) { showError('verifyRegError', 'Verification code is invalid.'); return; }
-
-    const parent = {
-        id: 'p_' + Date.now(),
-        name: pendingRegistration.name,
-        phone: pendingRegistration.phone,
-        email: pendingRegistration.email,
-        schoolId: pendingRegistration.schoolId,
-        schoolName: pendingRegistration.schoolName,
-        children: [],
-        createdAt: Date.now(),
-    };
-
-    const parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
-    parents.push(parent);
-    localStorage.setItem('ff_parents', JSON.stringify(parents));
-    pendingRegistration.parentId = parent.id;
-    registeredChildren = [];
-
-    document.getElementById('stepVerifyReg').style.display = 'none';
-    document.getElementById('stepAddChildren').style.display = 'block';
-    renderChildList();
+async function completeRegistration(user, reg) {
+    const { data, error } = await sb.rpc('register_parent', {
+        p_school_id: reg.school_id, p_name: reg.name, p_phone: reg.phone, p_email: user.email
+    });
+    if (error) throw error;
+    sb.auth.updateUser({ data: { reg: null } }).catch(() => {});   // tidy up; not critical
+    return data;
 }
 
-function addChild() {
-    const name = document.getElementById('childName').value.trim();
+// ---------- register a parent ----------
+async function registerParent() {
+    hideError('registerError');
+    const name = val('regName');
+    const phone9 = normalizePhone(val('regPhone'));
+    const email = val('regEmail').toLowerCase();
+    const schoolId = val('regSchool');
+    const pw = document.getElementById('regPassword').value;
+    const pw2 = document.getElementById('regPassword2').value;
+
+    if (name.length < 2) return showError('registerError', 'Enter your full name.');
+    if (!isValidKenyanLocalNumber(phone9)) return showError('registerError', 'Enter a valid Kenyan phone number, e.g. 712 345 678.');
+    if (!EMAIL_RE.test(email)) return showError('registerError', 'Enter a valid email address.');
+    if (!schoolId) return showError('registerError', 'Search for and select your school.');
+    if (pw.length < 8) return showError('registerError', 'Your password must be at least 8 characters.');
+    if (pw !== pw2) return showError('registerError', 'The two passwords do not match.');
+
+    const reg = { school_id: schoolId, name, phone: '254' + phone9 };
+    setBusy('registerBtn', true, 'Creating account…');
+    try {
+        const { data, error } = await sb.auth.signUp({
+            email, password: pw,
+            options: { data: { full_name: name, reg }, emailRedirectTo: new URL('portal.html', location.href).href }
+        });
+        if (error) throw error;
+        // With email confirmation on, an already-registered email comes back as a user with no identities.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+            throw new Error('An account with this email already exists. Please log in instead.');
+        }
+        if (data.session) {                       // confirmation off: carry straight on
+            currentParentId = await completeRegistration(data.user, reg);
+            registeredChildren = [];
+            renderChildList();
+            showStep('stepAddChildren');
+        } else {                                  // confirmation on: wait for the email link
+            document.getElementById('confirmEmailAddress').textContent = email;
+            showStep('stepVerifyReg');
+        }
+    } catch (e) {
+        showError('registerError', FF.friendlyError(e));
+    } finally {
+        setBusy('registerBtn', false);
+    }
+}
+
+// ---------- add children (links are requests until the school approves) ----------
+async function addChild() {
+    hideError('childError');
+    const name = val('childName');
     const cls = document.getElementById('childClass').value;
-    const adm = document.getElementById('childAdm').value.trim();
+    const adm = val('childAdm');
     const gender = document.getElementById('childGender').value;
+    if (name.length < 2) return showError('childError', "Enter your child's full name.");
+    if (!cls) return showError('childError', 'Select your child\'s class.');
+    if (!adm) return showError('childError', 'Enter your child\'s admission number.');
+    if (!currentParentId) return showError('childError', 'Your registration is incomplete. Please sign in again.');
 
-    if (!name) { alert("Please enter child's name"); return; }
-    if (!cls) { alert('Please select a class'); return; }
-
-    const colors = [
-        'linear-gradient(135deg,#2b7fd4,#1557a0)',
-        'linear-gradient(135deg,#10b981,#047857)',
-        'linear-gradient(135deg,#f59e0b,#d97706)',
-        'linear-gradient(135deg,#8b5cf6,#6d28d9)',
-        'linear-gradient(135deg,#06b6d4,#0891b2)',
-        'linear-gradient(135deg,#ec4899,#db2777)',
-    ];
-
-    const child = {
-        id: 'c_' + Date.now(),
-        parentId: pendingRegistration.parentId,
-        schoolId: pendingRegistration.schoolId,
-        name, class: cls,
-        adm: adm || 'ADM-' + Date.now(),
-        gender,
-        balance: 0, paid: 0, total: 0,
-        lastPayment: '—', status: 'paid',
-        color: colors[registeredChildren.length % colors.length],
-        initials: name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
-    };
-
-    registeredChildren.push(child);
-
-    const students = JSON.parse(localStorage.getItem('ff_students') || '[]');
-    students.push(child);
-    localStorage.setItem('ff_students', JSON.stringify(students));
-
-    document.getElementById('childName').value = '';
-    document.getElementById('childClass').value = '';
-    document.getElementById('childAdm').value = '';
-
-    renderChildList();
+    setBusy('addChildBtn', true, 'Adding…');
+    try {
+        const { data: status, error } = await sb.rpc('claim_child', {
+            p_parent_id: currentParentId, p_admission_no: adm, p_child_name: name, p_class: cls, p_gender: gender
+        });
+        if (error) throw error;
+        const initials = name.split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        registeredChildren.push({ name, class: cls, adm, status, initials, color: CHILD_COLORS[registeredChildren.length % CHILD_COLORS.length] });
+        ['childName', 'childAdm'].forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('childClass').value = '';
+        renderChildList();
+    } catch (e) {
+        showError('childError', FF.friendlyError(e));
+    } finally {
+        setBusy('addChildBtn', false);
+    }
 }
 
 function renderChildList() {
     const list = document.getElementById('childList');
-    const finishBtn = document.getElementById('finishBtn');
-    finishBtn.disabled = registeredChildren.length === 0;
-
+    document.getElementById('finishBtn').disabled = registeredChildren.length === 0;
     if (registeredChildren.length === 0) {
         list.innerHTML = '<p style="text-align:center;color:var(--text-light);font-size:13px;padding:20px;">No children added yet. Add your first child above to finish registration.</p>';
         return;
     }
+    const anyPending = registeredChildren.some(c => c.status !== 'active');
     list.innerHTML = registeredChildren.map(c => `
         <div class="child-item">
-            <div class="child-avatar" style="background:${c.color};">${c.initials}</div>
+            <div class="child-avatar" style="background:${c.color};">${escapeHtml(c.initials)}</div>
             <div>
                 <div class="child-item-name">${escapeHtml(c.name)}</div>
                 <div class="child-item-meta">${escapeHtml(c.class)} • ${escapeHtml(c.adm)}</div>
             </div>
-            <i class="fas fa-check-circle" style="margin-left:auto;color:var(--emerald);" aria-hidden="true"></i>
-        </div>
-    `).join('');
+            ${c.status === 'active'
+                ? '<span style="margin-left:auto;color:var(--emerald);font-size:12px;font-weight:600;"><i class="fas fa-check-circle" aria-hidden="true"></i> Linked</span>'
+                : '<span style="margin-left:auto;color:#b45309;font-size:12px;font-weight:600;"><i class="fas fa-clock" aria-hidden="true"></i> Awaiting school approval</span>'}
+        </div>`).join('') + (anyPending
+            ? '<p style="font-size:12px;color:var(--text-light);margin-top:8px;">The school will review your request and you will be notified once your child is linked. Fees appear after approval.</p>'
+            : '');
 }
 
-function finishRegistration() {
-    const parents = JSON.parse(localStorage.getItem('ff_parents') || '[]');
-    const parent = parents.find(p => p.id === pendingRegistration.parentId);
-    if (!parent) { alert('Registration could not be completed. Please start again.'); return; }
+function finishRegistration() { go('parent.html'); }
 
-    const session = { id: 'sess_' + Date.now(), type: 'parent', parentId: parent.id, schoolId: parent.schoolId, name: parent.name, timestamp: Date.now() };
-    localStorage.setItem('ff_sessions', JSON.stringify([session]));
-    addNotification(parent.schoolId, 'system', 'Registration Complete!', `${parent.name} registered as a parent for ${parent.schoolName}.`);
-    window.location.href = 'parent.html';
+// ---------- forgot / reset password ----------
+async function forgotPassword() {
+    hideError('loginError'); hideNotice();
+    const email = val('loginEmail').toLowerCase();
+    if (!EMAIL_RE.test(email)) return showError('loginError', 'Type your email address above first, then click "Forgot your password?".');
+    try {
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: new URL('portal.html', location.href).href });
+        if (error) throw error;
+        showNotice('If an account exists for that email, a password reset link is on its way. Check your inbox.');
+    } catch (e) {
+        showError('loginError', FF.friendlyError(e));
+    }
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
-function clearOTP() {
-    document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+async function updatePassword() {
+    hideError('newPasswordError');
+    const pw = document.getElementById('newPassword').value;
+    const pw2 = document.getElementById('newPassword2').value;
+    if (pw.length < 8) return showError('newPasswordError', 'Your password must be at least 8 characters.');
+    if (pw !== pw2) return showError('newPasswordError', 'The two passwords do not match.');
+    setBusy('newPasswordBtn', true, 'Updating…');
+    try {
+        const { error } = await sb.auth.updateUser({ password: pw });
+        if (error) throw error;
+        recoveryMode = false;
+        const profile = await FF.getProfile();
+        if (profile) { go(FF.routeFor(profile.role)); return; }
+        showStep('stepLogin');
+        showNotice('Password updated. You can now sign in.');
+    } catch (e) {
+        showError('newPasswordError', FF.friendlyError(e));
+    } finally {
+        setBusy('newPasswordBtn', false);
+    }
 }
 
-function addNotification(schoolId, type, title, body) {
-    const notifs = JSON.parse(localStorage.getItem('ff_notifications') || '[]');
-    notifs.unshift({ id: Date.now(), schoolId, type, title, body, time: 'Just now', unread: true });
-    localStorage.setItem('ff_notifications', JSON.stringify(notifs));
+// ---------- start-up ----------
+async function init() {
+    sb.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') { recoveryMode = true; showStep('stepNewPassword'); }
+    });
+    if (recoveryMode) showStep('stepNewPassword');
+    loadSchools();
+    if (recoveryMode) return;
+    try {                                          // already signed in? skip the form
+        const user = await FF.getUser();
+        if (user) await routeAfterLogin(user);
+    } catch (e) { /* stay on the sign-in form */ }
 }
+init();
 
-function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-}
-
-// Initialize
-updateLoginFields();
 document.addEventListener('click', e => {
-    if (!e.target.closest('#schoolSelectGroup')) document.getElementById('loginSchoolResults')?.classList.remove('show');
     if (!e.target.closest('#registerSchoolGroup')) document.getElementById('schoolSearchResults')?.classList.remove('show');
 });
 
 document.addEventListener('keydown', event => {
     if (event.key !== 'Enter' || event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
-    const target = event.target;
-    const activeLogin = document.getElementById('stepLogin').style.display !== 'none';
-    const activeOTP = document.getElementById('stepOTP').style.display !== 'none';
-    const activeRegister = document.getElementById('stepRegister').style.display !== 'none';
-    const activeVerifyReg = document.getElementById('stepVerifyReg').style.display !== 'none';
-    const activeAddChildren = document.getElementById('stepAddChildren').style.display !== 'none';
-
-    if (activeLogin && target && (target.id === 'loginPhone' || target.id === 'loginUsername' || target.id === 'loginPassword' || target.tagName === 'SELECT')) {
-        event.preventDefault();
-        sendOTP();
-        return;
-    }
-
-    if (activeOTP && target && target.classList.contains('otp-input')) {
-        event.preventDefault();
-        verifyLoginOTP();
-        return;
-    }
-
-    if (activeRegister && target && (target.id === 'regName' || target.id === 'regPhone' || target.id === 'regEmail')) {
-        event.preventDefault();
-        sendRegistrationOTP();
-        return;
-    }
-
-    if (activeVerifyReg && target && target.classList.contains('otp-input')) {
-        event.preventDefault();
-        verifyRegistration();
-        return;
-    }
-
-    if (activeAddChildren && target && (target.id === 'childName' || target.id === 'childAdm' || target.id === 'childClass')) {
-        event.preventDefault();
-        addChild();
-        return;
-    }
+    const id = event.target && event.target.id;
+    const visible = (step) => document.getElementById(step).style.display !== 'none';
+    if (visible('stepLogin') && (id === 'loginEmail' || id === 'loginPassword')) { event.preventDefault(); signIn(); }
+    else if (visible('stepRegister') && ['regName', 'regPhone', 'regEmail', 'regPassword', 'regPassword2'].includes(id)) { event.preventDefault(); registerParent(); }
+    else if (visible('stepAddChildren') && ['childName', 'childAdm', 'childClass'].includes(id)) { event.preventDefault(); addChild(); }
+    else if (visible('stepNewPassword') && (id === 'newPassword' || id === 'newPassword2')) { event.preventDefault(); updatePassword(); }
 });
 </script>
 </body>

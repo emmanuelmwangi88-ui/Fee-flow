@@ -1,0 +1,11 @@
+Finish the Supabase migration and restore files missing from main
+
+main contained the new pages but not js/ (config, shared client, pinned supabase-js),
+supabase/ (migrations, Edge Functions, SQL tests) or tests/, so every page failed to
+load its scripts. This restores them and completes the remaining work:
+
+- School Admin dashboard and Fee Structure Manager on Supabase
+- Parent dashboard on Supabase (read-only child details, secure child linking,
+  receipts, live payment status)
+- Migration 0006: school profile fields, academic terms, manual M-Pesa matching
+- Removes the interim coming-soon page; README and tests updated
