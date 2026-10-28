@@ -3,11 +3,7 @@
   "private": true,
   "description": "FeeFlow - school fee management (static site + Supabase). The site itself needs no build step; this file only exists to run the front-end tests.",
   "scripts": {
-<<<<<<< HEAD
     "test": "node tests/portal.test.js && node tests/superadmin.test.js && node tests/schooladmin.test.js && node tests/feemanager.test.js && node tests/parent.test.js"
-=======
-    "test": "node tests/portal.test.js && node tests/superadmin.test.js"
->>>>>>> ead16596339ae4d2953c797810b8ff47eaefde85
   },
   "devDependencies": {
     "jsdom": "^24.1.3"

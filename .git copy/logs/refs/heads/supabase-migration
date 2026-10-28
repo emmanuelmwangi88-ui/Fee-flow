@@ -1,4 +1,0 @@
-0000000000000000000000000000000000000000 322857ba760a81b459a364ab7a3a578580059c98 root <root@vm.(none)> 1792030437 +0000	branch: Created from HEAD
-322857ba760a81b459a364ab7a3a578580059c98 fb82d099dec006f86274aaee39c485fdaba72741 Claude <noreply@anthropic.com> 1792030704 +0000	commit: Phase 2a: Supabase client, vendored supabase-js, admin-create-school function (live-tested), pg_net
-fb82d099dec006f86274aaee39c485fdaba72741 345307795d7d0714bdafd1e6da8b2994a508fcf3 Claude <noreply@anthropic.com> 1792056578 +0000	commit: Phase 2b: portal on Supabase Auth (email+password, registration, child linking, password reset) + 66 front-end tests
-345307795d7d0714bdafd1e6da8b2994a508fcf3 81ee0c236b7c9d451f1e40d8f6ea8d83e5db5d34 Claude <noreply@anthropic.com> 1792197337 +0000	commit: Phase 3a: Super Admin dashboard on Supabase (WIP snapshot)

@@ -24,7 +24,7 @@ Project: `feeflow` (ref `kwuhuvkxvylgzohkrcqt`, region eu-west-2).
 insert into public.profiles (id, role, full_name)
 select id, 'super_admin', 'Platform Super Admin'
 from auth.users
-where email = 'feeflowadmin@gmail.com' and email_confirmed_at is not null
+where email = '<super-admin-email>' and email_confirmed_at is not null
 on conflict (id) do update set role = 'super_admin';
 ```
 Never put passwords, keys or secrets in this repo.

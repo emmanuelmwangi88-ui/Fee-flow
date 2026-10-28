@@ -4,11 +4,7 @@ School fee management for Kenyan schools: a **Parent** portal, a **School Admin*
 
 Static front end (HTML / CSS / vanilla JavaScript, no build step) on **Supabase** (Postgres + Auth + Row Level Security + Edge Functions).
 
-<<<<<<< HEAD
 > **Status:** sign-in, registration, password reset and all three dashboards run on the secure online database. Fee payments can be **recorded** by the school (cash, bank, cheque, M-Pesa statement match). **Automatic M-Pesa STK Push is the next step** (Phase 4): until it is connected, parents are shown the school's paybill and their child's admission number to pay from the M-Pesa menu.
-=======
-> **Status: moving to Supabase (in progress).** Sign-in, registration, password reset and the Super Admin dashboard already run on the secure online database. The School Admin, Parent and Fee Manager screens are being converted next; until then they show a "coming soon" page. Database docs and tests are in `supabase/` and `tests/`.
->>>>>>> ead16596339ae4d2953c797810b8ff47eaefde85
 
 ## Run it locally
 
@@ -45,7 +41,7 @@ In the Supabase dashboard → Authentication → URL Configuration, add every ad
 portal.html  parent.html  schooladmin.html  fee-structure-manager.html  superadmin.html  index.html
 js/            config.js, ff-client.js (shared sign-in/role helpers), fee-manager.js, vendor/ (pinned supabase-js)
 supabase/
-  migrations/  the exact SQL applied to the live database, in order (0001 ... 0006)
+  migrations/  the exact SQL applied to the live database, in order (0001 ... 0007)
   functions/   Edge Functions: admin-create-school, admin-reset-password
   tests/       SQL security tests (roll back; run in the Supabase SQL editor)
 tests/         front-end tests (simulated browser + mock Supabase)
@@ -61,6 +57,7 @@ SQL tests are in `supabase/tests/` (`rls_smoke.sql`, `access_matrix.sql`, `migra
 
 ## Still to do
 
+- [ ] Apply migration `0007` (claim_child rate limit) to the live database.
 - [ ] **M-Pesa STK Push** (Daraja): `mpesa-stk-push`, `mpesa-callback`, reconciliation job, per-school credentials. Needs your Daraja sandbox keys, set as Supabase secrets (never in the repo).
 - [ ] SMS fee reminders (Africa's Talking) and SMS code verification of parents' phone numbers.
 - [ ] Custom email sender (Supabase's built-in sender is slow and rate-limited), leaked-password protection, custom domain.

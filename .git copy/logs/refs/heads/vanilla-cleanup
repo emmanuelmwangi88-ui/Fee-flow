@@ -1,2 +1,0 @@
-0000000000000000000000000000000000000000 4fa1f4017ec3a862e7accd6b4748adbfa3b90139 root <root@vm.(none)> 1791982995 +0000	branch: Created from HEAD
-4fa1f4017ec3a862e7accd6b4748adbfa3b90139 322857ba760a81b459a364ab7a3a578580059c98 Claude <noreply@anthropic.com> 1792030437 +0000	commit: Phase 0+1: vanilla static site + Supabase schema, RLS, tests
