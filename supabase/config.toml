@@ -1,0 +1,14 @@
+# Edge Function settings used by `supabase functions deploy`.
+# fee-callback is called by Safaricom and by the reconcile cron job, which cannot send a Supabase JWT;
+# it authenticates every request with a per-school token (or the vault reconcile token) instead.
+[functions.fee-callback]
+verify_jwt = false
+
+[functions.fee-api]
+verify_jwt = true
+
+[functions.admin-create-school]
+verify_jwt = true
+
+[functions.admin-reset-password]
+verify_jwt = true

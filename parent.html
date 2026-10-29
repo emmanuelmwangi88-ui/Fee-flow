@@ -1736,6 +1736,40 @@ function renderShell() {
       `;
     }
 
+    function setOtpNotice(text, tone) {
+      const box = document.getElementById("otpNotice"); if (!box) return;
+      box.textContent = text;
+      box.style.color = tone === "error" ? "#b91c1c" : tone === "success" ? "#047857" : "var(--muted)";
+    }
+    async function requestPhoneCode() {
+      const sendBtn = document.getElementById("otpSendButton"), resendBtn = document.getElementById("otpResendButton");
+      [sendBtn, resendBtn].forEach(b => { if (b) b.disabled = true; });
+      setOtpNotice("Sending the code…");
+      try {
+        const { data, error } = await sb.functions.invoke('fee-api', { body: { action: 'otp_request', parent_id: parent.id } });
+        if (error) throw new Error(await fnErrorMessage(error));
+        document.getElementById("otpStep1").style.display = "none";
+        document.getElementById("otpStep2").style.display = "";
+        setOtpNotice(`Code sent to ${(data && data.sent_to) || "your phone"}. It expires in 10 minutes. Do not share it with anyone.`, "success");
+        const input = document.getElementById("otpCode"); if (input) input.focus();
+      } catch (e) { setOtpNotice(e.message || "Could not send the code. Please try again.", "error"); }
+      finally { [sendBtn, resendBtn].forEach(b => { if (b) b.disabled = false; }); }
+    }
+    async function verifyPhoneCode() {
+      const code = (document.getElementById("otpCode").value || "").trim();
+      if (!/^\d{6}$/.test(code)) { setOtpNotice("Enter the 6-digit code from the SMS.", "error"); return; }
+      const btn = document.getElementById("otpVerifyButton"); btn.disabled = true;
+      try {
+        const { data, error } = await sb.functions.invoke('fee-api', { body: { action: 'otp_verify', parent_id: parent.id, code } });
+        if (error) throw new Error(await fnErrorMessage(error));
+        parent.phone_verified = true;
+        const n = Number(data && data.approved) || 0;
+        await refresh();                         // pending child links the school had not approved yet may now be active
+        renderProfile();
+        setOtpNotice(`Phone verified.${n ? ` ${n} child link${n === 1 ? "" : "s"} approved.` : ""}`, "success");
+      } catch (e) { setOtpNotice(e.message || "Could not verify the code.", "error"); btn.disabled = false; }
+    }
+
     function renderProfile() {
       document.getElementById("view-profile").innerHTML = `
         <div class="page-heading">
@@ -1770,6 +1804,26 @@ function renderShell() {
             <button class="button button-primary" onclick="saveProfile()" id="saveProfileButton">Save Profile</button>
           </div>
         </div>
+        ${parent.phone_verified ? `
+        <div class="panel" style="margin-top:20px;" id="phoneVerifyPanel">
+          <div class="panel-header">Phone verification</div>
+          <div class="panel-body"><p style="margin:0;font-size:13px;color:var(--muted);">✓ Your phone number is verified. Children registered under this number are approved automatically.</p>
+            <div id="otpNotice" style="font-size:13px;margin-top:10px;" role="status"></div></div>
+        </div>` : `
+        <div class="panel" style="margin-top:20px;" id="phoneVerifyPanel">
+          <div class="panel-header">Verify your phone number</div>
+          <div class="panel-body">
+            <p style="margin:0 0 12px;font-size:13px;color:var(--muted);">We will text a 6-digit code to +${escapeHtml(parent.phone || "")}. Once verified, children registered under this number are approved straight away, without waiting for the school.</p>
+            <div id="otpStep1"><button class="button button-primary" id="otpSendButton" onclick="requestPhoneCode()">Send code by SMS</button></div>
+            <div id="otpStep2" style="display:none;">
+              <div class="form-group"><label class="form-label" for="otpCode">6-digit code</label>
+                <input class="form-input" id="otpCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456"></div>
+              <button class="button button-primary" id="otpVerifyButton" onclick="verifyPhoneCode()">Verify</button>
+              <button class="button button-outline" id="otpResendButton" onclick="requestPhoneCode()" style="margin-left:8px;">Send a new code</button>
+            </div>
+            <div id="otpNotice" style="font-size:13px;margin-top:10px;" role="status"></div>
+          </div>
+        </div>`}
         <div class="panel" style="margin-top:20px;">
           <div class="panel-header">Change Password</div>
           <div class="panel-body">
@@ -1886,6 +1940,7 @@ function renderShell() {
       const amount = Number(document.getElementById("paymentAmount").value);
       const phone = normalizeKenyanPhone(document.getElementById("paymentPhone").value.trim());
       if (!studentId || !(amount > 0)) { alert("Choose a student and enter a valid amount."); return; }
+      if (!Number.isInteger(amount)) { alert("Enter a whole amount in KES (M-Pesa does not accept cents)."); return; }
       if (!phone) { alert("Enter a valid Safaricom number, e.g. 07XX XXX XXX or 7XX XXX XXX."); return; }
       const student = children.find(item => item.id === studentId);
       if (!student) return;
@@ -1894,11 +1949,14 @@ function renderShell() {
       setPayState(true, "Sending…");
       showPayNotice("Sending the payment request to M-Pesa…");
       try {
-        const { data, error } = await sb.functions.invoke('mpesa-stk-push', { body: { student_id: studentId, amount, phone } });
+        const { data, error } = await sb.functions.invoke('fee-api', { body: { action: 'stk_push', student_id: studentId, amount, phone } });
         if (error) {
           const status = error.context && error.context.status;
+          const howToPay = `Please pay from your M-Pesa menu: Paybill ${school.paybill || "(ask the school)"}, account number ${student.adm}.`;
+          // 404 = function missing, 409/503 = the school has not set up M-Pesa yet: either way give the manual way to pay
           throw Object.assign(new Error(status === 404
-            ? `Online payment is not available yet. Please pay from your M-Pesa menu: Paybill ${school.paybill || "(ask the school)"}, account number ${student.adm}.`
+            ? `Online payment is not available yet. ${howToPay}`
+            : (status === 409 || status === 503) ? `${await fnErrorMessage(error)} ${howToPay}`
             : await fnErrorMessage(error)), { handled: true });
         }
         if (!data || !data.payment_id) throw Object.assign(new Error("The payment service did not respond properly. Please try again."), { handled: true });

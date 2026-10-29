@@ -1,5 +1,5 @@
--- claim_child: count REJECTED requests too (last 24h) so a parent cannot keep creating
--- unverified junk student rows by retrying after each rejection. Same signature and grants as 0002.
+-- 0009. claim_child: count REJECTED requests too (last 24h) so a parent cannot keep creating
+-- unverified junk student rows by retrying after each rejection. Same signature and grants as 0002 (live 0007/0008 are payments + messaging).
 create or replace function public.claim_child(p_parent_id uuid, p_admission_no text, p_child_name text, p_class text, p_gender text default null)
 returns text
 language plpgsql security definer set search_path = '' as $$

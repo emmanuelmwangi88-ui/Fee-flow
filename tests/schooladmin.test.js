@@ -150,21 +150,84 @@ const q = (p, f) => p.mock.calls.filter(c => c.kind === 'query' && f(c));
   p.set('reconAmount', '2500'); p.set('reconDate', '2026-10-09'); await p.w.manualReconcile(); await tick();
   ins = q(p, c => c.op === 'insert' && c.table === 'payments')[0];
   ok(ins && ins.payload.method === 'mpesa_c2b' && ins.payload.mpesa_receipt === 'RK1' && ins.payload.amount === 2500 && /2026-10-09/.test(ins.payload.note), 'manual match payload');
-  p.w.autoReconcile(); ok(/starts with the M-Pesa integration/.test(p.toasts().pop()), 'auto-reconcile is honest (no fake spinner)');
+  p = await openPage('schooladmin.html', { ...base(), rpc: { rematch_unmatched: () => ({ data: 0, error: null }) } }); await p.w.autoReconcile(); await tick();
+  ok(p.mock.calls.some(c => c.kind === 'rpc' && c.fn === 'rematch_unmatched') && /Nothing could be matched/.test(p.toasts().pop()), 'Auto-Reconcile re-checks unmatched payments against admission numbers and says honestly when nothing matched');
 
   // ---------- reminders ----------
   p = await openPage('schooladmin.html', base());
   ok(p.d.querySelectorAll('.reminder-check').length === 1 && p.text('reminderCount') === '1' && p.text('selectedCost') === 'KES 0.00', 'reminder recipients: only students who owe');
   ok(/Amani Wanjiku/.test(p.text('smsPreviewText')) && /211211/.test(p.d.getElementById('smsTemplate').value === 'deadline' ? p.text('smsPreviewText') : '211211'), 'SMS preview uses the school paybill');
+  const apiCalls = (pp) => pp.mock.calls.filter(c => c.kind === 'fn' && c.name === 'fee-api');
+  const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Error('x'), { context: { status, json: async () => ({ error: msg }) } }) });
+  const sentOk = { parents_notified: 1, no_parent_linked: 0, sms: { enabled: false, sent: 0, failed: 0, skipped_recent: 0, reason: 'SMS is not switched on for FeeFlow yet, so only in-app messages were sent.' } };
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: sentOk, error: null }) } });
   await p.w.sendBulkReminders(); await tick();
-  ins = q(p, c => c.op === 'insert' && c.table === 'notifications')[0];
-  ok(ins && ins.payload.length === 1 && ins.payload[0].audience === 'parent' && ins.payload[0].parent_id === 'pa-1' && ins.payload[0].school_id === 'sc-1' && /Amani Wanjiku/.test(ins.payload[0].body) && /KES 15,000/.test(ins.payload[0].body), 'bulk reminder goes to the linked parent with the balance');
-  ins = q(p, c => c.op === 'insert' && c.table === 'reminder_history')[0]; ok(ins && ins.payload.recipient_count === 1 && ins.payload.sent_by === 'u-1', 'reminder history recorded');
-  ok(/Reminder sent to 1 parent/.test(p.toasts().join(' ')), 'success message');
-  p.d.querySelector('.reminder-check').checked = false; p.w.updateReminderCounts(); await p.w.sendBulkReminders(); ok(/No recipients selected/.test(p.toasts().pop()), 'no recipients selected -> message');
+  let fa = apiCalls(p)[0];
+  ok(fa && fa.body.action === 'send_message' && fa.body.mode === 'reminder' && fa.body.student_ids.length === 1 && fa.body.student_ids[0] === 's-1' && fa.body.channels.inapp === true && fa.body.channels.sms === false, 'bulk reminder is sent by the server (fee-api) for the selected students, in-app only by default');
+  ok(!q(p, c => c.op === 'insert').length, 'the browser writes no notifications or reminder history itself');
+  ok(/1 parent\(s\) notified/.test(p.toasts().join(' ')) && /SMS is not switched on/.test(p.toasts().join(' ')), 'summary shows the in-app count and why SMS was not sent');
+  const smsOk = { parents_notified: 1, no_parent_linked: 2, sms: { enabled: true, sent: 1, failed: 1, skipped_recent: 3, reason: '', cost: '' } };
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: smsOk, error: null }) } });
+  p.d.getElementById('remindSms').checked = true; p.w.confirm = () => true; await p.w.sendBulkReminders(); await tick();
+  ok(apiCalls(p)[0].body.channels.sms === true && /SMS: 1 sent, 1 failed, 3 skipped/.test(p.toasts().join(' ')) && /2 student\(s\) have no linked parent/.test(p.toasts().join(' ')), 'SMS reminders: counts of sent / failed / skipped / unlinked are reported');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: smsOk, error: null }) } });
+  p.d.getElementById('remindSms').checked = true; p.w.confirm = () => false; await p.w.sendBulkReminders(); await tick();
+  ok(!apiCalls(p).length, 'declining the SMS cost warning sends nothing');
+  p = await openPage('schooladmin.html', base()); p.d.getElementById('remindInapp').checked = false; await p.w.sendBulkReminders();
+  ok(/at least one way/.test(p.toasts().pop()) && !apiCalls(p).length, 'no channel chosen -> message, nothing sent');
+  p = await openPage('schooladmin.html', base()); p.d.querySelector('.reminder-check').checked = false; p.w.updateReminderCounts(); await p.w.sendBulkReminders();
+  ok(/No recipients selected/.test(p.toasts().pop()) && !apiCalls(p).length, 'no recipients selected -> message');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => fnErr('Too many recipients at once (the limit is 2,000). Narrow the selection.') } });
+  await p.w.sendBulkReminders(); await tick(); ok(/Too many recipients/.test(p.toasts().pop()), 'server refusal is shown to the admin');
   const noParent = base(); noParent.tables.parent_students = [];
-  p = await openPage('schooladmin.html', noParent); await p.w.sendBulkReminders(); ok(/linked to a registered parent/.test(p.toasts().pop()) && !q(p, c => c.op === 'insert').length, 'students without a linked parent are reported, nothing sent');
-  p = await openPage('schooladmin.html', base()); await p.w.sendReminder('s-1'); await tick(); ok(q(p, c => c.op === 'insert' && c.table === 'notifications').length === 1, 'single reminder from Outstanding list');
+  p = await openPage('schooladmin.html', noParent); await p.w.sendReminder('s-1'); await tick();
+  ok(/linked to a registered parent/.test(p.toasts().pop()) && !apiCalls(p).length, 'student without a linked parent: reported, nothing sent');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: sentOk, error: null }) } }); await p.w.sendReminder('s-1'); await tick();
+  fa = apiCalls(p)[0]; ok(fa && fa.body.student_ids.length === 1 && fa.body.student_ids[0] === 's-1' && fa.body.channels.sms === false && fa.body.channels.inapp === true, 'single reminder from the Outstanding list: in-app only');
+
+  // ---------- M-Pesa connection (credentials are verified and stored by the server, never kept in the page) ----------
+  const connected = { configured: true, environment: 'sandbox', shortcode: '174379', shortcode_type: 'paybill', c2b_registered: false };
+  const fillMp = (pp) => { const v = (id, x) => { pp.d.getElementById(id).value = x; }; v('mpesaEnv', 'sandbox'); v('mpesaType', 'paybill'); v('mpesaShortcode', '174379'); v('mpesaKey', 'CONSUMERKEY123'); v('mpesaSecret', 'CONSUMERSECRET123'); v('mpesaPasskey', 'PASSKEYPASSKEYPASSKEY1234'); };
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: { configured: false }, error: null }) } });
+  p.w.switchSettingsTab('paybill', null); await tick();
+  ok(/Not connected/.test(p.text('mpesaStatusLine')) && p.d.getElementById('mpesaRemoveBtn').style.display === 'none' && p.d.getElementById('mpesaShortcode').value === '211211', 'M-Pesa not connected: explains the manual way, paybill pre-filled, no Disconnect button');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: connected, error: null }) } });
+  p.w.switchSettingsTab('paybill', null); await tick();
+  ok(/Connected/.test(p.text('mpesaStatusLine')) && /sandbox/.test(p.text('mpesaStatusLine')) && p.d.getElementById('mpesaRemoveBtn').style.display !== 'none' && ['mpesaKey', 'mpesaSecret', 'mpesaPasskey'].every(id => p.d.getElementById(id).value === ''), 'M-Pesa connected: status shown, secret fields stay empty (secrets never come back to the browser)');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': (b) => ({ data: b.action === 'mpesa_save' ? { ok: true, mode: 'sandbox', c2b_registered: false } : connected, error: null }) } });
+  fillMp(p); await p.w.saveMpesa(); await tick();
+  fa = apiCalls(p).find(c => c.body.action === 'mpesa_save');
+  ok(fa && fa.body.environment === 'sandbox' && fa.body.shortcode === '174379' && fa.body.shortcode_type === 'paybill' && fa.body.consumer_key === 'CONSUMERKEY123' && fa.body.consumer_secret === 'CONSUMERSECRET123' && fa.body.passkey === 'PASSKEYPASSKEYPASSKEY1234', 'credentials are sent to the server to verify and store');
+  ok(['mpesaKey', 'mpesaSecret', 'mpesaPasskey'].every(id => p.d.getElementById(id).value === '') && /connected \(sandbox\)/i.test(p.toasts().join(' ')), 'secret fields are cleared after saving; success shown');
+  ok(!q(p, c => c.table === 'school_mpesa_config').length, 'the browser never touches the credentials table');
+  p = await openPage('schooladmin.html', base()); fillMp(p); p.d.getElementById('mpesaShortcode').value = '12'; await p.w.saveMpesa();
+  ok(/5 to 7 digits/.test(p.toasts().pop()) && !apiCalls(p).length, 'bad paybill number rejected in the browser');
+  p = await openPage('schooladmin.html', base()); fillMp(p); p.d.getElementById('mpesaKey').value = 'short'; await p.w.saveMpesa();
+  ok(/full consumer key/.test(p.toasts().pop()) && !apiCalls(p).length, 'truncated credentials rejected in the browser');
+  p = await openPage('schooladmin.html', base()); fillMp(p); p.d.getElementById('mpesaEnv').value = 'production'; p.w.confirm = () => false; await p.w.saveMpesa();
+  ok(!apiCalls(p).length, 'production (real money) needs confirmation; declining sends nothing');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => fnErr('Safaricom rejected these credentials (sandbox). Check the consumer key and secret.') } });
+  fillMp(p); await p.w.saveMpesa(); await tick();
+  ok(/Safaricom rejected these credentials/.test(p.toasts().pop()) && !p.d.getElementById('mpesaSaveBtn').disabled, 'Safaricom rejecting the keys is explained; button recovers');
+  p = await openPage('schooladmin.html', { ...base(), functions: { 'fee-api': () => ({ data: { ok: true }, error: null }) } });
+  p.w.confirm = () => true; await p.w.removeMpesa(); await tick();
+  ok(apiCalls(p).some(c => c.body.action === 'mpesa_remove'), 'disconnect asks the server to remove the credentials');
+
+  // ---------- unmatched M-Pesa payments ----------
+  const UM = [{ id: 'um-1', status: 'unmatched', trans_id: 'RKT111AAA', amount: 2500, bill_ref: 'ADM 99', msisdn: '254712345678', payer_name: 'John Doe', trans_time: NOW },
+              { id: 'um-2', status: 'unmatched', trans_id: 'RKT222BBB', amount: 100, bill_ref: '<img src=x onerror=alert(1)>', msisdn: '254700000000', payer_name: null, trans_time: NOW }];
+  p = await openPage('schooladmin.html', base());
+  ok(/No unmatched transactions/.test(p.text('unmatchedList')), 'no unmatched payments: the empty message is shown');
+  const withUm = base(); withUm.tables.mpesa_unmatched = UM;
+  p = await openPage('schooladmin.html', withUm);
+  ok(/RKT111AAA/.test(p.text('unmatchedList')) && /ADM 99/.test(p.text('unmatchedList')) && /2,500/.test(p.text('unmatchedList')), 'unmatched payments are listed with code, account and amount');
+  ok(!p.d.querySelector('#unmatchedList img') && /onerror/.test(p.text('unmatchedList')), 'account text from M-Pesa is escaped (no HTML injection)');
+  await p.w.resolveUnmatched('um-1'); ok(/Choose the student/.test(p.toasts().pop()) && !p.mock.calls.some(c => c.kind === 'rpc' && c.fn === 'resolve_unmatched'), 'matching without choosing a student is refused');
+  p.d.getElementById('um-um-1').value = 's-1'; await p.w.resolveUnmatched('um-1'); await tick();
+  const rcall = p.mock.calls.find(c => c.kind === 'rpc' && c.fn === 'resolve_unmatched');
+  ok(rcall && rcall.args.p_unmatched === 'um-1' && rcall.args.p_student === 's-1' && /matched and credited/.test(p.toasts().join(' ')), 'matching calls the database rule with the unmatched id and the chosen student');
+  p = await openPage('schooladmin.html', { ...withUm, rpc: { rematch_unmatched: () => ({ data: 2, error: null }) } }); await p.w.rematchUnmatched(); await tick();
+  ok(p.mock.calls.some(c => c.kind === 'rpc' && c.fn === 'rematch_unmatched') && /2 payment\(s\) matched automatically/.test(p.toasts().join(' ')), 'auto-match reports how many payments it matched');
 
   // ---------- notifications ----------
   p = await openPage('schooladmin.html', base());

@@ -674,8 +674,8 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 <div class="section" id="sec-reminders">
                     <div class="page-header">
                         <div class="page-header-left">
-                            <div class="page-title">Bulk SMS Reminders</div>
-                            <div class="page-desc">Send payment reminder SMS to parents</div>
+                            <div class="page-title">Bulk Reminders</div>
+                            <div class="page-desc">Remind parents of fee balances in the app and by SMS</div>
                         </div>
                         <button class="btn btn-outline" onclick="openModal('editTemplate')"><i class="fas fa-edit"></i> Edit Template</button>
                     </div>
@@ -684,7 +684,7 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
                             <div class="alert-title"><span id="reminderCount">0</span> parents have overdue balances</div>
-                            <div>Estimated cost: <strong id="reminderCost">KES 0</strong> via Africa's Talking (~KES 0.40/SMS)</div>
+                            <div>SMS reminders are charged by the SMS provider (about KES 0.40 each). In-app reminders are free.</div>
                         </div>
                     </div>
 
@@ -721,9 +721,14 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                         <div class="sms-phone">To: +254 7XX XXX XXX (<span id="previewCount">0</span> recipients)</div>
                                         <div class="sms-body" id="smsPreviewText"></div>
                                     </div>
-                                    <div class="form-hint" style="margin-bottom:8px;"><i class="fas fa-info-circle"></i> Reminders are delivered to parents' FeeFlow dashboards. SMS delivery will be switched on with the SMS integration.</div>
+                                    <div class="form-group">
+                                        <label class="form-label">Send via</label>
+                                        <div class="checkbox-row"><input type="checkbox" id="remindInapp" checked><label for="remindInapp">Parent's FeeFlow dashboard (free)</label></div>
+                                        <div class="checkbox-row"><input type="checkbox" id="remindSms"><label for="remindSms">SMS to the parent's phone (charged per message)</label></div>
+                                    </div>
+                                    <div class="form-hint" style="margin-bottom:8px;"><i class="fas fa-info-circle"></i> Each parent gets one personal message with the balance and how to pay. A number receives at most one reminder SMS a day.</div>
                                     <button class="btn btn-orange" style="width:100%;justify-content:center;margin-top:16px;" onclick="sendBulkReminders()">
-                                        <i class="fas fa-paper-plane"></i> Send SMS Reminders
+                                        <i class="fas fa-paper-plane"></i> Send Reminders
                                     </button>
                                 </div>
                             </div>
@@ -883,6 +888,31 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                 <div class="alert alert-info" style="margin-bottom:14px;"><i class="fas fa-info-circle"></i><div>Parents pay to this paybill using the student's admission number as the account number. FeeFlow's M-Pesa connection (STK Push) is set up securely by the platform, so no API keys are needed here.</div></div>
                                 <div style="display:flex;gap:8px;">
                                     <button class="btn btn-primary" onclick="savePaybill()"><i class="fas fa-save"></i> Save</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" style="margin-top:20px;" id="mpesaCard">
+                            <div class="card-header"><div class="card-title">Automatic M-Pesa payments (STK Push)</div></div>
+                            <div class="card-body p">
+                                <div class="form-hint" id="mpesaStatusLine" style="margin-bottom:14px;">Checking M-Pesa connection…</div>
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">Environment</label>
+                                        <select class="form-input" id="mpesaEnv"><option value="sandbox">Sandbox (testing, no real money)</option><option value="production">Production (real money)</option></select></div>
+                                    <div class="form-group"><label class="form-label">Account type</label>
+                                        <select class="form-input" id="mpesaType"><option value="paybill">Paybill</option><option value="till">Buy Goods Till</option></select></div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">Paybill / Till number</label><input type="text" class="form-input" id="mpesaShortcode" inputmode="numeric" autocomplete="off"></div>
+                                    <div class="form-group"><label class="form-label">Consumer key</label><input type="password" class="form-input" id="mpesaKey" autocomplete="off" placeholder="From the Daraja portal"></div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label">Consumer secret</label><input type="password" class="form-input" id="mpesaSecret" autocomplete="off"></div>
+                                    <div class="form-group"><label class="form-label">Lipa Na M-Pesa passkey</label><input type="password" class="form-input" id="mpesaPasskey" autocomplete="off"></div>
+                                </div>
+                                <div class="form-hint" style="margin-bottom:12px;"><i class="fas fa-lock"></i> Your keys are checked with Safaricom, then stored encrypted. They are never shown again.</div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button class="btn btn-primary" id="mpesaSaveBtn" onclick="saveMpesa()"><i class="fas fa-plug"></i> Verify &amp; save</button>
+                                    <button class="btn btn-outline" id="mpesaRemoveBtn" style="display:none;" onclick="removeMpesa()"><i class="fas fa-unlink"></i> Disconnect</button>
                                 </div>
                             </div>
                         </div>
@@ -1111,7 +1141,7 @@ let me = null;
 let schoolId = null;
 let school = {};
 let allStudents = [];
-const schoolData = { students: [], payments: [], parents: [], links: [], pendingLinks: [], notifications: [], terms: [], reminderHistory: [], classes: [], published: null };
+const schoolData = { students: [], payments: [], parents: [], links: [], pendingLinks: [], notifications: [], terms: [], reminderHistory: [], unmatched: [], classes: [], published: null };
 
 // ---------- helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -1191,7 +1221,7 @@ function activeTerm() { return schoolData.terms.find(t => t.status === 'active')
 
 async function loadData() {
     try {
-        const [schoolR, students, payments, parentsR, linksR, notifR, termsR, remR, feeR] = await Promise.all([
+        const [schoolR, students, payments, parentsR, linksR, notifR, termsR, remR, feeR, umR] = await Promise.all([
             sb.from('schools').select('*').eq('id', schoolId).maybeSingle(),
             fetchAll(() => sb.from('student_balances').select('*').order('full_name')),
             fetchAll(() => sb.from('payments').select('id, student_id, parent_id, amount, method, status, mpesa_receipt, account_reference, receipt_no, note, phone, created_at, completed_at').order('created_at', { ascending: false }), 10000),
@@ -1200,7 +1230,8 @@ async function loadData() {
             sb.from('notifications').select('id, title, body, unread, created_at, type').eq('audience', 'school').order('created_at', { ascending: false }).limit(100),
             sb.from('terms').select('*').order('start_date', { ascending: false }),
             sb.from('reminder_history').select('*').order('created_at', { ascending: false }).limit(20),
-            sb.from('fee_structure_published').select('published_at, data').eq('school_id', schoolId).maybeSingle()
+            sb.from('fee_structure_published').select('published_at, data').eq('school_id', schoolId).maybeSingle(),
+            sb.from('mpesa_unmatched').select('id, trans_id, amount, bill_ref, msisdn, payer_name, trans_time').eq('status', 'unmatched').order('created_at', { ascending: false }).limit(100)
         ]);
         for (const r of [schoolR, parentsR, linksR, notifR, termsR, remR, feeR]) if (r.error) throw r.error;
 
@@ -1219,6 +1250,7 @@ async function loadData() {
         schoolData.notifications = notifR.data || [];
         schoolData.reminderHistory = remR.data || [];
         schoolData.published = feeR.data || null;
+        schoolData.unmatched = umR && !umR.error ? (umR.data || []) : [];
         schoolData.classes = deriveClasses();
         renderAll();
     } catch (e) {
@@ -1460,9 +1492,9 @@ function renderOutstanding() {
 function renderMpesa() {
     const mp = schoolData.payments.filter(p => p.methodKey === 'mpesa_stk' || p.methodKey === 'mpesa_c2b');
     $('reconDone').textContent = mp.filter(p => p.rawStatus === 'completed' && isToday(p.completed)).length;
-    $('reconPending').textContent = mp.filter(p => p.rawStatus === 'pending').length;
+    $('reconPending').textContent = mp.filter(p => p.rawStatus === 'pending').length + (schoolData.unmatched || []).length;
     $('reconFailed').textContent = mp.filter(p => ['failed', 'cancelled', 'timeout'].includes(p.rawStatus)).length;
-    $('unmatchedList').innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No unmatched transactions. Payments made through FeeFlow are matched to students automatically. Use "Manual Match" for a payment you find on your paybill statement.</p>';
+    renderUnmatched();
     $('reconLog').innerHTML = mp.slice(0, 10).map(p => `
         <div style="display:flex;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;">
             <div><strong>${esc(p.ref)}</strong><div style="font-size:12px;color:var(--text-light);">${esc(p.studentName)} • ${esc(p.date)}</div></div>
@@ -1550,7 +1582,6 @@ function renderNotifications() {
 function renderReminderRecipients() {
     const owing = schoolData.students.filter(s => s.balance > 0);
     $('reminderCount').textContent = owing.length;
-    $('reminderCost').textContent = 'KES 0.00';
     $('selectedCount').textContent = owing.length;
     $('selectedCost').textContent = 'KES 0.00';
     $('previewCount').textContent = owing.length;
@@ -1563,7 +1594,7 @@ function renderReminderRecipients() {
     $('reminderHistory').innerHTML = schoolData.reminderHistory.length ? schoolData.reminderHistory.map(r => `
         <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
             <div style="font-weight:600;font-size:13px;">${r.recipient_count} parent(s) notified</div>
-            <div style="font-size:12px;color:var(--text-light);margin-top:2px;">${esc(fmtDateTime(r.created_at))}</div></div>`).join('')
+            <div style="font-size:12px;color:var(--text-light);margin-top:2px;">${esc(fmtDateTime(r.created_at))}${r.channels && r.channels.length ? ' · ' + esc(r.channels.join(' + ')) : ''}${(r.sms_sent || r.sms_failed) ? ` · SMS: ${num(r.sms_sent)} sent, ${num(r.sms_failed)} failed` : ''}</div></div>`).join('')
         : '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No reminders sent yet.</p>';
 }
 
@@ -1610,6 +1641,7 @@ function switchSettingsTab(tab, btn) {
     document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
     if (btn) btn.classList.add('active');
     $('settings-' + tab).classList.add('active');
+    if (tab === 'paybill') loadMpesaStatus();
 }
 
 // ============================================================
@@ -1771,10 +1803,10 @@ async function manualReconcile() {
     } catch (e) { showToast(dbMessage(e), 'error'); }
     finally { setBusy('reconcileBtn', false); }
 }
-function autoReconcile() { showToast('Automatic matching starts with the M-Pesa integration. Until then, use Manual Match for payments on your paybill statement.', 'info'); }
+function autoReconcile() { return rematchUnmatched(); }   // re-checks unmatched payments against admission numbers
 
 // ============================================================
-// REMINDERS (delivered to parents' FeeFlow dashboards; SMS comes with the SMS integration)
+// REMINDERS (in the parent's app and/or by SMS, sent by the server)
 // ============================================================
 function toggleAllReminders() { const on = $('selectAllReminders').checked; document.querySelectorAll('.reminder-check').forEach(cb => { cb.checked = on; }); updateReminderCounts(); }
 function updateReminderCounts() {
@@ -1791,38 +1823,113 @@ function updateSmsPreview() {
     const tpl = templates[$('smsTemplate').value] || templates.deadline;
     $('smsPreviewText').textContent = tpl.replaceAll('{{STUDENT}}', sample ? sample.name : 'Student').replaceAll('{{BALANCE}}', num(sample && sample.balance).toLocaleString()).replaceAll('{{REF}}', sample ? sample.adm : 'admission number');
 }
-function reminderRows(students) {
-    const byParent = new Map();
-    students.forEach(st => {
-        schoolData.links.filter(l => l.student_id === st.id && l.status === 'active').forEach(l => {
-            const e = byParent.get(l.parent_id) || { names: [], balance: 0 };
-            e.names.push(st.name); e.balance += st.balance; byParent.set(l.parent_id, e);
-        });
-    });
-    return [...byParent.entries()].map(([parentId, e]) => ({
-        audience: 'parent', school_id: schoolId, parent_id: parentId, type: 'fee-reminder', title: 'Fee Balance Reminder',
-        body: `${school.name || 'School'}: Remaining fee balance for ${e.names.join(', ')} is KES ${e.balance.toLocaleString()}.` }));
+// Calls the server-side fee-api function (it checks who you are; the browser never touches Daraja or the SMS provider).
+async function feeApi(body) {
+    const { data, error } = await sb.functions.invoke('fee-api', { body });
+    if (error) {
+        let m = '';
+        try { const j = await error.context.json(); m = j && j.error; } catch (e) { /* use the generic message */ }
+        throw new Error(m || FF.friendlyError(error));
+    }
+    return data || {};
+}
+function sendSummary(r) {
+    const parts = [`${num(r.parents_notified)} parent(s) notified in the app`];
+    const s = r.sms || {};
+    if (s.enabled) parts.push(`SMS: ${num(s.sent)} sent${s.failed ? `, ${num(s.failed)} failed` : ''}${s.skipped_recent ? `, ${num(s.skipped_recent)} skipped (already reminded today)` : ''}`);
+    else if (s.reason) parts.push(s.reason);
+    if (r.no_parent_linked) parts.push(`${num(r.no_parent_linked)} student(s) have no linked parent`);
+    return parts.join('. ') + '.';
 }
 async function sendBulkReminders() {
     const ids = [...document.querySelectorAll('.reminder-check:checked')].map(x => x.dataset.id);
     const students = schoolData.students.filter(s => ids.includes(s.id) && s.balance > 0);
     if (!students.length) return showToast('No recipients selected', 'error');
-    const rows = reminderRows(students);
-    if (!rows.length) return showToast('None of the selected students are linked to a registered parent yet', 'error');
+    const channels = { inapp: $('remindInapp').checked, sms: $('remindSms').checked };
+    if (!channels.inapp && !channels.sms) return showToast('Choose at least one way to send', 'error');
+    if (channels.sms && !confirm(`Send an SMS reminder for ${students.length} student(s)? SMS is charged per message.`)) return;
     try {
-        const n = await sb.from('notifications').insert(rows); if (n.error) throw n.error;
-        const h = await sb.from('reminder_history').insert({ school_id: schoolId, sent_by: me.id, recipient_count: rows.length, channels: ['website'] }); if (h.error) throw h.error;
-        showToast(`Reminder sent to ${rows.length} parent(s)`, 'success');
+        const r = await feeApi({ action: 'send_message', mode: 'reminder', student_ids: students.map(s => s.id), channels });
+        showToast(sendSummary(r), r.sms && r.sms.failed ? 'warning' : 'success');
         await loadData();
-    } catch (e) { showToast(dbMessage(e), 'error'); }
+    } catch (e) { showToast(e.message, 'error'); }
 }
 async function sendReminder(studentId) {
     const st = schoolData.students.find(s => s.id === studentId); if (!st) return;
-    const rows = reminderRows([st]);
-    if (!rows.length) return showToast(`${st.name} is not linked to a registered parent yet`, 'warning');
-    const { error } = await sb.from('notifications').insert(rows);
+    if (!schoolData.links.some(l => l.student_id === st.id && l.status === 'active')) return showToast(`${st.name} is not linked to a registered parent yet`, 'warning');
+    try {
+        await feeApi({ action: 'send_message', mode: 'reminder', student_ids: [st.id], channels: { inapp: true, sms: false } });
+        showToast('Reminder sent to the parent of ' + st.name, 'success');
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ============================================================
+// M-PESA: connect the school's Daraja credentials, match payments that arrived without a valid account number
+// ============================================================
+function renderMpesaStatus(s) {
+    const on = !!(s && s.configured);
+    $('mpesaStatusLine').innerHTML = on
+        ? `<strong style="color:var(--emerald);">Connected</strong> — ${s.environment === 'production' ? 'live (real money)' : 'sandbox (testing)'}, ${esc(s.shortcode_type)} ${esc(s.shortcode)}. Paybill-menu payments: ${s.c2b_registered ? 'matched automatically' : 'not registered yet (parents can still pay by STK Push; other payments will show under Payments to match)'}.`
+        : 'Not connected. Parents are shown your paybill and their child\'s admission number to pay from the M-Pesa menu.';
+    $('mpesaRemoveBtn').style.display = on ? '' : 'none';
+    if (on) { $('mpesaEnv').value = s.environment; $('mpesaType').value = s.shortcode_type; $('mpesaShortcode').value = s.shortcode; }
+    else if (!val('mpesaShortcode') && school.paybill) $('mpesaShortcode').value = school.paybill;
+}
+async function loadMpesaStatus() {
+    try { renderMpesaStatus(await feeApi({ action: 'mpesa_status' })); }
+    catch (e) { $('mpesaStatusLine').textContent = 'Could not check the M-Pesa connection: ' + e.message; }
+}
+async function saveMpesa() {
+    const env = val('mpesaEnv'), type = val('mpesaType'), shortcode = val('mpesaShortcode');
+    const key = val('mpesaKey'), secret = val('mpesaSecret'), passkey = val('mpesaPasskey');
+    if (!/^[0-9]{5,7}$/.test(shortcode)) return showToast('The paybill / till number must be 5 to 7 digits', 'error');
+    if (key.length < 8 || secret.length < 8 || passkey.length < 16) return showToast('Paste the full consumer key, consumer secret and passkey from the Daraja portal', 'error');
+    if (env === 'production' && !confirm('Production mode takes REAL money from parents. Continue?')) return;
+    setBusy('mpesaSaveBtn', true, 'Checking with Safaricom…');
+    try {
+        const r = await feeApi({ action: 'mpesa_save', environment: env, shortcode, shortcode_type: type, consumer_key: key, consumer_secret: secret, passkey });
+        ['mpesaKey', 'mpesaSecret', 'mpesaPasskey'].forEach(id => { $(id).value = ''; });   // secrets are never kept in the page
+        showToast(r.mode === 'live' ? 'M-Pesa connected (live)' : 'M-Pesa connected (sandbox)', 'success');
+        await loadMpesaStatus();
+        await loadData();
+    } catch (e) { showToast(e.message, 'error'); }
+    finally { setBusy('mpesaSaveBtn', false); }
+}
+async function removeMpesa() {
+    if (!confirm('Disconnect M-Pesa? Parents will no longer get the automatic payment prompt.')) return;
+    try { await feeApi({ action: 'mpesa_remove' }); showToast('M-Pesa disconnected', 'info'); await loadMpesaStatus(); await loadData(); }
+    catch (e) { showToast(e.message, 'error'); }
+}
+function renderUnmatched() {
+    const list = schoolData.unmatched || [];
+    if (!list.length) {
+        $('unmatchedList').innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No unmatched transactions. Payments made through FeeFlow are matched to students automatically. Use "Manual Match" for a payment you find on your paybill statement.</p>';
+        return;
+    }
+    const opts = '<option value="">Choose student…</option>' + schoolData.students.map(s => `<option value="${esc(s.id)}">${esc(s.name)} (${esc(s.adm)}, ${esc(s.class)})</option>`).join('');
+    $('unmatchedList').innerHTML = '<p class="form-hint" style="padding:10px 16px 0;">These payments reached your paybill with an account number that matches no student. Choose the right student so the money is credited.</p>' + list.map(u => `
+        <div class="checkbox-row" style="flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;">
+            <div style="flex:1;min-width:200px;"><strong>${esc(money(u.amount))}</strong>
+                <div style="font-size:12px;color:var(--text-light);">${esc(u.trans_id)} · account "${esc(u.bill_ref || 'none')}" · ${esc(u.payer_name || u.msisdn || '')} · ${esc(fmtDateTime(u.trans_time))}</div></div>
+            <select class="form-input" id="um-${esc(u.id)}" style="max-width:240px;">${opts}</select>
+            <button class="btn btn-primary btn-sm" onclick="resolveUnmatched('${esc(u.id)}')">Match</button>
+        </div>`).join('');
+}
+async function resolveUnmatched(id) {
+    const studentId = ($('um-' + id) || {}).value;
+    if (!studentId) return showToast('Choose the student this payment belongs to', 'error');
+    const { error } = await sb.rpc('resolve_unmatched', { p_unmatched: id, p_student: studentId });
     if (error) return showToast(dbMessage(error), 'error');
-    showToast('Reminder sent to the parent of ' + st.name, 'success');
+    showToast('Payment matched and credited', 'success');
+    await loadData();
+}
+async function rematchUnmatched() {
+    try {
+        const { data, error } = await sb.rpc('rematch_unmatched');
+        if (error) throw error;
+        showToast(num(data) ? `${num(data)} payment(s) matched automatically` : 'Nothing could be matched automatically', num(data) ? 'success' : 'info');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
 }
 
 // ============================================================

@@ -147,12 +147,12 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
 
   // success flow with polling: pending, pending, completed
   let polls = 0;
-  p = await openPage('parent.html', { ...base(), functions: { 'mpesa-stk-push': () => ({ data: { ok: true, payment_id: 'pay-new' }, error: null }) },
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => ({ data: { ok: true, payment_id: 'pay-new' }, error: null }) },
     onQuery: { 'payments:select': (qq) => { const byId = qq.filters.find(f => f[0] === 'id'); if (!byId) return { data: base().tables.payments, error: null }; polls++; return { data: polls < 3 ? { status: 'pending' } : { status: 'completed', receipt_no: 'FF-2610-000099', mpesa_receipt: 'QWERTY1234' }, error: null }; } } });
   p.w.eval('PAY_POLL_MS = 40'); openPay(); fill();
   await p.w.makePayment(); await tick(10);
-  const fn = p.mock.calls.find(c => c.kind === 'fn' && c.name === 'mpesa-stk-push');
-  ok(fn && fn.body.student_id === 'k-1' && fn.body.amount === 5000 && fn.body.phone === '254712345678', 'STK push requested with student, amount and normalised phone', JSON.stringify(fn && fn.body));
+  const fn = p.mock.calls.find(c => c.kind === 'fn' && c.name === 'fee-api');
+  ok(fn && fn.body.action === 'stk_push' && fn.body.student_id === 'k-1' && fn.body.amount === 5000 && fn.body.phone === '254712345678', 'STK push requested with student, amount and normalised phone', JSON.stringify(fn && fn.body));
   ok(!('paybill' in fn.body) && !('school_id' in fn.body) && !('parent_id' in fn.body), 'browser never chooses the paybill / school / payer (the server decides)');
   ok(/Check your phone/.test(p.text('paybillNotice')) && p.d.getElementById('payButton').disabled && p.d.getElementById('paymentAmount').disabled, 'waiting state: "Check your phone", form locked');
   await tick(400);
@@ -162,19 +162,50 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
   ok(p.mock.calls.filter(c => c.kind === 'rpc').length === 0 && !q(p, c => c.table === 'payments' && c.op !== 'select').length, 'the browser never writes a payment record');
 
   // failure + timeout + 404 + server message
-  p = await openPage('parent.html', { ...base(), functions: { 'mpesa-stk-push': () => ({ data: { payment_id: 'pay-f' }, error: null }) },
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => ({ data: { payment_id: 'pay-f' }, error: null }) },
     onQuery: { 'payments:select': (qq) => qq.filters.find(f => f[0] === 'id') ? { data: { status: 'cancelled', result_desc: 'Request cancelled by user' }, error: null } : { data: base().tables.payments, error: null } } });
   p.w.eval('PAY_POLL_MS = 30'); openPay(); fill(); await p.w.makePayment(); await tick(300);
   ok(/Request cancelled by user/.test(p.text('paybillNotice')) && /not been charged/.test(p.text('paybillNotice')) && !p.d.getElementById('payButton').disabled, 'cancelled payment: reason shown, not charged, can retry');
-  p = await openPage('parent.html', { ...base(), functions: { 'mpesa-stk-push': () => ({ data: { payment_id: 'pay-t' }, error: null }) },
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => ({ data: { payment_id: 'pay-t' }, error: null }) },
     onQuery: { 'payments:select': (qq) => qq.filters.find(f => f[0] === 'id') ? { data: { status: 'pending' }, error: null } : { data: base().tables.payments, error: null } } });
   p.w.eval('PAY_POLL_MS = 20; PAY_POLL_MAX = 3'); openPay(); fill(); await p.w.makePayment(); await tick(400);
   ok(/do not pay again/i.test(p.text('paybillNotice')) && !p.d.getElementById('payButton').disabled, 'no confirmation in time: tells the parent NOT to pay twice');
-  p = await openPage('parent.html', { ...base(), functions: { 'mpesa-stk-push': () => ({ data: null, error: Object.assign(new Error('x'), { context: { status: 404, json: async () => ({}) } }) }) } });
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => ({ data: null, error: Object.assign(new Error('x'), { context: { status: 404, json: async () => ({}) } }) }) } });
   openPay(); fill(); await p.w.makePayment(); await tick();
   ok(/not available yet/.test(p.text('paybillNotice')) && /211211/.test(p.text('paybillNotice')) && /ADM-1/.test(p.text('paybillNotice')), 'function not deployed yet -> clear fallback with paybill and admission number');
-  p = await openPage('parent.html', { ...base(), functions: { 'mpesa-stk-push': () => ({ data: null, error: Object.assign(new Error('x'), { context: { status: 400, json: async () => ({ error: 'M-Pesa is not set up for this school yet' }) } }) }) } });
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => ({ data: null, error: Object.assign(new Error('x'), { context: { status: 400, json: async () => ({ error: 'M-Pesa is not set up for this school yet' }) } }) }) } });
   openPay(); fill(); await p.w.makePayment(); await tick(); ok(/not set up for this school/.test(p.text('paybillNotice')) && !p.d.getElementById('payButton').disabled, 'server message shown; button recovers');
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => ({ data: null, error: Object.assign(new Error('x'), { context: { status: 409, json: async () => ({ error: 'M-Pesa is not set up for this school yet' }) } }) }) } });
+  openPay(); fill(); await p.w.makePayment(); await tick();
+  ok(/not set up for this school/.test(p.text('paybillNotice')) && /211211/.test(p.text('paybillNotice')) && /ADM-1/.test(p.text('paybillNotice')), 'school has no M-Pesa yet (409): message plus paybill and admission number to pay manually');
+  p = await openPage('parent.html', base()); openPay(); fill(); p.d.getElementById('paymentAmount').value = '100.50';
+  let alerted = ''; p.w.alert = (m) => { alerted = m; }; await p.w.makePayment();
+  ok(/whole amount/.test(alerted) && !p.mock.calls.some(c => c.kind === 'fn'), 'cents are rejected in the browser, nothing is sent');
+
+  // ---------- phone verification (SMS code) ----------
+  const fnErr2 = (msg, status = 400) => ({ data: null, error: Object.assign(new Error('x'), { context: { status, json: async () => ({ error: msg }) } }) });
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': (b) => b.action === 'otp_request' ? { data: { ok: true, sent_to: '+25471•••••678' }, error: null } : { data: { ok: true, approved: 1 }, error: null } } });
+  p.w.showView('profile'); await tick();
+  ok(p.d.getElementById('otpSendButton') && p.d.getElementById('otpStep2').style.display === 'none', 'unverified parent sees "Send code" and no code box yet');
+  await p.w.requestPhoneCode(); await tick();
+  let fa = p.mock.calls.find(c => c.kind === 'fn' && c.name === 'fee-api');
+  ok(fa && fa.body.action === 'otp_request' && fa.body.parent_id === 'pa-1', 'code requested for this parent only');
+  ok(p.d.getElementById('otpStep2').style.display !== 'none' && /25471/.test(p.text('otpNotice')) && /10 minutes/.test(p.text('otpNotice')), 'code box appears; masked number and expiry shown');
+  p.set('otpCode', '12ab'); await p.w.verifyPhoneCode();
+  ok(/6-digit/.test(p.text('otpNotice')) && !p.mock.calls.some(c => c.kind === 'fn' && c.body && c.body.action === 'otp_verify'), 'a malformed code is rejected in the browser, nothing sent');
+  p.set('otpCode', '123456'); await p.w.verifyPhoneCode(); await tick();
+  fa = p.mock.calls.find(c => c.kind === 'fn' && c.body && c.body.action === 'otp_verify');
+  ok(fa && fa.body.code === '123456' && fa.body.parent_id === 'pa-1', 'the code is sent to the server to check (the browser never decides)');
+  ok(/Phone verified/.test(p.text('otpNotice')) && /1 child link approved/.test(p.text('otpNotice')) && /verified/.test(p.text('phoneVerifyPanel')) && !p.d.getElementById('otpSendButton'), 'success: verified message and approved links; panel switches to "verified"');
+  PROW.phone_verified = false;   // the page updates the row object it was given; restore the shared fixture
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': (b) => b.action === 'otp_verify' ? fnErr2('That code is not right. Please check and try again.') : { data: { ok: true, sent_to: '+254•••' }, error: null } } });
+  p.w.showView('profile'); await tick(); await p.w.requestPhoneCode(); await tick(); p.set('otpCode', '000000'); await p.w.verifyPhoneCode(); await tick();
+  ok(/not right/.test(p.text('otpNotice')) && !p.d.getElementById('otpVerifyButton').disabled, 'wrong code: server message shown, can try again');
+  p = await openPage('parent.html', { ...base(), functions: { 'fee-api': () => fnErr2('SMS verification is not available yet. The school can approve your link requests instead.', 503) } });
+  p.w.showView('profile'); await tick(); await p.w.requestPhoneCode(); await tick();
+  ok(/not available yet/.test(p.text('otpNotice')) && p.d.getElementById('otpStep2').style.display === 'none' && !p.d.getElementById('otpSendButton').disabled, 'SMS not switched on: clear message, nothing breaks');
+  p = await openPage('parent.html', base({ parents: [{ ...PROW, phone_verified: true }] })); p.w.showView('profile'); await tick();
+  ok(/verified/.test(p.text('phoneVerifyPanel')) && !p.d.getElementById('otpSendButton'), 'already verified: no code request offered');
 
   // ---------- switch school / logout ----------
   p = await openPage('parent.html', base({ parents: [PROW, { ...PROW, id: 'pa-2', school_id: 'sc-2', full_name: 'Jane Other' }], schools: [{ id: 'sc-1', name: 'Don Bosco Ituru', paybill: '211211' }, { id: 'sc-2', name: 'Second Academy', paybill: '999999' }] }));

@@ -50,7 +50,7 @@ const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Err
   ok(/Just now/.test(p.text('recentActivity')) && /School added/.test(p.text('recentActivity')), 'recent activity with relative time');
   ok(p.d.getElementById('platformName').value === 'FeeFlow Kenya' && p.d.getElementById('supportEmail').value === 'help@feeflow.test', 'settings loaded from the database');
   ok(!/testAPI|••••/.test(p.d.documentElement.outerHTML), 'fake API-key fields and fake "Test Connection" are gone');
-  ok(/never typed into this page/.test(p.text('sec-settings')), 'settings page explains secrets stay on the server');
+  ok(/never shown again and never kept in this page/.test(p.text('sec-settings')) && p.d.getElementById('smsApiKey').type === 'password' && p.d.getElementById('smsApiKey').value === '', 'settings page explains keys are stored on the server only; the key field is masked and empty');
   const q = p.mock.calls.filter(c => c.kind === 'query' && c.table === 'notifications')[0];
   ok(q && q.filters.some(f => f[0] === 'audience' && f[1] === 'super'), 'only "super" notifications are requested');
   ok(!p.mock.calls.some(c => c.kind === 'query' && ['students', 'payments', 'parents'].includes(c.table)), 'page never queries students / payments / parents tables directly');
@@ -134,6 +134,28 @@ const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Err
   p.set('supportEmail', 'help@feeflow.co.ke'); p.set('supportPhone', '0700111222'); await p.w.saveSettings(); await tick();
   const us = p.mock.calls.find(c => c.kind === 'query' && c.op === 'upsert');
   ok(us && us.table === 'platform_settings' && us.opts.onConflict === 'key' && us.payload.length === 3 && us.payload.find(r => r.key === 'name').value === 'FeeFlow Africa', 'settings: upsert of name / support email / support phone');
+
+  // ---------- integrations: M-Pesa status and SMS provider ----------
+  const fnErrS = (msg) => ({ data: null, error: Object.assign(new Error('x'), { context: { status: 400, json: async () => ({ error: msg }) } }) });
+  const smsCalls = (pp) => pp.mock.calls.filter(c => c.kind === 'fn' && c.name === 'fee-api');
+  p = await openPage('superadmin.html', data());
+  ok(/No school connected yet/.test(p.text('intMpesa')) && /Not connected yet/.test(p.text('intSms')) && p.d.getElementById('smsRemoveBtn').style.display === 'none', 'integrations: nothing connected -> honest status, no "switch off" button');
+  const d2 = data(); d2.tables.schools = d2.tables.schools.map((s, i) => i === 0 ? { ...s, mpesa_mode: 'sandbox' } : s); d2.tables.platform_settings.push({ key: 'sms_enabled', value: true });
+  p = await openPage('superadmin.html', d2);
+  ok(/1 of \d+ school/.test(p.text('intMpesa')) && /Connected/.test(p.text('intSms')) && p.d.getElementById('smsRemoveBtn').style.display !== 'none', 'integrations: counts connected schools and shows SMS as connected');
+  p = await openPage('superadmin.html', data()); p.set('smsUsername', 'ab'); p.set('smsApiKey', 'short'); await p.w.saveSms();
+  ok(/username and the full API key/.test(p.toasts().pop()) && !smsCalls(p).length, 'SMS: short credentials rejected in the browser');
+  p = await openPage('superadmin.html', { ...data(), functions: { 'fee-api': () => ({ data: { ok: true, enabled: true }, error: null }) } });
+  p.set('smsUsername', 'feeflowsms'); p.set('smsApiKey', 'atsk_0123456789abcdef0123'); await p.w.saveSms(); await tick();
+  const sc = smsCalls(p)[0];
+  ok(sc && sc.body.action === 'sms_save' && sc.body.username === 'feeflowsms' && sc.body.api_key === 'atsk_0123456789abcdef0123', 'SMS: credentials sent to the server to verify and store');
+  ok(p.d.getElementById('smsApiKey').value === '' && /Connected/.test(p.text('intSms')) && /switched on/.test(p.toasts().pop()), 'SMS: key cleared from the page, status becomes Connected');
+  p = await openPage('superadmin.html', { ...data(), functions: { 'fee-api': () => fnErrS("Africa's Talking rejected these details. Check the username and API key.") } });
+  p.set('smsUsername', 'feeflowsms'); p.set('smsApiKey', 'atsk_0123456789abcdef0123'); await p.w.saveSms(); await tick();
+  ok(/rejected these details/.test(p.toasts().pop()) && /Not connected yet/.test(p.text('intSms')) && !p.d.getElementById('smsSaveBtn').disabled, 'SMS: provider rejection explained, status unchanged, button recovers');
+  p = await openPage('superadmin.html', { ...d2, functions: { 'fee-api': () => ({ data: { ok: true, enabled: false }, error: null }) } });
+  p.w.confirm = () => true; await p.w.removeSms(); await tick();
+  ok(smsCalls(p)[0].body.remove === true && /Not connected yet/.test(p.text('intSms')), 'SMS: switching off asks the server and updates the status');
 
   // ---------- error handling, toasts, logout ----------
   p = await openPage('superadmin.html', { ...data(), rpc: { platform_overview: () => ({ data: null, error: { message: 'Failed to fetch' } }), platform_parents: () => ({ data: [], error: null }) } });

@@ -474,16 +474,30 @@
                         <div class="card-body p">
                             <div class="alert alert-info" style="margin-bottom:16px;">
                                 <i class="fas fa-lock" style="font-size:18px;margin-top:1px;"></i>
-                                <div>API keys and secrets are never typed into this page. They are stored securely on the server and used only by server functions.</div>
+                                <div>Keys are typed once, checked with the provider, then stored encrypted on the server. They are never shown again and never kept in this page.</div>
                             </div>
                             <table class="table" style="width:100%;">
                                 <thead><tr><th>Service</th><th>Purpose</th><th>Status</th></tr></thead>
                                 <tbody>
                                     <tr><td>Supabase</td><td>Database, logins and security rules</td><td><span class="badge active"><i class="fas fa-circle"></i> Connected</span></td></tr>
-                                    <tr><td>M-Pesa (Daraja)</td><td>STK Push fee payments</td><td><span class="badge trial"><i class="fas fa-circle"></i> Not connected yet</span></td></tr>
-                                    <tr><td>Africa's Talking</td><td>SMS fee reminders</td><td><span class="badge trial"><i class="fas fa-circle"></i> Not connected yet</span></td></tr>
+                                    <tr><td>M-Pesa (Daraja)</td><td>STK Push fee payments (each school adds its own keys)</td><td id="intMpesa"></td></tr>
+                                    <tr><td>Africa's Talking</td><td>SMS fee reminders and phone verification</td><td id="intSms"></td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <div class="card" id="smsCard">
+                        <div class="card-header"><div class="card-title">SMS provider (Africa's Talking)</div></div>
+                        <div class="card-body p">
+                            <div class="grid-2">
+                                <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="smsUsername" autocomplete="off" placeholder="sandbox for testing, or your app username"></div>
+                                <div class="form-group"><label class="form-label">API key</label><input type="password" class="form-input" id="smsApiKey" autocomplete="off"></div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <button class="btn btn-primary" id="smsSaveBtn" onclick="saveSms()"><i class="fas fa-plug"></i> Verify &amp; save</button>
+                                <button class="btn btn-outline" id="smsRemoveBtn" style="display:none;" onclick="removeSms()"><i class="fas fa-unlink"></i> Switch SMS off</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -636,7 +650,7 @@ function logout() { FF.signOut(); }
 // ============================================================
 async function loadData() {
     const [schoolsR, overviewR, parentsR, notifR, settingsR] = await Promise.all([
-        sb.from('schools').select('id, name, location, level, paybill, plan, status, created_at').order('created_at', { ascending: false }),
+        sb.from('schools').select('id, name, location, level, paybill, plan, status, created_at, mpesa_mode').order('created_at', { ascending: false }),
         sb.rpc('platform_overview'),
         sb.rpc('platform_parents'),
         sb.from('notifications').select('id, title, body, unread, created_at').eq('audience', 'super').order('created_at', { ascending: false }).limit(100),
@@ -954,6 +968,49 @@ function applySettings() {
     if (st.name) document.getElementById('platformName').value = st.name;
     if (st.support_email) document.getElementById('supportEmail').value = st.support_email;
     if (st.support_phone) document.getElementById('supportPhone').value = st.support_phone;
+    renderIntegrations();
+}
+function renderIntegrations() {
+    const badge = (cls, text) => `<span class="badge ${cls}"><i class="fas fa-circle"></i> ${text}</span>`;
+    const schools = platformData.schools || [];
+    const live = schools.filter(s => s.mpesa_mode && s.mpesa_mode !== 'off').length;
+    document.getElementById('intMpesa').innerHTML = live
+        ? badge('active', `${live} of ${schools.length} school${schools.length === 1 ? '' : 's'} connected`)
+        : badge('trial', 'No school connected yet');
+    const smsOn = platformData.settings.sms_enabled === true;
+    document.getElementById('intSms').innerHTML = smsOn ? badge('active', 'Connected') : badge('trial', 'Not connected yet');
+    document.getElementById('smsRemoveBtn').style.display = smsOn ? '' : 'none';
+}
+async function feeApi(body) {
+    const { data, error } = await sb.functions.invoke('fee-api', { body });
+    if (error) {
+        let m = '';
+        try { const j = await error.context.json(); m = j && j.error; } catch (e) { /* generic message below */ }
+        throw new Error(m || FF.friendlyError(error));
+    }
+    return data || {};
+}
+async function saveSms() {
+    const username = val('smsUsername'), apiKey = val('smsApiKey');
+    if (username.length < 3 || apiKey.length < 16) return showToast("Enter your Africa's Talking username and the full API key", 'warning');
+    setBusy('smsSaveBtn', true, 'Checking with Africa\'s Talking…');
+    try {
+        await feeApi({ action: 'sms_save', username, api_key: apiKey });
+        document.getElementById('smsApiKey').value = '';                     // the key is never kept in the page
+        platformData.settings.sms_enabled = true;
+        renderIntegrations();
+        showToast('SMS is now switched on', 'success');
+    } catch (e) { showToast(e.message, 'error'); }
+    finally { setBusy('smsSaveBtn', false); }
+}
+async function removeSms() {
+    if (!confirm('Switch SMS off? Reminders will go to the parents\' app only, and phone verification will stop working.')) return;
+    try {
+        await feeApi({ action: 'sms_save', remove: true });
+        platformData.settings.sms_enabled = false;
+        renderIntegrations();
+        showToast('SMS switched off', 'info');
+    } catch (e) { showToast(e.message, 'error'); }
 }
 async function saveSettings() {
     const name = val('platformName');
