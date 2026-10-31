@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FeeFlow — School Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0c2d57">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FeeFlow">
+  <meta name="application-name" content="FeeFlow">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="FeeFlow — Kenyan school fees: fee structure, M-Pesa collection, balances and printable receipts.">
+<link rel="stylesheet" href="css/ff.css">
+</head>
+<body>
+
+<div id="app">
+    <!-- Unauthorized -->
+    <div id="unauthorizedPage" style="display:none;">
+        <div class="ff-empty">
+            <i data-ico="lock"></i>
+            <h2>Access Denied</h2>
+            <p>You need to be logged in as School Admin to access this page.</p>
+            <a href="portal.html" class="ff-btn ff-btn-primary"><i data-ico="key"></i> Go to Login</a>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="ff-app" id="mainApp" style="display:none;">
+        <!-- Sidebar -->
+        <aside class="ff-sidebar">
+            <div class="ff-brand">
+                <div class="ff-brand-mark"><i data-ico="student"></i></div>
+                <div>
+                    <div class="ff-brand-name">FeeFlow</div>
+                    <span class="ff-brand-tag">SCHOOL ADMIN</span>
+                </div>
+            </div>
+            <div class="ff-school-name" id="schoolNameDisplay"><i data-ico="school"></i> <span>School</span></div>
+            <div class="ff-school-name" id="schoolLevelChip" style="display:none"><i data-ico="student"></i> <span id="schoolLevelText"></span></div>
+            
+            <nav class="ff-nav">
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Main</div>
+                    <div class="ff-nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i data-ico="dashboard"></i> Dashboard</div>
+                    <div class="ff-nav-item" data-section="students" onclick="navigate('students',this)"><i data-ico="student"></i> Students <span class="ff-nav-badge" id="navStudentCount">0</span></div>
+                    <div class="ff-nav-item" data-section="fees" onclick="window.location.href='fee-structure-manager.html'"><i data-ico="receipt"></i> Fee Structure</div>
+                    <div class="ff-nav-item" data-section="payments" onclick="navigate('payments',this)"><i data-ico="money"></i> Payments</div>
+                </div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Finance</div>
+                    <div class="ff-nav-item" data-section="ledger" onclick="navigate('ledger',this)"><i data-ico="book"></i> Fee Ledger</div>
+                    <div class="ff-nav-item" data-section="outstanding" onclick="navigate('outstanding',this)"><i data-ico="alert"></i> Outstanding <span class="ff-nav-badge" id="navOverdueCount">0</span></div>
+                    <div class="ff-nav-item" data-section="mpesa" onclick="navigate('mpesa',this)"><i data-ico="mobile"></i> M-Pesa Reconcile</div>
+                    <div class="ff-nav-item" data-section="adjustments" onclick="window.location.href='fee-adjustments.html'"><i data-ico="receipt"></i> Bursaries &amp; Discounts</div>
+                </div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Tools</div>
+                    <div class="ff-nav-item" data-section="reminders" onclick="navigate('reminders',this)"><i data-ico="send"></i> Bulk Reminders</div>
+                    <div class="ff-nav-item" data-section="receipts" onclick="navigate('receipts',this)"><i data-ico="receipt"></i> Receipts</div>
+                    <div class="ff-nav-item" data-section="reports" onclick="navigate('reports',this)"><i data-ico="chart"></i> Reports</div>
+                </div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Management</div>
+<div class="ff-nav-item" data-section="parents" onclick="navigate('parents',this)"><i data-ico="users"></i> Parent Directory <span class="ff-nav-badge" id="navParentCount">0</span></div>
+                    <div class="ff-nav-item" data-section="classes" onclick="navigate('classes',this)"><i data-ico="dashboard"></i> Classes</div>
+                    <div class="ff-nav-item" data-section="settings" onclick="navigate('settings',this)"><i data-ico="settings"></i> Settings</div>
+                </div>
+            </nav>
+
+            <div class="ff-sidebar-foot">
+                <div class="ff-user">
+                    <div class="ff-avatar" id="userAvatar">SA</div>
+                    <div>
+                        <div class="ff-user-name" id="userName">School Admin</div>
+                        <div class="ff-user-role" id="userSchool">School</div>
+                    </div>
+                </div>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
+                    <i data-ico="logout"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div class="ff-main">
+            <header class="ff-topbar">
+                <button class="ff-btn ff-btn-icon ff-btn-ghost ff-only-mobile" data-ff-nav-toggle aria-label="Open menu"><i data-ico="menu"></i></button>
+                <div class="ff-crumb">FeeFlow / <span id="breadcrumb">Dashboard</span></div>
+                <div class="ff-topbar-right">
+                    <span class="ff-badge navy" id="topLevelBadge" style="display:none"></span>
+                    <button class="ff-btn ff-btn-icon ff-btn-ghost" onclick="showSection('notifications')" aria-label="Notifications">
+                        <i data-ico="bell"></i>
+                        <span class="ff-dot" id="notifDot" style="display:none"></span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="ff-content">
+
+                <!-- DASHBOARD -->
+                <div class="ff-view active" id="sec-dashboard">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Dashboard</div>
+                            <div class="ff-page-desc" id="termInfo">Current Term</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="ff-btn ff-btn-outline" onclick="exportDashboard()"><i data-ico="download"></i> Export</button>
+                            <button class="ff-btn ff-btn-primary" onclick="openModal('recordPayment')"><i data-ico="plus"></i> Record Payment</button>
+                        </div>
+                    </div>
+
+                    <div class="ff-alert warning" id="deadlineAlert">
+                        <i data-ico="clock"></i>
+                        <div>
+                            <div class="ff-alert-title">Fee Deadline: Not configured</div>
+                            <div><span id="overdueCountAlert">0</span> students have overdue balances. <a href="#" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))" style="font-weight:600;">Send bulk reminders →</a></div>
+                        </div>
+                    </div>
+
+                    <div class="ff-alert info" id="pendingAlert" style="display:none;">
+                        <i data-ico="clock"></i>
+                        <div><div class="ff-alert-title">Parent link requests waiting</div>
+                        <div><span id="pendingAlertCount">0</span> parent(s) asked to link a child. <a href="#" onclick="showSection('parents');return false;" style="font-weight:600;">Review requests →</a></div></div>
+                    </div>
+
+                    <div class="ff-stats">
+                        <div class="ff-stat">
+                            <div class="ff-stat-trend up"><i data-ico="upload"></i> 12%</div>
+                            <div class="ff-stat-ico"><i data-ico="users"></i></div>
+                            <div class="ff-stat-value" id="statStudents">0</div>
+                            <div class="ff-stat-label">Total Students</div>
+                        </div>
+                        <div class="ff-stat green">
+                            <div class="ff-stat-trend up"><i data-ico="upload"></i> 8%</div>
+                            <div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div>
+                            <div class="ff-stat-value" id="statCollected">KES 0</div>
+                            <div class="ff-stat-label">Fees Collected</div>
+                        </div>
+                        <div class="ff-stat amber">
+                            <div class="ff-stat-trend down"><i data-ico="download"></i> 3%</div>
+                            <div class="ff-stat-ico amber"><i data-ico="clock"></i></div>
+                            <div class="ff-stat-value" id="statOutstanding">KES 0</div>
+                            <div class="ff-stat-label">Outstanding</div>
+                        </div>
+                        <div class="ff-stat red">
+                            <div class="ff-stat-trend down"><i data-ico="upload"></i> 5%</div>
+                            <div class="ff-stat-ico red"><i data-ico="alert"></i></div>
+                            <div class="ff-stat-value" id="statOverdue">0</div>
+                            <div class="ff-stat-label">Overdue Accounts</div>
+                        </div>
+                    </div>
+
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head">
+                                <div class="ff-card-title">Recent Payments</div>
+                                <div class="ff-btn-group">
+                                    <select class="ff-select" id="recentClassFilter" onchange="renderRecentPayments()">
+                                        <option value="">All Classes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ff-card-body flush">
+                                <div style="overflow-x:auto;">
+                                    <table class="ff-table">
+                                        <thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                                        <tbody id="recentPaymentsBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="ff-card">
+                                <div class="ff-card-head"><div class="ff-card-title">Collection Rate</div></div>
+                                <div class="ff-card-body">
+                                    <div class="ff-circular">
+                                        <svg viewBox="0 0 140 140" width="140" height="140">
+                                            <circle cx="70" cy="70" r="58" fill="none" stroke="#e2e8f0" stroke-width="12"/>
+                                            <circle cx="70" cy="70" r="58" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="364.42" stroke-dashoffset="72.88" id="collectionCircle"/>
+                                            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:var(--ff-navy)"/><stop offset="100%" style="stop-color:var(--ff-green)"/></linearGradient></defs>
+                                        </svg>
+                                        <div class="ff-circular-value">
+                                            <div class="ff-circular-pct" id="collectionPct">80%</div>
+                                            <div class="ff-circular-label">collected</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex;justify-content:center;gap:20px;font-size:12px;margin-top:12px;">
+                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--ff-green);border-radius:2px;margin-right:4px;"></span>Collected</span>
+                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--ff-border);border-radius:2px;margin-right:4px;"></span>Outstanding</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ff-card" style="margin-top:16px;">
+                                <div class="ff-card-head"><div class="ff-card-title">Class Performance</div></div>
+                                <div class="ff-card-body">
+                                    <div class="ff-grid" id="classPerformance"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STUDENTS -->
+                <div class="ff-view" id="sec-students">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Students</div>
+                            <div class="ff-page-desc">Manage enrolled students</div>
+                        </div>
+                        <button class="ff-btn ff-btn-primary" onclick="openModal('addStudent')"><i data-ico="plus"></i> Add Student</button>
+                    </div>
+
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">All Students <span id="studentTableCount" style="font-weight:400;color:var(--ff-muted);font-size:13px;"></span></div>
+                            <div class="ff-btn-group">
+                                <div class="ff-school-pick">
+                                    <i data-ico="search"></i>
+                                    <input type="text" class="ff-select" placeholder="Search name, ADM..." id="studentSearch" oninput="renderStudents()" style="width:200px;">
+                                </div>
+                                <select class="ff-select" id="studentClassFilter" onchange="renderStudents()">
+                                    <option value="">All Classes</option>
+                                </select>
+                                <select class="ff-select" id="studentStatusFilter" onchange="renderStudents()">
+                                    <option value="">All Status</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="unpaid">Unpaid</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="ff-card-body flush">
+                            <div style="overflow-x:auto;">
+                                <table class="ff-table">
+                                    <thead><tr><th>Student</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+                                    <tbody id="studentsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FEE STRUCTURE -->
+                <div class="ff-view" id="sec-fees">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Fee Structure</div>
+                            <div class="ff-page-desc">Build and publish your fees in the Fee Structure Manager</div>
+                        </div>
+                        <button class="ff-btn ff-btn-primary" onclick="location.href='fee-structure-manager.html'"><i data-ico="edit"></i> Open Fee Structure Manager</button>
+                    </div>
+                    <div class="ff-card"><div class="ff-card-body" id="feeSummary"></div></div>
+                </div>
+
+                <div class="ff-view" id="sec-payments">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Payments</div>
+                            <div class="ff-page-desc">All payment transactions</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="ff-btn ff-btn-outline" onclick="exportPayments()"><i data-ico="download"></i> Export</button>
+                            <button class="ff-btn ff-btn-primary" onclick="openModal('recordPayment')"><i data-ico="plus"></i> Record Payment</button>
+                        </div>
+                    </div>
+
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title" style="display:flex;align-items:center;gap:8px;">
+                                Transactions <span class="ff-live-dot"></span> <span style="font-size:11px;color:var(--ff-green);font-weight:500;">Live</span>
+                            </div>
+                            <div class="ff-btn-group">
+                                <select class="ff-select"><option>All Methods</option><option>M-Pesa</option><option>Bank</option><option>Cash</option></select>
+                                <select class="ff-select"><option>All Status</option><option>Reconciled</option><option>Pending</option><option>Failed</option></select>
+                                <input type="date" class="ff-select" style="width:150px;">
+                            </div>
+                        </div>
+                        <div class="ff-card-body flush">
+                            <div style="overflow-x:auto;">
+                                <table class="ff-table">
+                                    <thead><tr><th>Ref / Code</th><th>Student</th><th>Class</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                                    <tbody id="paymentsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FEE LEDGER -->
+                <div class="ff-view" id="sec-ledger">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Fee Ledger</div>
+                            <div class="ff-page-desc">Student financial ledger — charges and payments</div>
+                        </div>
+                        <div class="ff-btn-group">
+                            <select class="ff-select" id="ledgerStudentSelect" onchange="loadLedger()">
+                                <option value="">Select Student...</option>
+                            </select>
+                            <button class="ff-btn ff-btn-outline" onclick="printLedger()"><i data-ico="print"></i> Print</button>
+                        </div>
+                    </div>
+
+                    <div id="ledgerPlaceholder">
+                        <div class="ff-alert info">
+                            <i data-ico="info"></i>
+                            <div><div class="ff-alert-title">Select a Student</div>Choose a student from the dropdown above to view their complete fee ledger.</div>
+                        </div>
+                    </div>
+
+                    <div id="ledgerContent" style="display:none;">
+                        <div class="ff-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;" id="ledgerStats"></div>
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Transaction History</div></div>
+                            <div class="ff-card-body flush">
+                                <div class="ff-ledger-row head"><div>Date</div><div>Description</div><div>Debit</div><div>Credit</div><div>Balance</div><div>Ref</div></div>
+                                <div id="ledgerRows"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OUTSTANDING -->
+                <div class="ff-view" id="sec-outstanding">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Outstanding Balances</div>
+                            <div class="ff-page-desc">Students with overdue or partial balances</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="ff-btn ff-btn-outline" onclick="exportOutstanding()"><i data-ico="download"></i> Export</button>
+                            <button class="ff-btn ff-btn-orange" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))"><i data-ico="send"></i> Send Reminders</button>
+                        </div>
+                    </div>
+
+                    <div class="ff-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+                        <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="alert"></i></div><div class="ff-stat-value" id="outstandingTotal">0</div><div class="ff-stat-label">Overdue Accounts</div></div>
+                        <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="money"></i></div><div class="ff-stat-value" id="outstandingAmount">KES 0</div><div class="ff-stat-label">Total Outstanding</div></div>
+                        <div class="ff-stat" style="--after:bg:linear-gradient(90deg,#f97316,#f59e0b)"><div class="ff-stat-ico" style="background:#fff7ed;color:#f97316"><i data-ico="clock"></i></div><div class="ff-stat-value" id="outstanding30">0</div><div class="ff-stat-label">30+ Days Overdue</div></div>
+                        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div><div class="ff-stat-value" id="outstandingPartial">0</div><div class="ff-stat-label">Partial Payments</div></div>
+                    </div>
+
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">Overdue & Partial Report</div>
+                            <div class="ff-btn-group">
+                                <select class="ff-select" id="outstandingClassFilter" onchange="renderOutstanding()">
+                                    <option value="">All Classes</option>
+                                </select>
+                                <select class="ff-select" id="outstandingDaysFilter" onchange="renderOutstanding()">
+                                    <option value="">All</option><option value="7">7+ Days</option><option value="14">14+ Days</option><option value="30">30+ Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="ff-card-body flush">
+                            <div style="overflow-x:auto;">
+                                <table class="ff-table">
+                                    <thead><tr><th>Student</th><th>Class</th><th>Balance</th><th>Last Payment</th><th>Days Overdue</th><th>Parent Phone</th><th>Actions</th></tr></thead>
+                                    <tbody id="outstandingBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- M-PESA RECONCILE -->
+                <div class="ff-view" id="sec-mpesa">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">M-Pesa Reconciliation</div>
+                            <div class="ff-page-desc">Auto &amp; manual matching of M-Pesa payments</div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button class="ff-btn ff-btn-outline" onclick="autoReconcile()"><i data-ico="refresh"></i> Auto-Reconcile</button>
+                            <button class="ff-btn ff-btn-green" onclick="openModal('manualReconcile')"><i data-ico="link"></i> Manual Match</button>
+                        </div>
+                    </div>
+
+                    <div class="ff-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+                        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="check"></i></div><div class="ff-stat-value" id="reconDone">0</div><div class="ff-stat-label">Reconciled Today</div></div>
+                        <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="clock"></i></div><div class="ff-stat-value" id="reconPending">0</div><div class="ff-stat-label">Unmatched</div></div>
+                        <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="timesCircle"></i></div><div class="ff-stat-value" id="reconFailed">0</div><div class="ff-stat-label">Failed</div></div>
+                    </div>
+
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Unmatched Transactions</div></div>
+                            <div class="ff-card-body flush" id="unmatchedList"></div>
+                        </div>
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Reconciliation Log</div></div>
+                            <div class="ff-card-body flush" id="reconLog"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BULK REMINDERS -->
+                <div class="ff-view" id="sec-reminders">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Bulk Reminders</div>
+                            <div class="ff-page-desc">Remind parents of fee balances in the app and by SMS</div>
+                        </div>
+                        <button class="ff-btn ff-btn-outline" onclick="openModal('editTemplate')"><i data-ico="edit"></i> Edit Template</button>
+                    </div>
+
+                    <div class="ff-alert warning">
+                        <i data-ico="alert"></i>
+                        <div>
+                            <div class="ff-alert-title"><span id="reminderCount">0</span> parents have overdue balances</div>
+                            <div>SMS reminders are charged by the SMS provider (about KES 0.40 each). In-app reminders are free.</div>
+                        </div>
+                    </div>
+
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head">
+                                <div class="ff-card-title">Select Recipients</div>
+                                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+                                    <input type="checkbox" id="selectAllReminders" onchange="toggleAllReminders()"> Select All
+                                </label>
+                            </div>
+                            <div class="ff-card-body">
+                                <div style="max-height:300px;overflow-y:auto;" id="reminderRecipients"></div>
+                                <div style="padding-top:12px;border-top:1px solid var(--ff-border);display:flex;justify-content:space-between;font-size:13px;">
+                                    <span>Selected: <strong id="selectedCount">0</strong></span>
+                                    <span style="color:var(--ff-muted);">Cost: <strong id="selectedCost">KES 0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="ff-card">
+                                <div class="ff-card-head"><div class="ff-card-title">Message Preview</div></div>
+                                <div class="ff-card-body">
+                                    <div class="ff-field">
+                                        <label class="ff-label">Template</label>
+                                        <select class="ff-input" id="smsTemplate" onchange="updateSmsPreview()">
+                                            <option value="deadline">Fee Deadline Reminder</option>
+                                            <option value="overdue">Overdue Balance Notice</option>
+                                            <option value="welcome">Welcome / First Reminder</option>
+                                            <option value="custom">Custom Message</option>
+                                        </select>
+                                    </div>
+                                    <div class="ff-alert info">
+                                        <div class="ff-notif-time">To: +254 7XX XXX XXX (<span id="previewCount">0</span> recipients)</div>
+                                        <div class="ff-sms-body" id="smsPreviewText"></div>
+                                    </div>
+                                    <div class="ff-field">
+                                        <label class="ff-label">Send via</label>
+                                        <div class="ff-check"><input type="checkbox" id="remindInapp" checked><label for="remindInapp">Parent's FeeFlow dashboard (free)</label></div>
+                                        <div class="ff-check"><input type="checkbox" id="remindSms"><label for="remindSms">SMS to the parent's phone (charged per message)</label></div>
+                                    </div>
+                                    <div class="ff-hint" style="margin-bottom:8px;"><i data-ico="info"></i> Each parent gets one personal message with the balance and how to pay. A number receives at most one reminder SMS a day.</div>
+                                    <button class="ff-btn ff-btn-orange" style="width:100%;justify-content:center;margin-top:16px;" onclick="sendBulkReminders()">
+                                        <i data-ico="send"></i> Send Reminders
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="ff-card" style="margin-top:16px;">
+                                <div class="ff-card-head"><div class="ff-card-title">Reminder History</div></div>
+                                <div class="ff-card-body flush" id="reminderHistory"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECEIPTS -->
+                <div class="ff-view" id="sec-receipts">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Receipts</div>
+                            <div class="ff-page-desc">Payment receipts and confirmations</div>
+                        </div>
+                        <button class="ff-btn ff-btn-outline" onclick="exportReceipts()"><i data-ico="download"></i> Bulk Export</button>
+                    </div>
+                    <div class="ff-grid ff-grid-2" id="receiptsGrid"></div>
+                </div>
+
+                <!-- REPORTS -->
+                <div class="ff-view" id="sec-reports">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Reports</div>
+                            <div class="ff-page-desc">Termly and annual financial reports</div>
+                        </div>
+                    </div>
+
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">Collection Report — Current Term</div>
+                            <select class="ff-select">
+                                <option>Current Term</option>
+                            </select>
+                        </div>
+                        <div class="ff-card-body">
+                            <div class="ff-grid ff-grid-3" style="margin-bottom:20px;">
+                                <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div><div class="ff-stat-value" id="reportCollected">KES 0</div><div class="ff-stat-label">Collected</div></div>
+                                <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="clock"></i></div><div class="ff-stat-value" id="reportPartial">KES 0</div><div class="ff-stat-label">Partial</div></div>
+                                <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="timesCircle"></i></div><div class="ff-stat-value" id="reportOutstanding">KES 0</div><div class="ff-stat-label">Outstanding</div></div>
+                            </div>
+                            <div class="ff-grid" style="margin-bottom:20px;">
+                                <div>
+                                    <div class="ff-progress-row"><span class="ff-progress-name">M-Pesa</span><span class="ff-progress-pct" style="color:var(--ff-green);" id="reportMpesa">67%</span></div>
+                                    <div class="ff-progress"><div class="ff-progress-fill" id="reportMpesaBar" style="width:67%;background:linear-gradient(90deg,var(--ff-green),var(--ff-green));"></div></div>
+                                </div>
+                                <div>
+                                    <div class="ff-progress-row"><span class="ff-progress-name">Bank Transfer</span><span class="ff-progress-pct" style="color:var(--ff-blue);" id="reportBank">23%</span></div>
+                                    <div class="ff-progress"><div class="ff-progress-fill" id="reportBankBar" style="width:23%;background:linear-gradient(90deg,var(--ff-blue),#60a5fa);"></div></div>
+                                </div>
+                                <div>
+                                    <div class="ff-progress-row"><span class="ff-progress-name">Cash</span><span class="ff-progress-pct" style="color:var(--ff-amber);" id="reportCash">10%</span></div>
+                                    <div class="ff-progress"><div class="ff-progress-fill" id="reportCashBar" style="width:10%;background:linear-gradient(90deg,var(--ff-amber),#fbbf24);"></div></div>
+                                </div>
+                            </div>
+
+                            <table class="ff-table">
+                                <thead><tr><th>Class</th><th>Students</th><th>Expected</th><th>Collected</th><th>Outstanding</th><th>Rate</th></tr></thead>
+                                <tbody id="reportClassBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- PARENT DIRECTORY (school records only) -->
+                <div class="ff-view" id="sec-parents">
+                    <div class="ff-page-head"><div><div class="ff-page-title">Parent Directory</div><div class="ff-page-desc">Parents registered specifically with this school</div></div></div>
+                    <div class="ff-card" id="pendingLinksCard" style="display:none;margin-bottom:20px;">
+                        <div class="ff-card-head"><div class="ff-card-title"><i data-ico="clock" style="color:var(--ff-amber);margin-right:6px;"></i> Pending Link Requests <span id="pendingLinksCount"></span></div></div>
+                        <div class="ff-card-body flush"><div class="ff-alert info" style="margin:12px 16px;"><i data-ico="info"></i><div>Approve a request only if you recognise the parent and the child. Approved parents can see that child's fees and make payments.</div></div>
+                        <div style="overflow:auto"><table class="ff-table"><thead><tr><th>Parent</th><th>Phone</th><th>Child</th><th>Admission No.</th><th>Class</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pendingLinksBody"></tbody></table></div></div>
+                    </div>
+                    <div class="ff-card"><div class="ff-card-head"><div class="ff-card-title">Registered Parents <span id="parentCount"></span></div></div><div class="ff-card-body flush"><div style="overflow:auto"><table class="ff-table"><thead><tr><th>Parent</th><th>Phone</th><th>Email</th><th>Children</th><th>Combined Balance</th><th>Registered</th></tr></thead><tbody id="parentsBody"></tbody></table></div></div></div>
+                </div>
+
+                <!-- CLASSES -->
+                <div class="ff-view" id="sec-classes">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Classes</div>
+                            <div class="ff-page-desc">Classes appear automatically from your students</div>
+                        </div>
+                        
+                    </div>
+
+                    <div class="ff-card">
+                        <div class="ff-card-body flush">
+                            <div style="overflow-x:auto;">
+                                <table class="ff-table">
+                                    <thead><tr><th>Class</th><th>Level</th><th>Streams</th><th>Students</th><th>Collection</th></tr></thead>
+                                    <tbody id="classesBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="ff-view" id="sec-settings">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Settings</div>
+                            <div class="ff-page-desc">School configuration and preferences</div>
+                        </div>
+                    </div>
+
+                    <div class="ff-tabs">
+                        <button class="ff-tab active" onclick="switchSettingsTab('school',this)">School Info</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('paybill',this)">Paybill</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('terms',this)">Term Dates</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('notifications',this)">Notifications</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('appearance',this)">Appearance</button>
+                    </div>
+
+                    <!-- School Info -->
+                    <div class="ff-view" id="settings-school">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">School Information</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label" for="schoolNameInput">School name</label><input type="text" class="ff-input" id="schoolNameInput" value="School"></div>
+                                    <div class="ff-field"><label class="ff-label" for="schoolCodeInput">School code</label><input type="text" class="ff-input" id="schoolCodeInput" value="" disabled></div>
+                                </div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">School type</label>
+                                        <input type="text" class="ff-input" id="schoolLevelInfo" value="" disabled>
+                                        <p class="ff-hint"><i data-ico="info"></i> Chosen when the school registered. It decides which classes appear in the Fee Structure Manager. Ask the platform team if it needs to change.</p>
+                                    </div>
+                                    <div class="ff-field"><label class="ff-label" for="schoolPhoneInput">School phone</label><input type="tel" class="ff-input" id="schoolPhoneInput" value=""></div>
+                                </div>
+                                <div class="ff-field"><label class="ff-label" for="schoolAddressInput">Address</label><input type="text" class="ff-input" id="schoolAddressInput" value=""></div>
+                                <button class="ff-btn ff-btn-primary" onclick="saveSchoolInfo()"><i data-ico="check"></i> Save</button>
+                            </div>
+                        </div>
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Change Password</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">New Password</label><input type="password" class="ff-input" id="newPasswordInput" placeholder="At least 10 characters" autocomplete="new-password"></div>
+                                    <div class="ff-field"><label class="ff-label">Confirm New Password</label><input type="password" class="ff-input" id="newPasswordInput2" placeholder="Repeat new password" autocomplete="new-password"></div>
+                                </div>
+                                <button class="ff-btn ff-btn-primary" onclick="changePassword()"><i data-ico="lock"></i> Change Password</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paybill -->
+                    <div class="ff-view" id="settings-paybill">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">M-Pesa Paybill Configuration</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Paybill Number</label><input type="text" class="ff-input" id="paybillInput" value=""></div>
+                                </div>
+                                <div class="ff-alert info" style="margin-bottom:14px;"><i data-ico="info"></i><div>Parents pay to this paybill using the student's admission number as the account number. FeeFlow's M-Pesa connection (STK Push) is set up securely by the platform, so no API keys are needed here.</div></div>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="ff-btn ff-btn-primary" onclick="savePaybill()"><i data-ico="check"></i> Save</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ff-card" style="margin-top:20px;" id="mpesaCard">
+                            <div class="ff-card-head"><div class="ff-card-title">Automatic M-Pesa payments (STK Push)</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-hint" id="mpesaStatusLine" style="margin-bottom:14px;">Checking M-Pesa connection…</div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Environment</label>
+                                        <select class="ff-input" id="mpesaEnv"><option value="sandbox">Sandbox (testing, no real money)</option><option value="production">Production (real money)</option></select></div>
+                                    <div class="ff-field"><label class="ff-label">Account type</label>
+                                        <select class="ff-input" id="mpesaType"><option value="paybill">Paybill</option><option value="till">Buy Goods Till</option></select></div>
+                                </div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Paybill / Till number</label><input type="text" class="ff-input" id="mpesaShortcode" inputmode="numeric" autocomplete="off"></div>
+                                    <div class="ff-field"><label class="ff-label">Consumer key</label><input type="password" class="ff-input" id="mpesaKey" autocomplete="off" placeholder="From the Daraja portal"></div>
+                                </div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Consumer secret</label><input type="password" class="ff-input" id="mpesaSecret" autocomplete="off"></div>
+                                    <div class="ff-field"><label class="ff-label">Lipa Na M-Pesa passkey</label><input type="password" class="ff-input" id="mpesaPasskey" autocomplete="off"></div>
+                                </div>
+                                <div class="ff-hint" style="margin-bottom:12px;"><i data-ico="lock"></i> Your keys are checked with Safaricom, then stored encrypted. They are never shown again.</div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button class="ff-btn ff-btn-primary" id="mpesaSaveBtn" onclick="saveMpesa()"><i data-ico="link"></i> Verify &amp; save</button>
+                                    <button class="ff-btn ff-btn-outline" id="mpesaRemoveBtn" style="display:none;" onclick="removeMpesa()"><i data-ico="times"></i> Disconnect</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Term Dates -->
+                    <div class="ff-view" id="settings-terms">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Term Configuration</div><button class="ff-btn ff-btn-primary ff-btn-sm" onclick="openModal('addTerm')"><i data-ico="plus"></i> Add Term</button></div>
+                            <div class="ff-card-body flush">
+                                <table class="ff-table">
+                                    <thead><tr><th>Term</th><th>Start</th><th>End</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+                                    <tbody id="termsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="ff-view" id="settings-notifications">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Notification Preferences</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-check"><input type="checkbox" id="notifPayReceived" checked><label for="notifPayReceived">Payment received confirmation</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifDeadline" checked><label for="notifDeadline">Fee deadline reminders (7 days before)</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifOverdue" checked><label for="notifOverdue">Overdue balance alerts</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifReceipt" checked><label for="notifReceipt">Auto-generate PDF receipts</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifUnmatched"><label for="notifUnmatched">Admin alert for unmatched payments</label></div>
+                                <div class="ff-field" style="margin-top:16px;"><label class="ff-label">SMS Sender ID</label><input type="text" class="ff-input" id="smsSenderInput" placeholder="Your approved SMS sender ID"></div>
+                                <button class="ff-btn ff-btn-primary" onclick="saveNotifications()" style="margin-top:12px;"><i data-ico="check"></i> Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                    <div class="ff-view" id="settings-appearance">
+                        <div class="ff-card"><div class="ff-card-head"><div class="ff-card-title">Appearance & Accessibility</div></div><div class="ff-card-body">
+                            <div class="ff-field"><label class="ff-label">Color mode</label><select class="ff-input" id="themeSelect" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="system">Use device setting</option></select></div>
+                            <div class="ff-check"><input type="checkbox" id="compactTables" onchange="savePreferences()"><label for="compactTables">Compact table spacing</label></div>
+                            <button class="ff-btn ff-btn-primary" onclick="savePreferences()"><i data-ico="check"></i> Save Preferences</button>
+                        </div></div>
+                    </div>
+
+                <!-- NOTIFICATIONS -->
+                <div class="ff-view" id="sec-notifications">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Notifications</div>
+                            <div class="ff-page-desc">Activity alerts for your school</div>
+                        </div>
+                        <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="markAllRead()">Mark all read</button>
+                    </div>
+                    <div class="ff-card">
+                        <div class="ff-card-body flush">
+                            <div class="" id="notifList"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end content -->
+        </div><!-- end main -->
+    </div><!-- end layout -->
+</div><!-- end app -->
+
+<!-- MODALS -->
+<div class="ff-modal" id="modal-recordPayment">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="money" style="color:var(--ff-green);"></i> Record Payment</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('recordPayment')"><i data-ico="times"></i></button>
+        </div>
+        <div class="ff-modal-body">
+            <div class="ff-field">
+                <label class="ff-label">Student <span>*</span></label>
+                <select class="ff-input" id="payStudentSelect"></select>
+            </div>
+            <div class="ff-row">
+                <div class="ff-field">
+                    <label class="ff-label">Amount (KES) <span>*</span></label>
+                    <input type="number" class="ff-input" id="payAmount" placeholder="e.g. 5000">
+                </div>
+                <div class="ff-field">
+                    <label class="ff-label">Method <span>*</span></label>
+                    <select class="ff-input" id="payMethod">
+                        <option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option>
+                    </select>
+                </div>
+            </div>
+            <div class="ff-field">
+                <label class="ff-label">Reference / M-Pesa Code</label>
+                <input type="text" class="ff-input" id="payRef" placeholder="Enter payment reference">
+            </div>
+            <div class="ff-field">
+                <label class="ff-label">Notes</label>
+                <textarea class="ff-input" id="payNotes" placeholder="Optional notes..."></textarea>
+            </div>
+        </div>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('recordPayment')">Cancel</button>
+            <button class="ff-btn ff-btn-green" onclick="recordPayment()" id="recordPaymentBtn"><i data-ico="check"></i> Record</button>
+        </div>
+    </div>
+</div>
+
+<div class="ff-modal" id="modal-addStudent">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="user" style="color:var(--ff-navy);"></i> Add Student</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('addStudent')"><i data-ico="times"></i></button>
+        </div>
+        <div class="ff-modal-body">
+            <div class="ff-field"><label class="ff-label">Full Name <span>*</span></label><input type="text" class="ff-input" id="newStudentName" placeholder="Enter student full name"></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Class <span>*</span></label>
+                    <select class="ff-input" id="newStudentClass">
+                        <option>PP1</option><option>PP2</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
+                    </select>
+                </div>
+                <div class="ff-field"><label class="ff-label">Stream</label><input type="text" class="ff-input" id="newStudentStream" value="A" maxlength="1" style="width:80px;"></div>
+            </div>
+            <div class="ff-field"><label class="ff-label">Admission Number</label><input type="text" class="ff-input" id="newStudentAdm" placeholder="Leave blank to generate automatically (e.g. ADM-2026-001)"><div class="ff-hint">Parents use this number as the M-Pesa account reference.</div></div>
+            <div class="ff-field"><label class="ff-label">Parent Name <span>*</span></label><input type="text" class="ff-input" id="newStudentParent" placeholder="e.g. John Kamau"></div>
+            <div class="ff-field"><label class="ff-label">Parent Phone (+254) <span>*</span></label><input type="tel" class="ff-input" id="newStudentPhone" placeholder="7XX XXX XXX"></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Gender</label>
+                    <select class="ff-input" id="newStudentGender"><option>Female</option><option>Male</option></select>
+                </div>
+                <div class="ff-field"><label class="ff-label">Boarding</label>
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:13px;"><input type="checkbox" id="newStudentBoarding"> Boarder (pays boarding fees)</label>
+                </div>
+            </div>
+        </div>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('addStudent')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="addStudent()" id="addStudentBtn"><i data-ico="plus"></i> Add Student</button>
+        </div>
+    </div>
+</div>
+
+<div class="ff-modal" id="modal-manualReconcile">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="link" style="color:var(--ff-green);"></i> Manual M-Pesa Match</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('manualReconcile')"><i data-ico="times"></i></button>
+        </div>
+        <div class="ff-modal-body">
+            <div class="ff-alert warning" style="margin-bottom:14px;"><i data-ico="alert"></i>Match an unmatched M-Pesa transaction to a student.</div>
+            <div class="ff-field"><label class="ff-label">Transaction Ref <span>*</span></label><input type="text" class="ff-input" id="reconRef" placeholder="e.g. R7K2MNP4QX"></div>
+            <div class="ff-field"><label class="ff-label">Match to Student <span>*</span></label><select class="ff-input" id="reconStudent"></select></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Amount <span>*</span></label><input type="number" class="ff-input" id="reconAmount" placeholder="KES"></div>
+                <div class="ff-field"><label class="ff-label">Statement Date</label><input type="date" class="ff-input" id="reconDate"></div>
+            </div>
+        </div>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('manualReconcile')">Cancel</button>
+            <button class="ff-btn ff-btn-green" onclick="manualReconcile()" id="reconcileBtn"><i data-ico="check"></i> Reconcile</button>
+        </div>
+    </div>
+</div>
+
+<div class="ff-modal" id="modal-editTemplate">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="edit"></i> Edit SMS Template</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('editTemplate')"><i data-ico="times"></i></button>
+        </div>
+        <div class="ff-modal-body">
+            <div class="ff-field"><label class="ff-label">Template Name</label><input type="text" class="ff-input" value="Fee Deadline Reminder"></div>
+            <div class="ff-field">
+                <label class="ff-label">SMS Message</label>
+                <textarea class="ff-input" rows="4" id="smsTemplateText">{{SCHOOL}}: Dear Parent, your child {{STUDENT}} has a fee balance of KES {{BALANCE}} for {{TERM}}. Pay via M-Pesa Paybill {{PAYBILL}}, Account: {{REF}}. Deadline: {{DEADLINE}}. Call {{PHONE}}.</textarea>
+                <div class="ff-hint">Placeholders: {{SCHOOL}}, {{STUDENT}}, {{BALANCE}}, {{TERM}}, {{PAYBILL}}, {{REF}}, {{DEADLINE}}, {{PHONE}}</div>
+            </div>
+        </div>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('editTemplate')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="closeModal('editTemplate');showToast('Template saved')"><i data-ico="check"></i> Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="ff-modal" id="modal-addTerm">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="calendar"></i> Add Term</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('addTerm')"><i data-ico="times"></i></button>
+        </div>
+        <div class="ff-modal-body">
+            <div class="ff-field"><label class="ff-label">Term Name</label><input type="text" class="ff-input" placeholder="Enter term name" id="newTermName"></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Start Date</label><input type="date" class="ff-input" id="newTermStart"></div>
+                <div class="ff-field"><label class="ff-label">End Date</label><input type="date" class="ff-input" id="newTermEnd"></div>
+            </div>
+            <div class="ff-field"><label class="ff-label">Fee Deadline</label><input type="date" class="ff-input" id="newTermDeadline"></div>
+        </div>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('addTerm')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="addTerm()"><i data-ico="plus"></i> Add</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="ff-toasts" id="toastContainer" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script src="js/config.js"></script>
+<script src="js/ff-client.js"></script>
+<script src="js/ff-ui.js"></script>
+<script>
+'use strict';
+// ============================================================
+// FeeFlow School Admin dashboard (Supabase)
+// Every school sees only its own data: the database enforces it (Row Level Security).
+// Balances always come from CONFIRMED payments; totals come from the published fee structure.
+// ============================================================
+if (!window.FF) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center;">FeeFlow could not load. Check your internet connection and refresh the page.</div>';
+    throw new Error('FeeFlow client failed to load');
+}
+const sb = FF.sb;
+const esc = FF.escapeHtml;
+
+let me = null;
+let schoolId = null;
+let school = {};
+let allStudents = [];
+const schoolData = { students: [], payments: [], parents: [], links: [], pendingLinks: [], notifications: [], terms: [], reminderHistory: [], unmatched: [], classes: [], published: null };
+
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+const val = (id) => ($(id) && $(id).value || '').trim();
+const num = (v) => Number(v || 0);
+const money = FFUI.money;
+const ico = FFUI.ico;
+const sum = (arr, f) => arr.reduce((a, x) => a + num(f(x)), 0);
+const COLORS = ['#2b7fd4', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6', '#ef4444'];
+function colorFor(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return `linear-gradient(135deg,${COLORS[h % COLORS.length]},#1e293b)`; }
+const initialsOf = FFUI.initials;
+const fmtDate = FFUI.fmtDate;
+const fmtDateTime = FFUI.fmtDateTime;
+const timeAgo = FFUI.timeAgo;
+const isToday = (iso) => !!iso && new Date(iso).toDateString() === new Date().toDateString();
+const cap = FFUI.cap;
+function setBusy(btnId, busy, label) {
+    const btn = $(btnId); if (!btn) return;
+    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="ff-spinner"></span> ' + esc(label); }
+    else { btn.disabled = false; if (btn.dataset.html) btn.innerHTML = btn.dataset.html; }
+}
+function dbMessage(e) {                                  // friendlier messages for the rules this page can trip
+    const msg = String((e && e.message) || '');
+    if (e && e.code === '23505' && /admission/i.test(msg + (e.details || ''))) return 'That admission number is already used by another student.';
+    if (e && e.code === '23505' && /mpesa|receipt|payments_/i.test(msg + (e.details || ''))) return 'That M-Pesa transaction code has already been recorded.';
+    if (e && e.code === '23505') return 'That record already exists.';
+    return FF.friendlyError(e);
+}
+const normalizeKePhone = FFUI.normalizeKePhone;
+const METHOD_LABEL = { mpesa_stk: 'M-Pesa', mpesa_c2b: 'M-Pesa', bank: 'Bank Transfer', cash: 'Cash', cheque: 'Cheque' };
+const METHOD_KEY = { 'M-Pesa': 'mpesa_c2b', 'Bank Transfer': 'bank', 'Cash': 'cash', 'Cheque': 'cheque' };
+const PAY_STATUS = { completed: 'reconciled', pending: 'pending', failed: 'failed', cancelled: 'failed', timeout: 'failed' };
+
+// ============================================================
+// AUTH + DATA LOADING
+// ============================================================
+async function checkAuth() {
+    me = await FF.requireRole('school_admin');
+    if (!me) return;                                      // sent back to the login page
+    schoolId = me.school_id;
+    $('mainApp').style.display = 'flex';
+    $('userName').textContent = me.full_name || me.email || 'School Admin';
+    await loadData();
+    subscribeRealtime();
+}
+function logout() { FF.signOut(); }
+
+async function fetchAll(make, max = 20000) {            // PostgREST returns at most 1,000 rows per request
+    const out = [];
+    for (let from = 0; from < max; from += 1000) {
+        const { data, error } = await make().range(from, from + 999);
+        if (error) throw error;
+        out.push(...(data || []));
+        if (!data || data.length < 1000) break;
+    }
+    return out;
+}
+
+function activeTerm() { return schoolData.terms.find(t => t.status === 'active') || null; }
+
+async function loadData() {
+    try {
+        const [schoolR, students, payments, parentsR, linksR, notifR, termsR, remR, feeR, umR] = await Promise.all([
+            sb.from('schools').select('*').eq('id', schoolId).maybeSingle(),
+            fetchAll(() => sb.from('student_balances').select('*').order('full_name')),
+            fetchAll(() => sb.from('payments').select('id, student_id, parent_id, amount, method, status, mpesa_receipt, account_reference, receipt_no, note, phone, created_at, completed_at').order('created_at', { ascending: false }), 10000),
+            sb.from('parents').select('id, full_name, phone, email, created_at').order('created_at', { ascending: false }),
+            sb.from('parent_students').select('parent_id, student_id, status, created_at'),
+            sb.from('notifications').select('id, title, body, unread, created_at, type').eq('audience', 'school').order('created_at', { ascending: false }).limit(100),
+            sb.from('terms').select('*').order('start_date', { ascending: false }),
+            sb.from('reminder_history').select('*').order('created_at', { ascending: false }).limit(20),
+            sb.from('fee_structure_published').select('published_at, data').eq('school_id', schoolId).maybeSingle(),
+            sb.from('mpesa_unmatched').select('id, trans_id, amount, bill_ref, msisdn, payer_name, trans_time').eq('status', 'unmatched').order('created_at', { ascending: false }).limit(100)
+        ]);
+        for (const r of [schoolR, parentsR, linksR, notifR, termsR, remR, feeR]) if (r.error) throw r.error;
+
+        school = schoolR.data || school;
+        schoolData.terms = termsR.data || [];
+        const deadline = (activeTerm() || {}).deadline || null;
+        allStudents = students.map(r => mapStudent(r, deadline));
+        schoolData.students = allStudents.filter(s => s.verified && s.active);
+        const byId = Object.fromEntries(allStudents.map(s => [s.id, s]));
+        schoolData.payments = payments.map(p => mapPayment(p, byId));
+        schoolData.parents = (parentsR.data || []).map(p => ({ id: p.id, name: p.full_name, phone: p.phone, email: p.email, created: p.created_at }));
+        schoolData.links = linksR.data || [];
+        const parentById = Object.fromEntries(schoolData.parents.map(p => [p.id, p]));
+        schoolData.pendingLinks = schoolData.links.filter(l => l.status === 'pending' && parentById[l.parent_id] && byId[l.student_id])
+            .map(l => ({ ...l, parent: parentById[l.parent_id], student: byId[l.student_id] }));
+        schoolData.notifications = notifR.data || [];
+        schoolData.reminderHistory = remR.data || [];
+        schoolData.published = feeR.data || null;
+        schoolData.unmatched = umR && !umR.error ? (umR.data || []) : [];
+        schoolData.classes = deriveClasses();
+        renderAll();
+    } catch (e) {
+        showToast(FF.friendlyError(e), 'error');
+    }
+}
+
+function mapStudent(r, deadline) {
+    const balance = num(r.balance);
+    let overdueDays = 0;
+    if (balance > 0 && deadline) overdueDays = Math.max(0, Math.floor((Date.now() - new Date(deadline + 'T23:59:59').getTime()) / 86400000));
+    const status = balance > 0 && overdueDays > 0 ? 'overdue' : (r.fee_status === 'no_fee' ? 'unpaid' : r.fee_status);
+    return {
+        id: r.id, name: r.full_name, adm: r.admission_no, class: r.class_name, gender: r.gender, boarding: !!r.boarding,
+        total: num(r.total_due), paid: num(r.paid), balance, credit: num(r.credit), noFee: r.fee_status === 'no_fee', feeStatus: r.fee_status,
+        status, overdueDays, lastPayment: r.last_payment_at ? fmtDate(r.last_payment_at) : '—',
+        parentName: r.guardian_name || '', parentPhone: r.guardian_phone ? '+' + r.guardian_phone : '—',
+        color: colorFor(r.id), initials: initialsOf(r.full_name), verified: !!r.verified, active: !!r.active
+    };
+}
+function mapPayment(p, byId) {
+    const st = byId[p.student_id] || {};
+    return {
+        id: p.id, studentId: p.student_id, studentName: st.name || 'Unknown student', class: st.class || '—', adm: st.adm || '—',
+        amount: num(p.amount), method: METHOD_LABEL[p.method] || p.method, methodKey: p.method,
+        status: PAY_STATUS[p.status] || p.status, rawStatus: p.status,
+        ref: p.mpesa_receipt || p.account_reference || p.receipt_no || '—', receiptNo: p.receipt_no || '', mpesaReceipt: p.mpesa_receipt || '',
+        note: p.note || '', created: p.created_at, completed: p.completed_at, date: fmtDateTime(p.completed_at || p.created_at), parentId: p.parent_id
+    };
+}
+function levelOf(name) { const n = String(name || ''); return /^(PP|Pre)/i.test(n) ? 'Pre-Primary' : /^(Form|Grade\s*(7|8|9|10|11|12))/i.test(n) ? 'Secondary' : 'Primary'; }
+function classOrder(name) {
+    const m = String(name).match(/^(PP|Class|Grade|Form)\s*(\d+)/i);
+    if (!m) return [9, 0, name];
+    return [{ pp: 0, class: 1, grade: 1, form: 2 }[m[1].toLowerCase()], Number(m[2]), name];
+}
+function deriveClasses() {
+    const groups = {};
+    schoolData.students.forEach(s => { const base = s.class.replace(/[A-Z]$/, '').trim() || s.class; (groups[base] = groups[base] || []).push(s); });
+    return Object.entries(groups).map(([name, list]) => {
+        const expected = sum(list, s => s.total), collected = sum(list, s => s.paid);
+        return { name, level: levelOf(name), streams: new Set(list.map(s => (s.class.match(/[A-Z]$/) || ['—'])[0])).size,
+                 students: list.length, collectionRate: expected > 0 ? Math.round(collected / expected * 100) : 0 };
+    }).sort((a, b) => { const x = classOrder(a.name), y = classOrder(b.name); return x[0] - y[0] || x[1] - y[1] || String(x[2]).localeCompare(y[2]); });
+}
+
+let reloadTimer = null;
+function subscribeRealtime() {                           // new payments / notifications appear without refreshing
+    if (!sb.channel) return;
+    const refresh = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadData, 800); };
+    try {
+        sb.channel('school-' + schoolId)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments', filter: 'school_id=eq.' + schoolId }, refresh)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: 'school_id=eq.' + schoolId }, refresh)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'parent_students' }, refresh)
+            .subscribe();
+    } catch (e) { /* live updates are optional */ }
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll() {
+    renderSchoolHeader();
+    renderStats();
+    renderTermBanner();
+    renderRecentPayments();
+    renderClassPerformance();
+    renderStudents();
+    renderFeeSummary();
+    renderPayments();
+    renderOutstanding();
+    renderMpesa();
+    renderReceipts();
+    renderParents();
+    renderClasses();
+    renderTerms();
+    renderNotifications();
+    renderReminderRecipients();
+    renderReports();
+    populateSelects();
+    fillSettingsForm();
+    loadLedger();
+}
+
+function renderSchoolHeader() {
+    const label = FFUI.levelLabel(school.level);
+    $('userSchool').textContent = school.name || 'School';
+    $('schoolNameDisplay').innerHTML = '<i data-ico="school"></i> ' + esc(school.name || 'School');
+    $('schoolNameDisplay').title = label;
+    const chip = $('schoolLevelChip');
+    if (chip) { chip.style.display = 'flex'; $('schoolLevelText').textContent = label; }
+    const badge = $('topLevelBadge');
+    if (badge) { badge.style.display = 'inline-flex'; badge.textContent = label; }
+    const info = $('schoolLevelInfo');
+    if (info) info.value = label;
+}
+
+function renderStats() {
+    const S = schoolData.students;
+    const totalPaid = sum(S, s => s.paid), totalOutstanding = sum(S, s => s.balance);
+    const overdueCount = S.filter(s => s.balance > 0 && s.overdueDays > 0).length;
+    const rate = totalPaid + totalOutstanding > 0 ? Math.round(totalPaid / (totalPaid + totalOutstanding) * 100) : 0;
+    $('statStudents').textContent = S.length;
+    $('statCollected').textContent = money(totalPaid);
+    $('statOutstanding').textContent = money(totalOutstanding);
+    $('statOverdue').textContent = overdueCount;
+    $('overdueCountAlert').textContent = overdueCount;
+    $('collectionPct').textContent = rate + '%';
+    const circle = $('collectionCircle'); if (circle) circle.setAttribute('stroke-dashoffset', 364.42 - (364.42 * rate / 100));
+    $('navStudentCount').textContent = S.length;
+    $('navOverdueCount').textContent = overdueCount;
+    $('navParentCount').textContent = schoolData.parents.length;
+    $('outstandingTotal').textContent = S.filter(s => s.balance > 0).length;
+    $('outstandingAmount').textContent = money(totalOutstanding);
+    $('outstanding30').textContent = S.filter(s => s.overdueDays >= 30).length;
+    $('outstandingPartial').textContent = S.filter(s => s.status === 'partial').length;
+    const pending = schoolData.pendingLinks.length;
+    const alertBox = $('pendingAlert');
+    alertBox.style.display = pending ? 'flex' : 'none';
+    $('pendingAlertCount').textContent = pending;
+}
+
+function renderTermBanner() {
+    const t = activeTerm();
+    $('termInfo').textContent = t ? `${t.name} • ${fmtDate(t.start_date)} – ${fmtDate(t.end_date)}` : 'No active term. Add one under Settings → Term Dates.';
+    const title = document.querySelector('#deadlineAlert .ff-alert-title');
+    if (title) title.textContent = t && t.deadline ? 'Fee Deadline: ' + fmtDate(t.deadline) : 'Fee Deadline: Not configured';
+}
+
+const BADGE_TONE = { reconciled: 'green', paid: 'green', linked: 'green', active: 'green', pending: 'blue', partial: 'amber', upcoming: 'amber', unpaid: 'amber', trial: 'amber', overdue: 'red', failed: 'red', rejected: 'red', suspended: 'red', inactive: '' };
+function payIcon(p) { const m = p.method === 'M-Pesa'; const tone = m ? 'var(--ff-green)' : 'var(--ff-blue)'; return `<span style="display:inline-flex;align-items:center;gap:5px;color:${tone};font-weight:600">${ico(m ? 'mobile' : 'bank', 'ff-ico-sm')} ${esc(p.method)}</span>`; }
+const statusBadge = (s) => `<span class="ff-badge ${BADGE_TONE[s] || ''}">${esc(cap(s))}</span>`;
+
+function renderRecentPayments() {
+    const filter = $('recentClassFilter').value;
+    const rows = schoolData.payments.filter(p => !filter || p.class === filter).slice(0, 8);
+    $('recentPaymentsBody').innerHTML = rows.length ? rows.map(p => {
+        const st = allStudents.find(s => s.id === p.studentId) || {};
+        return `<tr>
+            <td><div class="ff-person"><div class="ff-avatar-sm" style="background:${st.color || '#94a3b8'};">${esc(st.initials || '?')}</div><div class="ff-person-name">${esc(p.studentName)}</div></div></td>
+            <td class="num" style="color:${p.status === 'reconciled' ? 'var(--ff-green)' : 'var(--ff-amber)'};">${money(p.amount)}</td>
+            <td>${payIcon(p)}</td>
+            <td>${statusBadge(p.status)}</td>
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(p.date)}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--ff-muted);">No payments yet.</td></tr>';
+    const classes = [...new Set(schoolData.students.map(s => s.class))].sort();
+    $('recentClassFilter').innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option ${c === filter ? 'selected' : ''}>${esc(c)}</option>`).join('');
+}
+
+function renderClassPerformance() {
+    const colors = ['linear-gradient(90deg,#059669,#10b981)', 'linear-gradient(90deg,#3b82f6,#60a5fa)', 'linear-gradient(90deg,#f59e0b,#fbbf24)', 'linear-gradient(90deg,#ef4444,#f87171)'];
+    const perf = schoolData.classes.slice().sort((a, b) => b.collectionRate - a.collectionRate).slice(0, 6);
+    $('classPerformance').innerHTML = perf.length ? perf.map((p, i) => `
+        <div>
+            <div class="ff-progress-row"><span class="ff-progress-name">${esc(p.name)}</span>
+                <span class="ff-progress-pct" style="color:${p.collectionRate >= 80 ? 'var(--ff-green)' : p.collectionRate >= 60 ? 'var(--ff-amber)' : 'var(--ff-red)'};">${p.collectionRate}%</span></div>
+            <div class="ff-progress"><div class="ff-progress-fill" style="width:${Math.min(100, p.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
+        </div>`).join('') : '<p style="padding:16px;color:var(--ff-muted);font-size:13px;">Add students to see class performance.</p>';
+}
+
+function fillClassFilters() {
+    const classes = [...new Set(schoolData.students.map(s => s.class))].sort();
+    for (const id of ['studentClassFilter', 'outstandingClassFilter']) {
+        const el = $(id); if (!el) continue;
+        const keep = el.value;
+        el.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option ${c === keep ? 'selected' : ''}>${esc(c)}</option>`).join('');
+    }
+}
+
+function renderStudents() {
+    fillClassFilters();
+    const search = val('studentSearch').toLowerCase(), cls = $('studentClassFilter').value, status = $('studentStatusFilter').value;
+    let rows = schoolData.students;
+    if (search) rows = rows.filter(s => s.name.toLowerCase().includes(search) || s.adm.toLowerCase().includes(search));
+    if (cls) rows = rows.filter(s => s.class === cls);
+    if (status === 'overdue') rows = rows.filter(s => s.balance > 0 && s.overdueDays > 0);          // past the term deadline
+    else if (status) rows = rows.filter(s => s.feeStatus === status);                                   // paid / partial / unpaid by payments made
+    $('studentTableCount').textContent = `(${rows.length})`;
+    $('studentsBody').innerHTML = rows.length ? rows.map(s => `
+        <tr class="ff-clickable" onclick="viewStudentProfile('${esc(s.id)}')">
+            <td><div class="ff-person"><div class="ff-avatar-sm" style="background:${s.color};">${esc(s.initials)}</div><div><div class="ff-person-name">${esc(s.name)}</div><div class="ff-person-sub">${esc(s.adm)}</div></div></div></td>
+            <td>${esc(s.class)}</td>
+            <td class="num">${s.noFee ? '<span style="color:var(--ff-muted);font-size:12px;" title="No fee structure matches this class">Not set</span>' : money(s.total)}</td>
+            <td class="num" style="color:var(--ff-green);">${money(s.paid)}</td>
+            <td class="num" style="color:${s.balance > 0 ? 'var(--ff-red)' : 'var(--ff-green)'};">${money(s.balance)}</td>
+            <td>${statusBadge(s.status)}</td>
+            <td onclick="event.stopPropagation()">
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="viewStudentProfile('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i data-ico="eye"></i></button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="openRecordPaymentFor('${esc(s.id)}')" aria-label="Record payment for ${esc(s.name)}"><i data-ico="plus"></i></button>
+            </td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No students found. Use "Add Student" to enrol the first one.</td></tr>';
+}
+
+function renderFeeSummary() {
+    const pub = schoolData.published;
+    const unbilled = schoolData.students.filter(s => s.noFee);
+    const classes = [...new Set(unbilled.map(s => s.class))].sort();
+    let levels = 0, grades = 0;
+    if (pub && pub.data && Array.isArray(pub.data.levels)) { levels = pub.data.levels.length; grades = sum(pub.data.levels, l => (l.grades || []).length); }
+    $('feeSummary').innerHTML = `
+        <div class="alert ${pub ? 'alert-info' : 'alert-warning'}" style="margin-bottom:16px;">
+            ${ico(pub ? 'checkCircle' : 'alert')}
+            <div>
+                <div class="ff-alert-title">${pub ? 'Fee structure published' : 'No fee structure published yet'}</div>
+                <div>${pub ? `Published ${esc(fmtDate(pub.published_at))} • ${levels} level(s), ${grades} grade(s). Parents see this structure, and every student's total is calculated from it automatically.`
+                           : 'Students show no fee until you build and publish a fee structure.'}</div>
+            </div>
+        </div>
+        ${unbilled.length && pub ? `<div class="ff-alert warning" style="margin-bottom:16px;"><i data-ico="alert"></i><div>
+            <div class="ff-alert-title">${unbilled.length} student(s) have no fee assigned</div>
+            <div>Their class name does not match a grade in the published structure: <strong>${classes.map(esc).join(', ')}</strong>. Rename the grade in the Fee Structure Manager or correct the student's class, then publish again.</div></div></div>` : ''}
+`;
+}
+
+function renderPayments() {
+    $('paymentsBody').innerHTML = schoolData.payments.length ? schoolData.payments.map(p => `
+        <tr class="ff-clickable" onclick="viewTransaction('${esc(p.id)}')">
+            <td style="font-weight:700;font-family:'Space Grotesk',sans-serif;">${esc(p.ref)}</td>
+            <td style="font-weight:500;">${esc(p.studentName)}</td>
+            <td style="font-size:12px;color:var(--ff-muted);">${esc(p.class)}</td>
+            <td class="num" style="color:${p.status === 'reconciled' ? 'var(--ff-green)' : 'var(--ff-amber)'};">${money(p.amount)}</td>
+            <td>${payIcon(p)}</td>
+            <td>${statusBadge(p.status)}</td>
+            <td style="font-size:12px;color:var(--ff-muted);">${esc(p.date)}</td></tr>`).join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No payments recorded yet.</td></tr>';
+}
+
+function renderOutstanding() {
+    const cls = $('outstandingClassFilter').value, days = parseInt($('outstandingDaysFilter').value) || 0;
+    let rows = schoolData.students.filter(s => s.balance > 0);
+    if (cls) rows = rows.filter(s => s.class === cls);
+    if (days > 0) rows = rows.filter(s => s.overdueDays >= days);
+    rows.sort((a, b) => b.overdueDays - a.overdueDays || b.balance - a.balance);
+    $('outstandingBody').innerHTML = rows.length ? rows.map(s => {
+        const oc = s.overdueDays >= 60 ? 'd60' : s.overdueDays >= 30 ? 'd30' : s.overdueDays >= 14 ? 'd14' : s.overdueDays >= 7 ? 'd7' : '';
+        return `<tr>
+            <td><div class="ff-person"><div class="ff-avatar-sm" style="background:${s.color};">${esc(s.initials)}</div><div><div class="ff-person-name">${esc(s.name)}</div><div class="ff-person-sub">${esc(s.adm)}</div></div></div></td>
+            <td>${esc(s.class)}</td>
+            <td class="num" style="color:var(--ff-red);font-weight:700;">${money(s.balance)}</td>
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(s.lastPayment)}</td>
+            <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${oc}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--ff-muted);">—</span>'}</td>
+            <td style="font-size:12px;">${esc(s.parentPhone)}</td>
+            <td><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="sendReminder('${esc(s.id)}')" aria-label="Send reminder"><i data-ico="send"></i></button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="viewStudentLedger('${esc(s.id)}')" aria-label="View ledger"><i data-ico="eye"></i></button></td></tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No outstanding balances. 🎉</td></tr>';
+}
+
+function renderMpesa() {
+    const mp = schoolData.payments.filter(p => p.methodKey === 'mpesa_stk' || p.methodKey === 'mpesa_c2b');
+    $('reconDone').textContent = mp.filter(p => p.rawStatus === 'completed' && isToday(p.completed)).length;
+    $('reconPending').textContent = mp.filter(p => p.rawStatus === 'pending').length + (schoolData.unmatched || []).length;
+    $('reconFailed').textContent = mp.filter(p => ['failed', 'cancelled', 'timeout'].includes(p.rawStatus)).length;
+    renderUnmatched();
+    $('reconLog').innerHTML = mp.slice(0, 10).map(p => `
+        <div style="display:flex;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--ff-border);font-size:13px;">
+            <div><strong>${esc(p.ref)}</strong><div style="font-size:12px;color:var(--ff-muted);">${esc(p.studentName)} • ${esc(p.date)}</div></div>
+            <div style="text-align:right;"><div style="font-weight:700;">${money(p.amount)}</div>${statusBadge(p.status)}</div></div>`).join('')
+        || '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No M-Pesa activity yet.</p>';
+}
+
+function renderReceipts() {
+    const rows = schoolData.payments.filter(p => p.status === 'reconciled').slice(0, 6);
+    $('receiptsGrid').innerHTML = rows.length ? rows.map(p => `
+        <div class="ff-receipt">
+            <div class="ff-receipt-head"><div style="font-weight:700;font-size:13px;">Receipt #${esc(p.receiptNo || p.ref)}</div>
+                <span class="ff-badge green"> Confirmed</span></div>
+                <div class="ff-receipt-logo"><div class="ff-receipt-school">${esc(school.name || 'School')}</div>
+                    <div class="ff-receipt-sub">${esc([school.address, school.phone].filter(Boolean).join(' • ') || 'Address not set')}</div></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Student</span><span class="ff-receipt-value">${esc(p.studentName)}</span></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Class</span><span class="ff-receipt-value">${esc(p.class)}</span></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Method</span><span class="ff-receipt-value">${esc(p.method)}${p.ref !== '—' ? ' (' + esc(p.ref) + ')' : ''}</span></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Date</span><span class="ff-receipt-value">${esc(p.date)}</span></div>
+                <div class="ff-receipt-row total"><span class="ff-receipt-label">Amount</span><span class="ff-receipt-value" style="color:var(--ff-green);">${money(p.amount)}</span></div>
+                <div style="text-align:center;margin-top:12px;"><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="printReceipt('${esc(p.id)}')"><i data-ico="print"></i> Print / PDF</button></div></div>`).join('')
+        : '<p style="padding:30px;color:var(--ff-muted);">Receipts appear here once payments are confirmed.</p>';
+}
+
+function renderParents() {
+    const { parents, links, pendingLinks } = schoolData;
+    $('parentCount').textContent = '(' + parents.length + ')';
+    const activeKids = (pid) => links.filter(l => l.parent_id === pid && l.status === 'active').map(l => allStudents.find(s => s.id === l.student_id)).filter(Boolean);
+    $('parentsBody').innerHTML = parents.length ? parents.map(p => {
+        const kids = activeKids(p.id), balance = sum(kids, k => k.balance);
+        return `<tr><td style="font-weight:600">${esc(p.name)}</td><td>+${esc(p.phone)}</td><td>${esc(p.email || '—')}</td>
+            <td>${kids.map(k => esc(k.name)).join(', ') || 'None linked'}</td>
+            <td class="num" style="color:${balance ? 'var(--ff-red)' : 'var(--ff-green)'}">${money(balance)}</td>
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(fmtDate(p.created))}</td></tr>`;
+    }).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--ff-muted)">No parents registered for this school yet.</td></tr>';
+
+    $('pendingLinksCard').style.display = pendingLinks.length ? 'block' : 'none';
+    $('pendingLinksCount').textContent = '(' + pendingLinks.length + ')';
+    $('pendingLinksBody').innerHTML = pendingLinks.map(l => `
+        <tr><td style="font-weight:600">${esc(l.parent.name)}</td><td>+${esc(l.parent.phone)}</td>
+            <td>${esc(l.student.name)}</td><td>${esc(l.student.adm)}</td><td>${esc(l.student.class)}</td>
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(timeAgo(l.created_at))}</td>
+            <td><button class="ff-btn ff-btn-green ff-btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',true)"><i data-ico="check"></i> Approve</button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',false)"><i data-ico="times"></i> Reject</button></td></tr>`).join('');
+}
+
+async function resolveLink(parentId, studentId, approve) {
+    const l = schoolData.pendingLinks.find(x => x.parent_id === parentId && x.student_id === studentId);
+    if (!approve && !confirm('Reject this request? The parent will not see this child.')) return;
+    const { error } = await sb.from('parent_students').update({ status: approve ? 'active' : 'rejected' }).eq('parent_id', parentId).eq('student_id', studentId);
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast(approve ? `${l ? l.student.name : 'Child'} is now linked to ${l ? l.parent.name : 'the parent'}` : 'Request rejected', approve ? 'success' : 'info');
+    await loadData();
+}
+
+function renderClasses() {
+    $('classesBody').innerHTML = schoolData.classes.length ? schoolData.classes.map(c => `
+        <tr><td style="font-weight:600;">${esc(c.name)}</td><td>${esc(c.level)}</td><td>${c.streams}</td><td>${c.students}</td>
+            <td><span style="font-weight:700;color:${c.collectionRate >= 80 ? 'var(--ff-green)' : c.collectionRate >= 60 ? 'var(--ff-amber)' : 'var(--ff-red)'};">${c.collectionRate}%</span></td></tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ff-muted);">Classes appear automatically as you add students.</td></tr>';
+}
+
+function renderTerms() {
+    $('termsBody').innerHTML = schoolData.terms.length ? schoolData.terms.map(t => `
+        <tr><td style="font-weight:600;">${esc(t.name)}</td><td>${esc(fmtDate(t.start_date))}</td><td>${esc(fmtDate(t.end_date))}</td>
+            <td style="color:${t.status === 'active' ? 'var(--ff-red)' : 'var(--ff-muted)'};font-weight:${t.status === 'active' ? '700' : ''};">${esc(fmtDate(t.deadline))}</td>
+            <td><span class="ff-badge ${t.status === 'active' ? 'green' : 'blue'}">${esc(cap(t.status))}</span></td>
+            <td><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="setActiveTerm('${esc(t.id)}')"><i data-ico="check"></i> Active</button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="deleteTerm('${esc(t.id)}')" aria-label="Delete term"><i data-ico="trash"></i></button></td></tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ff-muted);">No terms yet. Add a term to set the fee deadline used for overdue tracking.</td></tr>';
+}
+
+function renderNotifications() {
+    const n = schoolData.notifications;
+    $('notifDot').style.display = n.some(x => x.unread) ? 'block' : 'none';
+    $('notifList').innerHTML = n.length ? n.map(x => `
+        <div class="notif-item ${x.unread ? 'unread' : ''}" onclick="markNotifRead(${Number(x.id)})">
+            <div class="ff-notif-title">${esc(x.title)}</div><div class="ff-notif-body">${esc(x.body)}</div>
+            <div class="ff-notif-time">${esc(timeAgo(x.created_at))}</div></div>`).join('')
+        : '<p style="padding:30px;text-align:center;color:var(--ff-muted);">No notifications</p>';
+}
+
+function renderReminderRecipients() {
+    const owing = schoolData.students.filter(s => s.balance > 0);
+    $('reminderCount').textContent = owing.length;
+    $('selectedCount').textContent = owing.length;
+    $('selectedCost').textContent = 'KES 0.00';
+    $('previewCount').textContent = owing.length;
+    $('reminderRecipients').innerHTML = owing.map(s => `
+        <div class="ff-reminder-row"><label class="ff-check"><input type="checkbox" class="reminder-check" data-id="${esc(s.id)}" onchange="updateReminderCounts()" checked>
+            <span><strong>${esc(s.name)}</strong> <span style="color:var(--ff-muted);font-size:12px;">(${esc(s.class)})</span></span></label>
+            <span class="ff-money">${money(s.balance)}</span></div>`).join('')
+        || '<p style="padding:16px;color:var(--ff-muted);font-size:13px;">Nobody owes fees right now.</p>';
+    updateSmsPreview();
+    $('reminderHistory').innerHTML = schoolData.reminderHistory.length ? schoolData.reminderHistory.map(r => `
+        <div style="padding:12px 16px;border-bottom:1px solid var(--ff-border);">
+            <div style="font-weight:600;font-size:13px;">${r.recipient_count} parent(s) notified</div>
+            <div style="font-size:12px;color:var(--ff-muted);margin-top:2px;">${esc(fmtDateTime(r.created_at))}${r.channels && r.channels.length ? ' · ' + esc(r.channels.join(' + ')) : ''}${(r.sms_sent || r.sms_failed) ? ` · SMS: ${num(r.sms_sent)} sent, ${num(r.sms_failed)} failed` : ''}</div></div>`).join('')
+        : '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No reminders sent yet.</p>';
+}
+
+function renderReports() {
+    const S = schoolData.students;
+    $('reportCollected').textContent = money(sum(S, s => s.paid));
+    $('reportPartial').textContent = money(sum(S.filter(s => s.status === 'partial'), s => s.paid));
+    $('reportOutstanding').textContent = money(sum(S, s => s.balance));
+    const done = schoolData.payments.filter(p => p.rawStatus === 'completed'), total = sum(done, p => p.amount);
+    const share = (pred) => total > 0 ? Math.round(sum(done.filter(pred), p => p.amount) / total * 100) : 0;
+    const mp = share(p => p.method === 'M-Pesa'), bank = share(p => p.method === 'Bank Transfer'), cash = share(p => p.method === 'Cash' || p.method === 'Cheque');
+    [['reportMpesa', mp], ['reportBank', bank], ['reportCash', cash]].forEach(([id, v]) => { $(id).textContent = v + '%'; $(id + 'Bar').style.width = v + '%'; });
+    $('reportClassBody').innerHTML = schoolData.classes.map(c => {
+        const list = S.filter(s => s.class.replace(/[A-Z]$/, '').trim() === c.name);
+        const expected = sum(list, s => s.total), collected = sum(list, s => s.paid), rate = expected > 0 ? Math.round(collected / expected * 100) : 0;
+        return `<tr><td style="font-weight:600;">${esc(c.name)}</td><td>${list.length}</td><td class="num">${money(expected)}</td>
+            <td class="num" style="color:var(--ff-green);">${money(collected)}</td><td class="num" style="color:var(--ff-red);">${money(Math.max(0, expected - collected))}</td>
+            <td><span class="ff-badge ${rate >= 80 ? 'green' : rate >= 60 ? 'amber' : 'red'}">${rate}%</span></td></tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ff-muted);">No data yet.</td></tr>';
+}
+
+function populateSelects() {
+    const S = schoolData.students;
+    const keepLedger = $('ledgerStudentSelect').value;
+    $('ledgerStudentSelect').innerHTML = '<option value="">Select Student...</option>' + S.map(s => `<option value="${esc(s.id)}" ${s.id === keepLedger ? 'selected' : ''}>${esc(s.name)} (${esc(s.adm)})</option>`).join('');
+    const keepPay = $('payStudentSelect').value;
+    $('payStudentSelect').innerHTML = S.map(s => `<option value="${esc(s.id)}" ${s.id === keepPay ? 'selected' : ''}>${esc(s.name)} — ${esc(s.class)} (Bal: ${money(s.balance)})</option>`).join('');
+    $('reconStudent').innerHTML = '<option value="">Select Student...</option>' + S.map(s => `<option value="${esc(s.id)}">${esc(s.name)} — ${esc(s.adm)}</option>`).join('');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(section, el) {
+    document.querySelectorAll('.ff-nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+    $('sec-' + section).classList.add('active');
+    $('breadcrumb').textContent = cap(section);
+}
+function showSection(section) { navigate(section, document.querySelector(`[data-section=${section}]`)); }
+function switchSettingsTab(tab, btn) {
+    document.querySelectorAll('.ff-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    $('settings-' + tab).classList.add('active');
+    if (tab === 'paybill') loadMpesaStatus();
+}
+
+// ============================================================
+// LEDGER / DETAILS / RECEIPTS
+// ============================================================
+function viewStudentLedger(id) { navigate('ledger', document.querySelector('[data-section=ledger]')); $('ledgerStudentSelect').value = id; loadLedger(); }
+function loadLedger() {
+    const id = $('ledgerStudentSelect').value;
+    const student = schoolData.students.find(s => s.id === id);
+    $('ledgerPlaceholder').style.display = student ? 'none' : 'block';
+    $('ledgerContent').style.display = student ? 'block' : 'none';
+    if (!student) return;
+    $('ledgerStats').innerHTML = `
+        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="download"></i></div><div class="ff-stat-value">${money(student.paid)}</div><div class="ff-stat-label">Total Paid</div></div>
+        <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="upload"></i></div><div class="ff-stat-value">${money(student.balance)}</div><div class="ff-stat-label">Balance Due</div></div>
+        <div class="ff-stat"><div class="ff-stat-ico"><i data-ico="receipt"></i></div><div class="ff-stat-value">${money(student.total)}</div><div class="ff-stat-label">Total Billed</div></div>`;
+    let running = student.total;
+    const rows = [{ date: '—', desc: 'Current fee charges', debit: student.total, credit: 0, balance: running, ref: 'FEES' }];
+    schoolData.payments.filter(p => p.studentId === id && p.rawStatus === 'completed').slice().reverse().forEach(p => {
+        running = Math.max(0, running - p.amount);
+        rows.push({ date: p.date, desc: p.method + ' payment', debit: 0, credit: p.amount, balance: running, ref: p.ref, creditRow: true });
+    });
+    $('ledgerRows').innerHTML = rows.map(r => `
+        <div class="ledger ${r.creditRow ? 'credit-row' : ''}"><div class="ff-ledger-date">${esc(r.date)}</div><div class="ff-ledger-desc">${esc(r.desc)}</div>
+            <div class="ff-ledger-debit">${r.debit > 0 ? money(r.debit) : '—'}</div><div class="ff-ledger-credit">${r.credit > 0 ? money(r.credit) : '—'}</div>
+            <div class="ff-ledger-balance">${money(r.balance)}</div><div style="font-size:11px;color:var(--ff-muted);">${esc(r.ref)}</div></div>`).join('');
+}
+function printLedger() { window.print(); }
+
+function ensureDetailModal() {
+    if ($('modal-details')) return;
+    document.body.insertAdjacentHTML('beforeend', `<div class="ff-modal" id="modal-details"><div class="ff-modal-box wide"><div class="ff-modal-head"><div class="ff-modal-title" id="detailTitle">Details</div><button class="ff-modal-close" type="button" onclick="closeModal('details')" aria-label="Close"><i data-ico="times"></i></button></div><div class="ff-modal-body" id="detailBody"></div><div class="ff-modal-foot"><button class="ff-btn ff-btn-outline" type="button" onclick="closeModal('details')">Close</button></div></div></div>`);
+    $('modal-details').addEventListener('click', e => { if (e.target.id === 'modal-details') closeModal('details'); });
+}
+const detailBox = (label, value, style) => `<div class="ff-field"><div class="ff-label">${esc(label)}</div><div class="ff-detail-value" ${style ? `style="${style}"` : ''}>${value}</div></div>`;
+
+function viewTransaction(id) {
+    const p = schoolData.payments.find(x => x.id === id); if (!p) return;
+    ensureDetailModal();
+    $('detailTitle').innerHTML = '<i data-ico="receipt"></i> Transaction ' + esc(p.ref);
+    $('detailBody').innerHTML = `<div class="ff-grid ff-grid-2">
+        ${detailBox('Student', esc(p.studentName))}${detailBox('Admission / Class', esc(p.adm) + ' • ' + esc(p.class))}
+        ${detailBox('Reference / M-Pesa code', esc(p.ref))}
+        ${detailBox('Amount', money(p.amount), 'color:var(--ff-green)')}${detailBox('Method', esc(p.method))}
+        ${detailBox('Status', esc(cap(p.status)))}${detailBox('Date', esc(p.date))}
+        ${detailBox('Receipt No.', esc(p.receiptNo || '—'))}${detailBox('Note', esc(p.note || '—'))}</div>
+        <div style="margin-top:16px"><button class="ff-btn ff-btn-primary" onclick="printReceipt('${esc(p.id)}')"><i data-ico="print"></i> Print Receipt</button>
+        <button class="ff-btn ff-btn-outline" onclick="closeModal('details');viewStudentProfile('${esc(p.studentId)}')"><i data-ico="user"></i> Student Profile</button></div>`;
+    openModal('details');
+}
+function viewStudentProfile(id) {
+    const st = allStudents.find(s => s.id === id); if (!st) return;
+    const tx = schoolData.payments.filter(p => p.studentId === id);
+    const parentNames = schoolData.links.filter(l => l.student_id === id && l.status === 'active').map(l => (schoolData.parents.find(p => p.id === l.parent_id) || {}).name).filter(Boolean);
+    ensureDetailModal();
+    $('detailTitle').innerHTML = '<i data-ico="student"></i> ' + esc(st.name);
+    $('detailBody').innerHTML = `<div class="ff-grid ff-grid-2">
+        ${detailBox('Admission', esc(st.adm))}${detailBox('Class', esc(st.class) + (st.boarding ? ' (boarder)' : ''))}
+        ${detailBox('Total billed', st.noFee ? 'Not set' : money(st.total))}${detailBox('Balance', money(st.balance), 'color:var(--ff-red)')}
+        ${detailBox('Guardian', esc(st.parentName || '—') + '<br>' + esc(st.parentPhone))}${detailBox('Status', esc(cap(st.status)))}
+        ${detailBox('Linked parent accounts', esc(parentNames.join(', ') || 'None yet'))}</div>
+        <h4 style="margin:20px 0 10px">Payment Transactions</h4>
+        <div style="overflow:auto"><table class="ff-table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>
+        ${tx.length ? tx.map(p => `<tr class="ff-clickable" onclick="viewTransaction('${esc(p.id)}')"><td>${esc(p.ref)}</td><td class="num">${money(p.amount)}</td><td>${esc(p.method)}</td><td>${esc(p.date)}</td></tr>`).join('') : '<tr><td colspan="4">No payments yet.</td></tr>'}
+        </tbody></table></div>
+        <div style="margin-top:14px;"><button class="ff-btn ff-btn-outline" onclick="closeModal('details');viewStudentLedger('${esc(st.id)}')"><i data-ico="book"></i> View Ledger</button>
+        <button class="ff-btn ff-btn-green" onclick="closeModal('details');openRecordPaymentFor('${esc(st.id)}')"><i data-ico="plus"></i> Record Payment</button></div>`;
+    openModal('details');
+}
+function printReceipt(id) {
+    const p = schoolData.payments.find(x => x.id === id); if (!p) return;
+    const w = window.open('', '_blank', 'width=650,height=750'); if (!w) return showToast('Allow pop-ups to print the receipt', 'warning');
+    w.document.write(`<title>Receipt ${esc(p.receiptNo || p.ref)}</title><div style="font-family:Arial;padding:40px;max-width:560px;margin:auto">
+        <h1 style="margin:0">${esc(school.name || 'School')}</h1><div style="color:#64748b;font-size:13px">${esc([school.address, school.phone].filter(Boolean).join(' • '))}</div>
+        <h2>Payment Receipt</h2><hr>
+        <p><b>Receipt No:</b> ${esc(p.receiptNo || '—')}</p><p><b>Reference:</b> ${esc(p.ref)}</p>
+        <p><b>Student:</b> ${esc(p.studentName)} (${esc(p.adm)}, ${esc(p.class)})</p>
+        <p><b>Amount:</b> ${money(p.amount)}</p><p><b>Method:</b> ${esc(p.method)}</p><p><b>Date:</b> ${esc(p.date)}</p><hr>
+        <p style="color:#64748b;font-size:12px">Payment confirmed by FeeFlow.</p></div>`);
+    w.document.close(); w.print();
+}
+function downloadReceipt(id) { printReceipt(id); }
+
+// ============================================================
+// ACTIONS: students, payments, reconciliation
+// ============================================================
+function openModal(id) { $('modal-' + id).classList.add('open'); }
+function closeModal(id) { $('modal-' + id).classList.remove('open'); }
+function openRecordPaymentFor(id) { openModal('recordPayment'); $('payStudentSelect').value = id; }
+
+function nextAdmission() {
+    const prefix = `ADM-${new Date().getFullYear()}-`;
+    let max = 0;
+    allStudents.forEach(s => { if (s.adm.startsWith(prefix)) max = Math.max(max, parseInt(s.adm.slice(prefix.length), 10) || 0); });
+    return prefix + String(max + 1).padStart(3, '0');
+}
+
+async function addStudent() {
+    const name = val('newStudentName'), cls = val('newStudentClass'), stream = val('newStudentStream').toUpperCase().slice(0, 1);
+    const parent = val('newStudentParent'), phoneRaw = val('newStudentPhone');
+    if (name.length < 2 || !cls || !parent || !phoneRaw) return showToast('Please fill all required fields', 'error');
+    const phone = normalizeKePhone(phoneRaw);
+    if (!phone) return showToast('Enter a valid Kenyan phone number, e.g. 712 345 678', 'error');
+    const adm = val('newStudentAdm') || nextAdmission();
+    setBusy('addStudentBtn', true, 'Adding…');
+    try {
+        const { error } = await sb.from('students').insert({
+            school_id: schoolId, admission_no: adm, full_name: name, class_name: cls + (/^[A-Z]$/.test(stream) ? stream : ''),
+            gender: val('newStudentGender') || null, boarding: !!($('newStudentBoarding') && $('newStudentBoarding').checked),
+            guardian_name: parent, guardian_phone: phone
+        });
+        if (error) throw error;
+        closeModal('addStudent');
+        ['newStudentName', 'newStudentAdm', 'newStudentParent', 'newStudentPhone'].forEach(id => { $(id).value = ''; });
+        showToast(`${name} added (admission no. ${adm})`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+    finally { setBusy('addStudentBtn', false); }
+}
+
+async function recordPayment() {
+    const studentId = $('payStudentSelect').value, amount = Number(val('payAmount')), methodLabel = $('payMethod').value;
+    const method = METHOD_KEY[methodLabel], ref = val('payRef'), notes = val('payNotes');
+    const student = schoolData.students.find(s => s.id === studentId);
+    if (!student) return showToast('Select a student', 'error');
+    if (!(amount > 0) || amount > 10000000) return showToast('Enter a valid amount', 'error');
+    if (!method) return showToast('Choose a payment method', 'error');
+    if (method === 'mpesa_c2b' && !ref) return showToast('Enter the M-Pesa transaction code', 'error');
+    if (amount > student.balance && !confirm(`This is ${money(amount - student.balance)} more than ${student.name}'s balance. Record it anyway?`)) return;
+    const row = { school_id: schoolId, student_id: studentId, amount, method, status: 'completed', recorded_by: me.id, note: notes || null };
+    if (method === 'mpesa_c2b') row.mpesa_receipt = ref; else if (ref) row.account_reference = ref;
+    setBusy('recordPaymentBtn', true, 'Recording…');
+    try {
+        const { error } = await sb.from('payments').insert(row);
+        if (error) throw error;
+        closeModal('recordPayment');
+        ['payAmount', 'payRef', 'payNotes'].forEach(id => { $(id).value = ''; });
+        showToast(`Payment of ${money(amount)} recorded for ${student.name}`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+    finally { setBusy('recordPaymentBtn', false); }
+}
+
+async function manualReconcile() {
+    const ref = val('reconRef'), studentId = $('reconStudent').value, amount = Number(val('reconAmount')), date = val('reconDate');
+    if (!ref || !studentId) return showToast('Enter the transaction code and choose a student', 'error');
+    if (!(amount > 0)) return showToast('Enter the amount from the statement', 'error');
+    setBusy('reconcileBtn', true, 'Matching…');
+    try {
+        const { error } = await sb.from('payments').insert({
+            school_id: schoolId, student_id: studentId, amount, method: 'mpesa_c2b', status: 'completed', recorded_by: me.id,
+            mpesa_receipt: ref, note: 'Manual match' + (date ? ` (statement date ${date})` : '')
+        });
+        if (error) throw error;
+        closeModal('manualReconcile');
+        ['reconRef', 'reconAmount', 'reconDate'].forEach(id => { $(id).value = ''; });
+        showToast(`Transaction ${ref.toUpperCase()} matched`, 'success');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+    finally { setBusy('reconcileBtn', false); }
+}
+function autoReconcile() { return rematchUnmatched(); }   // re-checks unmatched payments against admission numbers
+
+// ============================================================
+// REMINDERS (in the parent's app and/or by SMS, sent by the server)
+// ============================================================
+function toggleAllReminders() { const on = $('selectAllReminders').checked; document.querySelectorAll('.reminder-check').forEach(cb => { cb.checked = on; }); updateReminderCounts(); }
+function updateReminderCounts() {
+    const n = document.querySelectorAll('.reminder-check:checked').length;
+    $('selectedCount').textContent = n; $('previewCount').textContent = n; $('selectedCost').textContent = 'KES 0.00';
+}
+function updateSmsPreview() {
+    const sample = schoolData.students.find(s => s.balance > 0);
+    const nm = school.name || 'School';
+    const templates = {
+        deadline: `${nm}: Fee reminder for {{STUDENT}}. Balance: KES {{BALANCE}}. Paybill: ${school.paybill || 'not configured'}, Account: {{REF}}.`,
+        overdue: `${nm}: {{STUDENT}} has an outstanding balance of KES {{BALANCE}}. Please contact the school if you need assistance.`,
+        welcome: `${nm}: Fee information is now available in FeeFlow.`, custom: `${nm}: School fee notification.` };
+    const tpl = templates[$('smsTemplate').value] || templates.deadline;
+    $('smsPreviewText').textContent = tpl.replaceAll('{{STUDENT}}', sample ? sample.name : 'Student').replaceAll('{{BALANCE}}', num(sample && sample.balance).toLocaleString()).replaceAll('{{REF}}', sample ? sample.adm : 'admission number');
+}
+// Calls the server-side fee-api function (it checks who you are; the browser never touches Daraja or the SMS provider).
+async function feeApi(body) {
+    const { data, error } = await sb.functions.invoke('fee-api', { body });
+    if (error) {
+        let m = '';
+        try { const j = await error.context.json(); m = j && j.error; } catch (e) { /* use the generic message */ }
+        throw new Error(m || FF.friendlyError(error));
+    }
+    return data || {};
+}
+function sendSummary(r) {
+    const parts = [`${num(r.parents_notified)} parent(s) notified in the app`];
+    const s = r.sms || {};
+    if (s.enabled) parts.push(`SMS: ${num(s.sent)} sent${s.failed ? `, ${num(s.failed)} failed` : ''}${s.skipped_recent ? `, ${num(s.skipped_recent)} skipped (already reminded today)` : ''}`);
+    else if (s.reason) parts.push(s.reason);
+    if (r.no_parent_linked) parts.push(`${num(r.no_parent_linked)} student(s) have no linked parent`);
+    return parts.join('. ') + '.';
+}
+async function sendBulkReminders() {
+    const ids = [...document.querySelectorAll('.reminder-check:checked')].map(x => x.dataset.id);
+    const students = schoolData.students.filter(s => ids.includes(s.id) && s.balance > 0);
+    if (!students.length) return showToast('No recipients selected', 'error');
+    const channels = { inapp: $('remindInapp').checked, sms: $('remindSms').checked };
+    if (!channels.inapp && !channels.sms) return showToast('Choose at least one way to send', 'error');
+    if (channels.sms && !confirm(`Send an SMS reminder for ${students.length} student(s)? SMS is charged per message.`)) return;
+    try {
+        const r = await feeApi({ action: 'send_message', mode: 'reminder', student_ids: students.map(s => s.id), channels });
+        showToast(sendSummary(r), r.sms && r.sms.failed ? 'warning' : 'success');
+        await loadData();
+    } catch (e) { showToast(e.message, 'error'); }
+}
+async function sendReminder(studentId) {
+    const st = schoolData.students.find(s => s.id === studentId); if (!st) return;
+    if (!schoolData.links.some(l => l.student_id === st.id && l.status === 'active')) return showToast(`${st.name} is not linked to a registered parent yet`, 'warning');
+    try {
+        await feeApi({ action: 'send_message', mode: 'reminder', student_ids: [st.id], channels: { inapp: true, sms: false } });
+        showToast('Reminder sent to the parent of ' + st.name, 'success');
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ============================================================
+// M-PESA: connect the school's Daraja credentials, match payments that arrived without a valid account number
+// ============================================================
+function renderMpesaStatus(s) {
+    const on = !!(s && s.configured);
+    $('mpesaStatusLine').innerHTML = on
+        ? `<strong style="color:var(--ff-green);">Connected</strong> — ${s.environment === 'production' ? 'live (real money)' : 'sandbox (testing)'}, ${esc(s.shortcode_type)} ${esc(s.shortcode)}. Paybill-menu payments: ${s.c2b_registered ? 'matched automatically' : 'not registered yet (parents can still pay by STK Push; other payments will show under Payments to match)'}.`
+        : 'Not connected. Parents are shown your paybill and their child\'s admission number to pay from the M-Pesa menu.';
+    $('mpesaRemoveBtn').style.display = on ? '' : 'none';
+    if (on) { $('mpesaEnv').value = s.environment; $('mpesaType').value = s.shortcode_type; $('mpesaShortcode').value = s.shortcode; }
+    else if (!val('mpesaShortcode') && school.paybill) $('mpesaShortcode').value = school.paybill;
+}
+async function loadMpesaStatus() {
+    try { renderMpesaStatus(await feeApi({ action: 'mpesa_status' })); }
+    catch (e) { $('mpesaStatusLine').textContent = 'Could not check the M-Pesa connection: ' + e.message; }
+}
+async function saveMpesa() {
+    const env = val('mpesaEnv'), type = val('mpesaType'), shortcode = val('mpesaShortcode');
+    const key = val('mpesaKey'), secret = val('mpesaSecret'), passkey = val('mpesaPasskey');
+    if (!/^[0-9]{5,7}$/.test(shortcode)) return showToast('The paybill / till number must be 5 to 7 digits', 'error');
+    if (key.length < 8 || secret.length < 8 || passkey.length < 16) return showToast('Paste the full consumer key, consumer secret and passkey from the Daraja portal', 'error');
+    if (env === 'production' && !confirm('Production mode takes REAL money from parents. Continue?')) return;
+    setBusy('mpesaSaveBtn', true, 'Checking with Safaricom…');
+    try {
+        const r = await feeApi({ action: 'mpesa_save', environment: env, shortcode, shortcode_type: type, consumer_key: key, consumer_secret: secret, passkey });
+        ['mpesaKey', 'mpesaSecret', 'mpesaPasskey'].forEach(id => { $(id).value = ''; });   // secrets are never kept in the page
+        showToast(r.mode === 'live' ? 'M-Pesa connected (live)' : 'M-Pesa connected (sandbox)', 'success');
+        await loadMpesaStatus();
+        await loadData();
+    } catch (e) { showToast(e.message, 'error'); }
+    finally { setBusy('mpesaSaveBtn', false); }
+}
+async function removeMpesa() {
+    if (!confirm('Disconnect M-Pesa? Parents will no longer get the automatic payment prompt.')) return;
+    try { await feeApi({ action: 'mpesa_remove' }); showToast('M-Pesa disconnected', 'info'); await loadMpesaStatus(); await loadData(); }
+    catch (e) { showToast(e.message, 'error'); }
+}
+function renderUnmatched() {
+    const list = schoolData.unmatched || [];
+    if (!list.length) {
+        $('unmatchedList').innerHTML = '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No unmatched transactions. Payments made through FeeFlow are matched to students automatically. Use "Manual Match" for a payment you find on your paybill statement.</p>';
+        return;
+    }
+    const opts = '<option value="">Choose student…</option>' + schoolData.students.map(s => `<option value="${esc(s.id)}">${esc(s.name)} (${esc(s.adm)}, ${esc(s.class)})</option>`).join('');
+    $('unmatchedList').innerHTML = '<p class="ff-hint" style="padding:10px 16px 0;">These payments reached your paybill with an account number that matches no student. Choose the right student so the money is credited.</p>' + list.map(u => `
+        <div class="ff-check" style="flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;">
+            <div style="flex:1;min-width:200px;"><strong>${esc(money(u.amount))}</strong>
+                <div style="font-size:12px;color:var(--ff-muted);">${esc(u.trans_id)} · account "${esc(u.bill_ref || 'none')}" · ${esc(u.payer_name || u.msisdn || '')} · ${esc(fmtDateTime(u.trans_time))}</div></div>
+            <select class="ff-input" id="um-${esc(u.id)}" style="max-width:240px;">${opts}</select>
+            <button class="ff-btn ff-btn-primary ff-btn-sm" onclick="resolveUnmatched('${esc(u.id)}')">Match</button>
+        </div>`).join('');
+}
+async function resolveUnmatched(id) {
+    const studentId = ($('um-' + id) || {}).value;
+    if (!studentId) return showToast('Choose the student this payment belongs to', 'error');
+    const { error } = await sb.rpc('resolve_unmatched', { p_unmatched: id, p_student: studentId });
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast('Payment matched and credited', 'success');
+    await loadData();
+}
+async function rematchUnmatched() {
+    try {
+        const { data, error } = await sb.rpc('rematch_unmatched');
+        if (error) throw error;
+        showToast(num(data) ? `${num(data)} payment(s) matched automatically` : 'Nothing could be matched automatically', num(data) ? 'success' : 'info');
+        await loadData();
+    } catch (e) { showToast(dbMessage(e), 'error'); }
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+async function markNotifRead(id) {
+    const n = schoolData.notifications.find(x => x.id === id); if (!n || !n.unread) return;
+    const { error } = await sb.from('notifications').update({ unread: false }).eq('id', id);
+    if (error) return showToast(dbMessage(error), 'error');
+    n.unread = false; renderNotifications();
+}
+async function markAllRead() {
+    const { error } = await sb.from('notifications').update({ unread: false }).eq('audience', 'school').eq('unread', true);
+    if (error) return showToast(dbMessage(error), 'error');
+    schoolData.notifications.forEach(n => { n.unread = false; }); renderNotifications(); showToast('All marked as read');
+}
+
+// ============================================================
+// TERMS
+// ============================================================
+async function addTerm() {
+    const name = val('newTermName'), start = val('newTermStart'), end = val('newTermEnd'), deadline = val('newTermDeadline');
+    if (!name || !start || !end) return showToast('Complete the term name and dates', 'error');
+    if (end < start) return showToast('The term cannot end before it starts', 'error');
+    const { error } = await sb.from('terms').insert({ school_id: schoolId, name, start_date: start, end_date: end, deadline: deadline || null, status: 'upcoming' });
+    if (error) return showToast(dbMessage(error), 'error');
+    closeModal('addTerm'); ['newTermName', 'newTermStart', 'newTermEnd', 'newTermDeadline'].forEach(id => { $(id).value = ''; });
+    showToast('Term added', 'success'); await loadData();
+}
+async function setActiveTerm(id) {
+    const { error } = await sb.rpc('set_active_term', { p_term: id });
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast('Active term updated. Overdue days now follow its deadline.', 'success'); await loadData();
+}
+async function deleteTerm(id) {
+    if (!confirm('Delete this term?')) return;
+    const { error } = await sb.from('terms').delete().eq('id', id);
+    if (error) return showToast(dbMessage(error), 'error');
+    showToast('Term deleted', 'success'); await loadData();
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function fillSettingsForm() {
+    const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v == null ? '' : v; };
+    set('schoolNameInput', school.name); set('schoolCodeInput', school.id); set('schoolAddressInput', school.address);
+    set('schoolPhoneInput', school.phone); set('paybillInput', school.paybill); set('smsSenderInput', school.sms_sender);
+    const n = (school.settings && school.settings.notify) || {};
+    [['notifPayReceived', true], ['notifDeadline', true], ['notifOverdue', true], ['notifReceipt', true], ['notifUnmatched', false]].forEach(([id, def]) => {
+        const el = $(id); if (el && document.activeElement !== el) el.checked = n[id] === undefined ? def : !!n[id];
+    });
+}
+async function saveSchoolRow(changes, okMessage) {
+    const { error } = await sb.from('schools').update(changes).eq('id', schoolId);
+    if (error) return showToast(dbMessage(error), 'error');
+    Object.assign(school, changes); renderSchoolHeader(); showToast(okMessage, 'success');
+}
+async function saveSchoolInfo() {
+    const name = val('schoolNameInput');
+    if (name.length < 2) return showToast('Enter the school name', 'error');
+    await saveSchoolRow({ name, address: val('schoolAddressInput') || null, phone: val('schoolPhoneInput') || null }, 'School info saved');
+}
+async function savePaybill() {
+    const paybill = val('paybillInput');
+    if (paybill && !/^[0-9]{5,7}$/.test(paybill)) return showToast('Paybill must be 5 to 7 digits', 'error');
+    await saveSchoolRow({ paybill: paybill || null }, 'Paybill saved');
+}
+async function saveNotifications() {
+    const sender = val('smsSenderInput');
+    if (sender && !/^[A-Za-z0-9 ]{1,11}$/.test(sender)) return showToast('SMS sender ID: up to 11 letters or numbers', 'error');
+    const notify = {}; ['notifPayReceived', 'notifDeadline', 'notifOverdue', 'notifReceipt', 'notifUnmatched'].forEach(id => { notify[id] = $(id).checked; });
+    await saveSchoolRow({ sms_sender: sender || null, settings: { ...(school.settings || {}), notify } }, 'Notification settings saved');
+}
+async function changePassword() {
+    const pw = $('newPasswordInput').value, pw2 = $('newPasswordInput2').value;
+    if (pw.length < 10) return showToast('Use at least 10 characters', 'error');
+    if (pw !== pw2) return showToast('The two passwords do not match', 'error');
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) return showToast(FF.friendlyError(error), 'error');
+    $('newPasswordInput').value = ''; $('newPasswordInput2').value = '';
+    showToast('Password changed', 'success');
+}
+function setTheme(mode) { try { localStorage.setItem('ff_theme', mode); } catch (e) { /* ignore */ } const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme:dark)').matches); document.body.classList.toggle('dark', dark); }
+function savePreferences() { try { localStorage.setItem('ff_compact', $('compactTables') && $('compactTables').checked ? '1' : '0'); } catch (e) { /* ignore */ } showToast('Preferences saved', 'success'); }
+
+// ============================================================
+// EXPORTS (real CSV downloads)
+// ============================================================
+function csvCell(v) {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;             // stop spreadsheet formula injection
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function downloadCsv(filename, header, rows) {
+    const text = [header, ...rows].map(r => r.map(csvCell).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function exportPayments() {
+    downloadCsv('payments.csv', ['Receipt No', 'Reference', 'Student', 'Admission', 'Class', 'Amount (KES)', 'Method', 'Status', 'Date'],
+        schoolData.payments.map(p => [p.receiptNo, p.ref, p.studentName, p.adm, p.class, p.amount, p.method, p.status, p.date]));
+    showToast('Payments exported', 'success');
+}
+function exportOutstanding() {
+    downloadCsv('outstanding-balances.csv', ['Student', 'Admission', 'Class', 'Balance (KES)', 'Overdue days', 'Guardian', 'Phone'],
+        schoolData.students.filter(s => s.balance > 0).map(s => [s.name, s.adm, s.class, s.balance, s.overdueDays, s.parentName, s.parentPhone]));
+    showToast('Outstanding balances exported', 'success');
+}
+function exportReceipts() {
+    downloadCsv('receipts.csv', ['Receipt No', 'Student', 'Class', 'Amount (KES)', 'Method', 'Reference', 'Date'],
+        schoolData.payments.filter(p => p.status === 'reconciled').map(p => [p.receiptNo, p.studentName, p.class, p.amount, p.method, p.ref, p.date]));
+    showToast('Receipts exported', 'success');
+}
+function exportDashboard() { window.print(); }
+
+// ============================================================
+// TOAST (text is never interpreted as HTML)
+// ============================================================
+function showToast(message, type) { FFUI.toast(message, type || 'info'); }
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    let theme = 'light'; try { theme = localStorage.getItem('ff_theme') || 'light'; } catch (e) { /* ignore */ }
+    setTheme(theme);
+    const t = $('themeSelect'); if (t) t.value = theme;
+    checkAuth();
+});
+</script>
+  <script>
+    // Register the service worker so the app opens offline and can be installed on a phone.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          // a waiting worker means a new version is ready: swap it in on the next navigation
+          if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage('skip-waiting');
+        }).catch(function () { /* offline-first is a bonus, not a requirement */ });
+      });
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (refreshing) return; refreshing = true;
+      });
+    }
+  </script>
+</body>
+</html>
