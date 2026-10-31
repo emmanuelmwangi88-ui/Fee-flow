@@ -206,6 +206,39 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
   p.set('newPassword2', 'brandnewpass1'); await p.w.updatePassword(); await tick();
   ok(p.mock.calls.some(c => c[0] === 'updateUser' && c[1].password === 'brandnewpass1') && p.nav().includes('parent.html'), 'password updated, then routed to the dashboard');
 
+  // ---------- a school registers itself ----------
+  p = await open();
+  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register');
+  p.d.getElementById('goSchoolReg').click();
+  ok(p.shown('stepSchoolRegister') && !p.shown('stepRegister'), '"Register your school" opens the school form');
+  const fillSch = (o = {}) => { const v = { srName: 'Green Hills Academy', srLevel: 'Primary Only', srLocation: 'Thika', srPhone: '0712 345 678', srAdmin: 'Mary Wanjiru', srEmail: 'Mary@GreenHills.ac.ke', srPassword: 'longenough12', srPassword2: 'longenough12', ...o }; for (const k in v) p.set(k, v[k]); };
+  const trySch = async (o, re, label) => { fillSch(o); await p.w.registerSchool(); await tick(); ok(re.test(p.err('schoolRegError')), label, p.err('schoolRegError')); };
+  await trySch({ srName: 'GH' }, /school name/i, 'school: short name rejected');
+  await trySch({ srAdmin: '' }, /your name/i, 'school: admin name required');
+  await trySch({ srPhone: '123' }, /phone/i, 'school: bad phone rejected');
+  await trySch({ srEmail: 'nope' }, /email/i, 'school: bad email rejected');
+  await trySch({ srPassword: 'short', srPassword2: 'short' }, /10 characters/i, 'school: password needs 10 characters');
+  await trySch({ srPassword2: 'different1234' }, /do not match/i, 'school: password mismatch rejected');
+  ok(!p.mock.calls.some(c => c[0] === 'signUp'), 'school: nothing sent while the form is invalid');
+  p = await open({ signUpSession: true, rpc: { register_school: () => ({ data: 'school-uuid', error: null }) } });
+  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); p.w.showStep('stepSchoolRegister');
+  fillSch(); await p.w.registerSchool(); await tick();
+  const ss = p.mock.calls.find(c => c[0] === 'signUp')[1];
+  ok(ss.email === 'mary@greenhills.ac.ke' && ss.options.data.school_reg.name === 'Green Hills Academy' && ss.options.data.school_reg.level === 'Primary Only', 'school sign-up keeps the details in case email confirmation is needed');
+  const rs = p.mock.calls.find(c => c[0] === 'rpc' && c[1] === 'register_school');
+  ok(rs && rs[2].p_name === 'Green Hills Academy' && rs[2].p_level === 'Primary Only' && rs[2].p_admin_name === 'Mary Wanjiru' && rs[2].p_location === 'Thika', 'register_school RPC called with the school details');
+  ok(p.nav().includes('schooladmin.html'), 'after registering the admin lands on the school dashboard (which shows "waiting for approval")');
+  p = await open({ signUpSession: false });
+  p.w.showStep('stepSchoolRegister'); fillSch(); await p.w.registerSchool(); await tick();
+  ok(p.shown('stepVerifyReg') && !p.mock.calls.some(c => c[0] === 'rpc' && c[1] === 'register_school'), 'with email confirmation on, the school is created after the first sign-in instead');
+  const SU = { id: 'u-5', email: 'mary@greenhills.ac.ke', user_metadata: { school_reg: { name: 'Green Hills Academy', level: 'Primary Only', location: 'Thika', phone: '0712345678', admin_name: 'Mary Wanjiru' } } };
+  p = await open({ user: SU, profile: null, rpc: { register_school: () => ({ data: 'school-uuid', error: null }) } });
+  p.set('loginEmail', 'mary@greenhills.ac.ke'); p.set('loginPassword', 'longenough12'); await p.w.signIn(); await tick();
+  ok(p.mock.calls.some(c => c[0] === 'rpc' && c[1] === 'register_school') && p.nav().includes('schooladmin.html'), 'first sign-in after confirming email finishes the school registration');
+  p = await open({ signUpError: { message: 'User already registered' } });
+  p.w.showStep('stepSchoolRegister'); fillSch(); await p.w.registerSchool(); await tick();
+  ok(/already/i.test(p.err('schoolRegError')), 'an existing email is reported');
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) { console.log('FAILURES:\n - ' + failures.join('\n - ')); process.exit(1); }
 })().catch(e => { console.error('HARNESS ERROR', e); process.exit(2); });

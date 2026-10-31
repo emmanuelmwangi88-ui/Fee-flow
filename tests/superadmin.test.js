@@ -164,5 +164,19 @@ const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Err
   p = await openPage('superadmin.html', data()); p.w.logout(); await tick();
   ok(p.mock.calls.some(c => c.kind === 'signOut'), 'logout signs out of Supabase');
 
+  // ---------- approving schools that registered themselves ----------
+  const pend = data(); pend.tables.schools.push({ id: 's-9', name: 'Newcomer Academy', location: 'Thika', level: 'Primary Only', paybill: null, plan: 'Trial', status: 'pending', created_at: '2026-10-09T10:00:00Z' });
+  p = await openPage('superadmin.html', pend);
+  const row9 = [...p.d.querySelectorAll('#schoolsTable tbody tr, #schoolsBody tr, table tbody tr')].find(r => /Newcomer Academy/.test(r.textContent));
+  ok(row9 && /Awaiting approval/.test(row9.textContent), 'a school that registered itself shows as "Awaiting approval"');
+  ok(row9 && /Approve/.test(row9.textContent) && !/Approve/.test([...p.d.querySelectorAll('table tbody tr')].find(r => /Alpha Academy/.test(r.textContent)).textContent), 'only pending schools have an Approve button');
+  await p.w.setSchoolStatus('s-9', 'active'); await tick();
+  const ap = p.mock.calls.find(c => c.kind === 'query' && c.table === 'schools' && c.op === 'update');
+  ok(ap && ap.payload.status === 'active' && ap.filters.some(f => f[0] === 'id' && f[1] === 's-9') && Object.keys(ap.payload).length === 1, 'approving changes only the status of that one school');
+  ok(/approved/i.test(p.toasts().join(' ')), 'approval confirmed to the super admin');
+  p = await openPage('superadmin.html', { ...pend, confirm: false });
+  await p.w.setSchoolStatus('s-9', 'rejected'); await tick();
+  ok(!p.mock.calls.some(c => c.kind === 'query' && c.op === 'update'), 'rejecting asks first; declining changes nothing');
+
   summary();
 })().catch(e => { console.error('HARNESS ERROR', e); process.exit(2); });

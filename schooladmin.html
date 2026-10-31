@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="css/ff.css" rel="stylesheet">
     <style>
         :root {
             --primary: #0c2d57; --primary-light: #1a6dcc; --emerald: #059669; --emerald-light: #10b981;
@@ -288,6 +289,17 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
 </style>
 </head>
 <body>
+<div id="statusGate" role="alertdialog" aria-labelledby="statusGateTitle" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg,#f8fafc);align-items:center;justify-content:center;padding:24px;">
+  <div style="max-width:480px;text-align:center;background:#fff;border:1px solid var(--border,#e2e8f0);border-radius:16px;padding:36px 28px;box-shadow:0 10px 30px rgba(15,23,42,.08);">
+    <div style="font-size:42px;color:var(--warning,#f59e0b);margin-bottom:12px;"><i id="statusGateIcon" class="fas fa-hourglass-half" aria-hidden="true"></i></div>
+    <div id="statusGateSchool" style="font-size:13px;color:var(--text-light,#64748b);margin-bottom:6px;"></div>
+    <h2 id="statusGateTitle" style="margin:0 0 10px;font-size:22px;"></h2>
+    <p id="statusGateText" style="color:var(--text-light,#64748b);line-height:1.6;margin:0 0 22px;"></p>
+    <button class="btn btn-primary" onclick="location.reload()" style="margin-right:8px;">Check again</button>
+    <button class="btn btn-outline" onclick="FF.signOut()">Sign out</button>
+  </div>
+</div>
+
 
 <div id="app">
     <!-- Unauthorized -->
@@ -1219,6 +1231,26 @@ async function fetchAll(make, max = 20000) {            // PostgREST returns at 
 
 function activeTerm() { return schoolData.terms.find(t => t.status === 'active') || null; }
 
+
+// A school that is not active yet (waiting for approval, rejected or suspended) only sees a status screen.
+const GATE_TEXT = {
+    pending:   ['fa-hourglass-half', 'Your school is waiting for approval', 'Thank you for registering. The FeeFlow team reviews every school before it goes live, usually within one working day. You will be able to use everything here as soon as it is approved.'],
+    rejected:  ['fa-circle-xmark', 'Your registration was not approved', 'Please contact FeeFlow support to find out why and how to continue.'],
+    suspended: ['fa-pause-circle', 'This school account is suspended', 'Please contact FeeFlow support to restore access.']
+};
+function applyStatusGate() {
+    const el = document.getElementById('statusGate');
+    if (!el) return;
+    const st = school && school.status;
+    const g = GATE_TEXT[st];
+    if (!g) { el.style.display = 'none'; return; }
+    document.getElementById('statusGateIcon').className = 'fas ' + g[0];
+    document.getElementById('statusGateTitle').textContent = g[1];
+    document.getElementById('statusGateText').textContent = g[2] + (school.admin_note ? ' Note from FeeFlow: ' + school.admin_note : '');
+    document.getElementById('statusGateSchool').textContent = school.name || '';
+    el.style.display = 'flex';
+}
+
 async function loadData() {
     try {
         const [schoolR, students, payments, parentsR, linksR, notifR, termsR, remR, feeR, umR] = await Promise.all([
@@ -1236,6 +1268,7 @@ async function loadData() {
         for (const r of [schoolR, parentsR, linksR, notifR, termsR, remR, feeR]) if (r.error) throw r.error;
 
         school = schoolR.data || school;
+        applyStatusGate();
         schoolData.terms = termsR.data || [];
         const deadline = (activeTerm() || {}).deadline || null;
         allStudents = students.map(r => mapStudent(r, deadline));

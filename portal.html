@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="css/ff.css" rel="stylesheet">
     <style>
         :root {
             --primary: #0c2d57;
@@ -253,6 +254,7 @@
 
             <h2>Create Parent Account</h2>
             <p class="subtitle">Register to access your child's fee information and make payments</p>
+            <p class="footer-note" style="margin:-6px 0 16px;text-align:left;">Running a school? <a href="#" onclick="showStep('stepSchoolRegister');return false;" id="goSchoolReg">Register your school instead</a></p>
 
             <div class="error-msg" id="registerError" role="alert">
                 <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
@@ -302,6 +304,38 @@
             <button class="btn-primary" onclick="registerParent()" id="registerBtn">
                 <i class="fas fa-user-plus" style="margin-right:8px;" aria-hidden="true"></i> Create Account &amp; Continue
             </button>
+        </div>
+
+        <!-- STEP: Register a school (starts as pending until the platform approves it) -->
+        <div id="stepSchoolRegister" style="display:none;">
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back</button>
+            <h2>Register Your School</h2>
+            <p class="subtitle">Create your school's FeeFlow account. We review every school before it goes live, usually within one working day.</p>
+            <div class="error-msg" id="schoolRegError" role="alert"><i class="fas fa-exclamation-circle" aria-hidden="true"></i><span id="schoolRegErrorText"></span></div>
+            <div class="form-group">
+                <label class="form-label" for="srName">School Name</label>
+                <input type="text" class="form-input" id="srName" placeholder="e.g. Green Hills Academy" autocomplete="organization">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="srLevel">What does your school teach?</label>
+                <select class="form-input" id="srLevel">
+                    <option value="Primary Only">Primary school (PP1 to Grade 6, with Junior School if you have it)</option>
+                    <option value="Secondary Only">Secondary school (Grade 7 to 12 / Form 1 to 4)</option>
+                    <option value="Primary & Secondary">Both primary and secondary</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label" for="srLocation">Town / County</label><input type="text" class="form-input" id="srLocation" placeholder="e.g. Thika, Kiambu"></div>
+                <div class="form-group"><label class="form-label" for="srPhone">School Phone</label><input type="tel" class="form-input" id="srPhone" placeholder="07XX XXX XXX" autocomplete="tel"></div>
+            </div>
+            <div class="form-group"><label class="form-label" for="srAdmin">Your Name (school administrator)</label><input type="text" class="form-input" id="srAdmin" placeholder="e.g. Mary Wanjiru" autocomplete="name"></div>
+            <div class="form-group"><label class="form-label" for="srEmail">Your Email (you will sign in with this)</label><input type="email" class="form-input" id="srEmail" placeholder="admin@yourschool.ac.ke" autocomplete="email"></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label" for="srPassword">Password</label><input type="password" class="form-input" id="srPassword" placeholder="At least 10 characters" autocomplete="new-password"></div>
+                <div class="form-group"><label class="form-label" for="srPassword2">Confirm Password</label><input type="password" class="form-input" id="srPassword2" placeholder="Repeat password" autocomplete="new-password"></div>
+            </div>
+            <button class="btn-primary" onclick="registerSchool()" id="schoolRegBtn"><i class="fas fa-school" style="margin-right:8px;" aria-hidden="true"></i> Register School</button>
+            <p class="footer-note">Already registered? <a href="#" onclick="goBack();return false;">Sign in</a></p>
         </div>
 
         <!-- STEP 3: Confirm email (only shown when the project requires email confirmation) -->
@@ -416,7 +450,7 @@ if (!window.FF) {
 }
 const sb = FF.sb;
 const escapeHtml = FF.escapeHtml;
-const STEPS = ['stepLogin', 'stepRegister', 'stepVerifyReg', 'stepAddChildren', 'stepNewPassword'];
+const STEPS = ['stepLogin', 'stepRegister', 'stepSchoolRegister', 'stepVerifyReg', 'stepAddChildren', 'stepNewPassword'];
 const CHILD_COLORS = ['#1a6dcc', '#0ea5a4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'];
 
 let SCHOOLS = [];
@@ -464,7 +498,7 @@ function switchTab(el, tab) {
     document.querySelectorAll('.role-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
     el.classList.add('active');
     el.setAttribute('aria-selected', 'true');
-    hideError('loginError'); hideError('registerError'); hideNotice();
+    hideError('loginError'); hideError('registerError'); hideError('schoolRegError'); hideNotice();
     showStep(tab === 'login' ? 'stepLogin' : 'stepRegister');
 }
 function goBack() {
@@ -547,6 +581,14 @@ async function routeAfterLogin(user) {
         showStep('stepAddChildren');
         return;
     }
+    const sreg = user && user.user_metadata && user.user_metadata.school_reg;
+    if (sreg && sreg.name) {
+        const { error } = await sb.rpc('register_school', { p_name: sreg.name, p_level: sreg.level, p_location: sreg.location || null, p_phone: sreg.phone || null, p_admin_name: sreg.admin_name });
+        if (error) throw error;
+        sb.auth.updateUser({ data: { school_reg: null } }).catch(() => {});
+        go('schooladmin.html');
+        return;
+    }
     await sb.auth.signOut();
     throw new Error('This account is not set up yet. Please contact your school or FeeFlow support.');
 }
@@ -602,6 +644,44 @@ async function registerParent() {
         showError('registerError', FF.friendlyError(e));
     } finally {
         setBusy('registerBtn', false);
+    }
+}
+
+// ---------- register a school ----------
+async function registerSchool() {
+    hideError('schoolRegError');
+    const reg = { name: val('srName'), level: document.getElementById('srLevel').value, location: val('srLocation'), phone: val('srPhone'), admin_name: val('srAdmin') };
+    const email = val('srEmail').toLowerCase();
+    const pw = document.getElementById('srPassword').value, pw2 = document.getElementById('srPassword2').value;
+    if (reg.name.length < 3) return showError('schoolRegError', 'Enter the full school name.');
+    if (reg.admin_name.length < 2) return showError('schoolRegError', 'Enter your name.');
+    if (reg.phone && !isValidKenyanLocalNumber(normalizePhone(reg.phone))) return showError('schoolRegError', 'Enter a valid phone number, e.g. 0712 345 678, or leave it empty.');
+    if (!EMAIL_RE.test(email)) return showError('schoolRegError', 'Enter a valid email address.');
+    if (pw.length < 10) return showError('schoolRegError', 'Your password must be at least 10 characters.');
+    if (pw !== pw2) return showError('schoolRegError', 'The two passwords do not match.');
+    setBusy('schoolRegBtn', true, 'Registering…');
+    try {
+        const { data, error } = await sb.auth.signUp({
+            email, password: pw,
+            options: { data: { full_name: reg.admin_name, school_reg: reg }, emailRedirectTo: new URL('portal.html', location.href).href }
+        });
+        if (error) throw error;
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+            throw new Error('An account with this email already exists. Please log in instead.');
+        }
+        if (data.session) {
+            const { error: e2 } = await sb.rpc('register_school', { p_name: reg.name, p_level: reg.level, p_location: reg.location || null, p_phone: reg.phone || null, p_admin_name: reg.admin_name });
+            if (e2) throw e2;
+            sb.auth.updateUser({ data: { school_reg: null } }).catch(() => {});
+            go('schooladmin.html');
+        } else {
+            document.getElementById('confirmEmailAddress').textContent = email;
+            showStep('stepVerifyReg');
+        }
+    } catch (e) {
+        showError('schoolRegError', FF.friendlyError(e));
+    } finally {
+        setBusy('schoolRegBtn', false);
     }
 }
 
