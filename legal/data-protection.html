@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Data Protection Registration — FeeFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/ff.css">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <meta name="theme-color" content="#0c2d57">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FeeFlow">
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="../icons/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png">
+  <meta name="description" content="FeeFlow — Kenyan school fees: fee structure, M-Pesa collection, balances and printable receipts.">
+  <style>
+    .legal { max-width: 760px; margin: 0 auto; padding: 26px 18px calc(40px + env(safe-area-inset-bottom)); }
+    .legal h1 { font-size: 26px; margin: 0 0 6px; }
+    .legal .updated { color: var(--ff-muted); font-size: 12.5px; margin: 0 0 22px; }
+    .legal h2 { font-size: 16px; margin: 26px 0 8px; }
+    .legal p, .legal li { font-size: 13.5px; line-height: 1.75; color: var(--ff-text); }
+    .legal ul, .legal ol { padding-left: 20px; margin: 8px 0; }
+    .legal li { margin-bottom: 6px; }
+    .legal a { color: var(--ff-blue-600); }
+    .legal-toc { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .legal-card { background: var(--ff-surface); border: 1px solid var(--ff-border); border-radius: var(--ff-r); padding: 16px 18px; margin: 14px 0; }
+    @media (max-width: 760px) { .legal { padding: 16px 14px calc(28px + env(safe-area-inset-bottom)); } .legal h1 { font-size: 21px; } }
+  </style>
+</head>
+<body>
+  <header class="ff-topbar">
+    <div class="ff-crumb"><a href="../portal.html" style="color:inherit;text-decoration:none">FeeFlow</a> / <strong>Data Protection</strong></div>
+    <div class="ff-topbar-right">
+      <button class="ff-btn ff-btn-icon ff-btn-ghost" type="button" onclick="FFUI.setTheme(FFUI.loadTheme()==='dark'?'light':'dark')" aria-label="Toggle dark mode"><i data-ico="moon"></i></button>
+      <a class="ff-btn ff-btn-outline" href="../portal.html"><i data-ico="arrowLeft" data-size="ff-ico-sm"></i> Back to sign in</a>
+    </div>
+  </header>
+  <main class="legal">
+    <h1>Data Protection Registration</h1>
+    <p class="updated">Last updated 31 October 2026</p>
+
+    <div class="ff-alert ff-alert-warn" style="margin-bottom:22px">
+      <i data-ico="warning"></i>
+      <div><strong>Action required by each school.</strong> FeeFlow provides the software, but the school is the
+      <em>data controller</em> for its own pupils and parents. Under section 18 of the Data Protection Act, 2019 a
+      data controller must be registered with the Office of the Data Protection Commissioner (ODPC) before
+      processing personal data.</div>
+    </div>
+
+    <h2>Who is who</h2>
+    <div class="legal-card">
+      <p style="margin-top:0"><strong>The school is the data controller.</strong> It decides which pupils are recorded, what fee is charged, and who may see a parent's phone number. FeeFlow only processes that data on the school's instructions — we are a <strong>data processor</strong>.</p>
+      <p style="margin-bottom:0">Where a parent gives their phone number to a school, the parent should deal with that school for access, correction or deletion. We act on the school's written instruction.</p>
+    </div>
+
+    <h2>What the school must do</h2>
+    <ol>
+      <li><strong>Register with the ODPC.</strong> File at <a href="https://www.odpc.go.ke" target="_blank" rel="noopener">www.odpc.go.ke</a>, or at a Huduma Centre. Registration is annual.</li>
+      <li><strong>Tell parents.</strong> Publish or hand out a notice naming the school as data controller, what is collected, and why.</li>
+      <li><strong>Appoint a data protection officer</strong> if the school processes at scale, and publish their contact details.</li>
+      <li><strong>Keep consent on record</strong> where the Data Protection Act requires consent — for example for sending an SMS reminder to a guardian's number.</li>
+      <li><strong>Honour requests</strong> for access or correction within 30 days, and report any data breach to the ODPC and to the people affected.</li>
+    </ol>
+
+    <h2>What FeeFlow provides to help</h2>
+    <ul>
+      <li>The <a href="privacy.html">Privacy Policy</a> and <a href="terms.html">Terms of Use</a> a school can link to from its own notice.</li>
+      <li>A record of who changed a fee, a balance or a payment, so the school can show what happened and when.</li>
+      <li>An export of the school's fee and payment records, in a readable format, whenever the school asks.</li>
+      <li>A way for a parent to ask for correction or deletion of their own details.</li>
+    </ul>
+
+    <h2>FeeFlow's own registration</h2>
+    <p>FeeFlow Kenya is registered with the Office of the Data Protection Commissioner as a data processor. A school should keep its own certificate; ours is available to any school on request through <a href="mailto:dpo@feeflow.co.ke">dpo@feeflow.co.ke</a>.</p>
+
+    <h2>Data we hold on children</h2>
+    <ul>
+      <li>Name, admission number, class or grade, gender, guardian link, and the fee items charged.</li>
+      <li>No national ID numbers, biometric data or medical records are required or stored.</li>
+      <li>Where a pupil leaves the school, the school should archive or delete the record — the service will not delete a pupil automatically, because the school needs the fee history.</li>
+    </ul>
+
+    <h2>Contact</h2>
+    <div class="legal-card">
+      <p style="margin:0">Data Protection Officer, FeeFlow Kenya — <strong>dpo@feeflow.co.ke</strong><br>
+      ODPC: <a href="https://www.odpc.go.ke" target="_blank" rel="noopener">www.odpc.go.ke</a> · <strong>info@odpc.go.ke</strong> · +254 20 271 1091</p>
+    </div>
+  </main>
+  <script src="../js/ff-ui.js"></script>
+</body>
+</html>

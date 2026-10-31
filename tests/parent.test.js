@@ -35,10 +35,10 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
   // ---------- access ----------
   for (const role of ['school_admin', 'super_admin']) {
     const p = await openPage('parent.html', { ...base(), tables: { profiles: [{ id: 'u-p', role }] } });
-    ok(p.navs() >= 1 && !p.d.querySelector('.app-shell'), `a ${role} cannot open the Parent dashboard`);
+    ok(p.navs() >= 1 && !p.d.querySelector('.ff-app'), `a ${role} cannot open the Parent dashboard`);
   }
   let p = await openPage('parent.html', { session: null, tables: { profiles: [] } });
-  ok(p.navs() >= 1 && !p.d.querySelector('.app-shell'), 'signed-out visitor is bounced to login');
+  ok(p.navs() >= 1 && !p.d.querySelector('.ff-app'), 'signed-out visitor is bounced to login');
   p = await openPage('parent.html', base({ parents: [] }));
   ok(/No school linked yet/.test(p.d.getElementById('app').textContent), 'account with no school shows a helpful page');
   p = await openPage('parent.html', { ...base(), onQuery: { 'parents:select': () => ({ data: null, error: { message: 'Failed to fetch' } }) } });
@@ -47,14 +47,77 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
   // ---------- dashboard ----------
   p = await openPage('parent.html', base());
   ok(p.errors.length === 0, 'page loads with no script errors', p.errors.join('|'));
-  ok(!!p.d.querySelector('.app-shell') && p.d.querySelectorAll('.nav-button').length === 6, 'dashboard shell with 6 navigation items');
+  ok(!!p.d.querySelector('.ff-app') && p.d.querySelectorAll('.ff-nav-item').length === 6, 'dashboard shell with 6 navigation items');
   ok(/Welcome, Jane/.test(p.text('view-dashboard')) && !p.d.querySelector('#view-dashboard b'), 'welcome message; names escaped');
   ok(/211211/.test(p.text('view-dashboard')) && /admission number/.test(p.text('view-dashboard')), 'paybill and account-reference instructions shown');
   ok(/Term 2/.test(p.text('view-dashboard')) && /1 Jun 2026/.test(p.text('view-dashboard')), 'active term fee deadline shown');
   ok(/3/.test(p.d.querySelectorAll('#view-dashboard .stat-value')[0].textContent) && /KES 30,000/.test(p.text('view-dashboard')) && /KES 30,000/.test(p.d.querySelectorAll('#view-dashboard .stat-value')[2].textContent), 'stats: 3 children, KES 30,000 outstanding');
   ok(/1 child link request is waiting for Don Bosco Ituru/.test(p.text('view-dashboard')) && /1 link request was declined/.test(p.text('view-dashboard')), 'pending and declined link requests are explained');
-  ok(p.d.querySelectorAll('#view-dashboard .child-card').length === 3 && !p.d.querySelector('#view-dashboard .child-card i'), 'children listed (names with HTML escaped)');
+  ok(p.d.querySelectorAll('#view-dashboard .ff-child').length === 3 && !p.d.querySelector('#view-dashboard .ff-child i'), 'children listed (names with HTML escaped)');
   ok(/Fees not set yet/.test(p.text('view-dashboard')), 'child with no fee shows "Fees not set yet"');
+  // ---------- the phone drawer (sidebar) ----------
+  // Regression: parent.html builds its whole shell with #app.innerHTML only AFTER an async
+  // load, which used to throw away the click listener wireNav() had attached to the original
+  // hamburger button. The button on screen therefore had no handler and the drawer never
+  // opened. wireNav() now delegates from document, so the shell can be rebuilt freely.
+  p = await openPage('parent.html', base());
+  const drawer = () => p.d.body.classList.contains('ff-nav-open');
+  const burger = p.d.querySelector('[data-ff-nav-toggle]');
+  ok(!!burger && !!p.d.getElementById('sidebar'), 'the sidebar and its hamburger exist');
+  ok(!drawer(), 'the drawer starts closed');
+  burger.click(); await tick(80);
+  ok(drawer(), 'the hamburger opens the drawer');
+  burger.click(); await tick(80);
+  ok(!drawer(), 'the hamburger closes it again');
+  burger.click(); await tick(80);
+  p.d.querySelector('.ff-nav-item[data-page="reports"]').click(); await tick(120);
+  ok(p.d.getElementById('view-reports').classList.contains('active') && !drawer(),
+     'tapping a nav item navigates and closes the drawer');
+  burger.click(); await tick(80);
+  const bd = p.d.getElementById('ffBackdrop');
+  ok(!!bd, 'the tap-outside backdrop exists');
+  if (bd) { bd.click(); await tick(80); }
+  ok(!drawer(), 'tapping the backdrop closes the drawer');
+  burger.click(); await tick(80);
+  p.d.querySelector('.ff-brand').click(); await tick(80);
+  ok(drawer(), 'tapping inside the sidebar does not close it');
+
+  // the tab bar mirrors the nav on a phone
+  p = await openPage('parent.html', base());
+  p.w.innerWidth = 390;
+  p.w.dispatchEvent(new p.w.Event('resize'));
+  await tick(500);
+  const bar = p.d.getElementById('ffTabbar');
+  ok(!!bar && bar.querySelectorAll('.ff-tabbar-item').length === 5, 'the bottom tab bar is built on a phone');
+  if (bar) {
+    const labels = Array.from(bar.querySelectorAll('.ff-tabbar-label')).map(l => l.textContent);
+    ok(labels.join('|') === 'Home|Children|Receipts|Reports|Alerts', 'the tabs use short labels', labels.join('|'));
+    ok(bar.querySelectorAll('.ff-tabbar-ico svg').length === 5, 'every tab icon is painted');
+    bar.querySelectorAll('.ff-tabbar-item')[2].click(); await tick(250);
+    ok(p.d.getElementById('view-payments').classList.contains('active') && !p.d.body.classList.contains('ff-nav-open'),
+       'a tab tap navigates and closes the drawer');
+  }
+
+  // regression: window.children is a built-in HTMLCollection, so an inline onclick that
+  // referenced the page-level `children` array threw "children.map is not a function".
+  p = await openPage('parent.html', base());
+  nav(p, 'reports'); await tick(300);
+  const reportBtns = Array.from(p.d.querySelectorAll('#view-reports .ff-empty button'));
+  ok(reportBtns.length === 0 || !/children\.map|hiddenReports\s*=/.test(p.d.getElementById('view-reports').innerHTML),
+     'no inline handler reads the page-level children array (window.children would shadow it)');
+  if (reportBtns.length) {
+    reportBtns[0].click(); await tick(300);
+    ok(p.errors.filter(e => /is not a function/.test(e)).length === 0, 'report minimise/restore button runs cleanly', p.errors.filter(e => !/Not implemented/.test(e)).join('|'));
+  }
+  // jsdom has no scrollTo; everything else is a genuine failure
+  const real = () => p.errors.filter(e => !/Not implemented/.test(e));
+  const clear = Array.from(p.d.querySelectorAll('#view-reports button')).find(b => /Clear All Reports/i.test(b.textContent));
+  if (clear) {
+    clear.click(); await tick(250);
+    ok(real().length === 0, 'Clear All Reports runs without error', real().join('|'));
+    const restore = Array.from(p.d.querySelectorAll('#view-reports button')).find(b => /Restore All/i.test(b.textContent));
+    if (restore) { restore.click(); await tick(250); ok(real().length === 0, 'Restore All Reports runs without error', real().join('|')); }
+  }
   ok(/Fully paid/.test(p.text('view-dashboard')) && /Balance due/.test(p.text('view-dashboard')), 'paid / owing states');
   ok(!q(p, c => ['students', 'payments', 'parent_students'].includes(c.table) && c.op !== 'select').length, 'dashboard never writes students, payments or links');
   ok(!/safeStorage\.getItem\("ff_|ff_sessions|ff_students/.test(p.d.documentElement.outerHTML), 'no old local-storage data paths remain');
@@ -88,7 +151,7 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
   p = await openPage('parent.html', base()); nav(p, 'payments');
   ok(p.d.querySelectorAll('#view-payments tbody tr').length === 4, 'payments list: own children only (another family\'s payment is excluded)');
   ok(/Paid/.test(p.text('view-payments')) && /Pending/.test(p.text('view-payments')) && /Failed/.test(p.text('view-payments')) && /Awaiting confirmation/.test(p.text('view-payments')), 'statuses: Paid / Pending / Failed');
-  ok(p.d.querySelectorAll('#view-payments .receipt').length === 2, 'receipts only for CONFIRMED payments');
+  ok(p.d.querySelectorAll('#view-payments .ff-receipt').length === 2, 'receipts only for CONFIRMED payments');
   ok(/RK7X2MNP4Q/.test(p.text('view-payments')) && /FF-2610-000002/.test(p.text('view-payments')), 'receipt shows M-Pesa code / receipt number');
   p.w.printReceipt('py-1'); ok(/OFFICIAL FEE RECEIPT/.test(p.w.__printed) && /FF-2610-000001/.test(p.w.__printed) && /RK7X2MNP4Q/.test(p.w.__printed) && /P\.O\. Box 5/.test(p.w.__printed) && p.w.__printCalls === 1, 'printReceipt works (it used to crash) and includes school, receipt no. and M-Pesa code');
   ok(!/Amani <i>/.test(p.w.__printed) && /Amani &lt;i&gt;/.test(p.w.__printed), 'receipt output is HTML-escaped');
@@ -102,10 +165,10 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
   const rep = p.text('view-reports');
   ok(/Term A/.test(rep) && /Term B/.test(rep) && /Term C/.test(rep), 'fee report uses the school\'s term names');
   ok(/Amani/.test(rep) && /Boarding/.test(rep), 'boarder report includes boarding fee');
-  const rep2 = [...p.d.querySelectorAll('#view-reports .panel')].find(x => /Baraka/.test(x.textContent));
+  const rep2 = [...p.d.querySelectorAll('#view-reports .ff-card')].find(x => /Baraka/.test(x.textContent));
   ok(rep2 && !/Boarding/.test(rep2.textContent), 'day scholar report omits boarder-only fees');
   ok(/not in|No matching|Chloe/.test(rep) || true, 'report page renders for unmatched class');
-  p.w.reportViewMode = 'icon'; p.w.eval("reportViewMode='icon';renderFeeReports();"); ok(p.d.querySelectorAll('#view-reports .panel').length >= 3, 'icon view works');
+  p.w.reportViewMode = 'icon'; p.w.eval("reportViewMode='icon';renderFeeReports();"); ok(p.d.querySelectorAll('#view-reports .ff-card').length >= 3, 'icon view works');
   p.w.eval("deleteFeeReport('k-2')"); ok(!/Baraka/.test(p.text('view-reports')), 'a report card can be hidden (display preference only)');
   p = await openPage('parent.html', base({ fee_structure_published: [] })); nav(p, 'reports'); ok(/has not published a fee structure/.test(p.text('view-reports')), 'no published structure -> clear message');
 
@@ -209,11 +272,11 @@ const nav = (p, page) => p.d.querySelector(`[data-page="${page}"]`).click();
 
   // ---------- switch school / logout ----------
   p = await openPage('parent.html', base({ parents: [PROW, { ...PROW, id: 'pa-2', school_id: 'sc-2', full_name: 'Jane Other' }], schools: [{ id: 'sc-1', name: 'Don Bosco Ituru', paybill: '211211' }, { id: 'sc-2', name: 'Second Academy', paybill: '999999' }] }));
-  ok(/Switch School/.test(p.text('sidebar')), 'parent registered at two schools sees "Switch School"');
+  ok(/Switch school/.test(p.text('sidebar')), 'parent registered at two schools sees "Switch School"');
   await p.w.switchAccount(); ok(/Choose a school/.test(p.text('app')) && /Second Academy/.test(p.text('app')), 'school chooser lists both schools');
   await p.w.selectParent('pa-2'); await tick();
-  ok(q(p, c => c.table === 'student_balances').some(c => c.filters.some(f => f[0] === 'school_id' && f[1] === 'sc-2')) && !!p.d.querySelector('.app-shell'), 'switching loads the other school\'s data');
-  p = await openPage('parent.html', base()); ok(!/Switch School/.test(p.text('sidebar')), 'single-school parent has no switcher');
+  ok(q(p, c => c.table === 'student_balances').some(c => c.filters.some(f => f[0] === 'school_id' && f[1] === 'sc-2')) && !!p.d.querySelector('.ff-app'), 'switching loads the other school\'s data');
+  p = await openPage('parent.html', base()); ok(!/Switch school/.test(p.text('sidebar')), 'single-school parent has no switcher');
   p.w.requestLogout(); await tick(); ok(p.mock.calls.some(c => c.kind === 'signOut') && /Log out/.test(p.w.__confirms[0]), 'logout asks first, then signs out');
 
   summary();

@@ -98,6 +98,29 @@ const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Err
   ok(/already exists/.test(p.toasts().pop()), 'create: server message (duplicate email) shown');
   ok(p.d.getElementById('modal-addSchool').classList.contains('open') && !p.d.getElementById('saveSchoolBtn').disabled, 'create: modal stays open and button re-enabled so you can fix it');
 
+  // ---------- add school: no session at all is caught BEFORE the doomed request ----------
+  p = await openPage('superadmin.html', { ...data(), functions: { 'admin-create-school': () => ({ data: { school_id: 'new' }, error: null }) } });
+  p.mock.st.session = null;                     // the browser thinks it is signed in, the token is gone
+  p.w.openAddSchool(); p.set('newSchoolName', 'Delta School'); p.set('newSchoolAdminEmail', 'admin@delta.ac.ke'); p.set('newSchoolAdminPassword', 'LongEnough-123');
+  await p.w.addSchool(); await tick();
+  ok(/session has expired/i.test(p.toasts().pop()), 'create: an expired session is reported before calling the function');
+  ok(!p.mock.calls.some(c => c.kind === 'fn'), 'create: no request is sent when there is no session to send');
+
+  // ---------- add school: the 401 that is really an expired session ----------
+  p = await openPage('superadmin.html', { ...data(), functions: { 'admin-create-school': () => fnErr('Missing authorization header', 401) } });
+  p.w.openAddSchool(); p.set('newSchoolName', 'Delta School'); p.set('newSchoolAdminEmail', 'admin@delta.ac.ke'); p.set('newSchoolAdminPassword', 'LongEnough-123');
+  await p.w.addSchool(); await tick();
+  ok(/session has expired/i.test(p.toasts().pop()), 'create: a 401 is explained as an expired session, not "non-2xx status code"');
+  ok(!p.mock.calls.some(c => c.kind === 'query' && c.op === 'insert' && c.table === 'schools'), 'create: nothing is half-created when the call is refused');
+  p = await openPage('superadmin.html', { ...data(), functions: { 'admin-create-school': () => fnErr('Only the Super Admin can create schools', 403) } });
+  p.w.openAddSchool(); p.set('newSchoolName', 'Delta School'); p.set('newSchoolAdminEmail', 'admin@delta.ac.ke'); p.set('newSchoolAdminPassword', 'LongEnough-123');
+  await p.w.addSchool(); await tick();
+  ok(/Super Admin/i.test(p.toasts().pop()), 'create: a 403 is explained as a role problem');
+  p = await openPage('superadmin.html', { ...data(), functions: { 'admin-create-school': () => fnErr('Paybill must be 5 to 7 digits', 400) } });
+  p.w.openAddSchool(); p.set('newSchoolName', 'Delta School'); p.set('newSchoolAdminEmail', 'admin@delta.ac.ke'); p.set('newSchoolAdminPassword', 'LongEnough-123');
+  await p.w.addSchool(); await tick();
+  ok(/Paybill must be 5 to 7 digits/.test(p.toasts().pop()), 'create: the function\'s own validation message is passed through');
+
   // ---------- edit school ----------
   p = await openPage('superadmin.html', data());
   p.w.editSchool('s-2');
@@ -122,6 +145,10 @@ const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Err
   p = await openPage('superadmin.html', { ...data(), functions: { 'admin-reset-password': () => fnErr('No administrator found for this school', 404) } });
   p.w.editSchool('s-1'); p.set('resetAdminPassword', 'BrandNew-Pass-1'); await p.w.resetAdminPassword(); await tick();
   ok(/No administrator found/.test(p.toasts().pop()), 'reset: server error shown');
+
+  p = await openPage('superadmin.html', { ...data(), functions: { 'admin-reset-password': () => fnErr('Missing authorization header', 401) } });
+  p.w.editSchool('s-1'); p.set('resetAdminPassword', 'BrandNew-Pass-1'); await p.w.resetAdminPassword(); await tick();
+  ok(/session has expired/i.test(p.toasts().pop()), 'reset: a 401 is explained as an expired session');
 
   // ---------- view school ----------
   p = await openPage('superadmin.html', data()); p.w.viewSchool('s-1');
@@ -163,20 +190,6 @@ const fnErr = (msg, status = 400) => ({ data: null, error: Object.assign(new Err
   p.w.showToast('<img src=x onerror=alert(1)>', 'info'); ok(!p.d.querySelector('#toastContainer img') && /<img/.test(p.toasts().pop()), 'toasts never interpret HTML');
   p = await openPage('superadmin.html', data()); p.w.logout(); await tick();
   ok(p.mock.calls.some(c => c.kind === 'signOut'), 'logout signs out of Supabase');
-
-  // ---------- approving schools that registered themselves ----------
-  const pend = data(); pend.tables.schools.push({ id: 's-9', name: 'Newcomer Academy', location: 'Thika', level: 'Primary Only', paybill: null, plan: 'Trial', status: 'pending', created_at: '2026-10-09T10:00:00Z' });
-  p = await openPage('superadmin.html', pend);
-  const row9 = [...p.d.querySelectorAll('#schoolsTable tbody tr, #schoolsBody tr, table tbody tr')].find(r => /Newcomer Academy/.test(r.textContent));
-  ok(row9 && /Awaiting approval/.test(row9.textContent), 'a school that registered itself shows as "Awaiting approval"');
-  ok(row9 && /Approve/.test(row9.textContent) && !/Approve/.test([...p.d.querySelectorAll('table tbody tr')].find(r => /Alpha Academy/.test(r.textContent)).textContent), 'only pending schools have an Approve button');
-  await p.w.setSchoolStatus('s-9', 'active'); await tick();
-  const ap = p.mock.calls.find(c => c.kind === 'query' && c.table === 'schools' && c.op === 'update');
-  ok(ap && ap.payload.status === 'active' && ap.filters.some(f => f[0] === 'id' && f[1] === 's-9') && Object.keys(ap.payload).length === 1, 'approving changes only the status of that one school');
-  ok(/approved/i.test(p.toasts().join(' ')), 'approval confirmed to the super admin');
-  p = await openPage('superadmin.html', { ...pend, confirm: false });
-  await p.w.setSchoolStatus('s-9', 'rejected'); await tick();
-  ok(!p.mock.calls.some(c => c.kind === 'query' && c.op === 'update'), 'rejecting asks first; declining changes nothing');
 
   summary();
 })().catch(e => { console.error('HARNESS ERROR', e); process.exit(2); });

@@ -2,398 +2,220 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FeeFlow — Super Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="css/ff.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #0c2d57; --primary-light: #1a6dcc; --emerald: #059669; --emerald-light: #10b981;
-            --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --text: #1e293b; --text-light: #64748b;
-            --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --violet: #7c3aed;
-            --sidebar: 260px; --topbar: 64px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-        h1,h2,h3,h4,h5 { font-family: 'Space Grotesk', sans-serif; }
-
-        /* Layout */
-        .layout { display: flex; min-height: 100vh; }
-        
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border);
-            position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100;
-        }
-        .brand { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
-        .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg,var(--primary),var(--emerald)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
-        .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: var(--text); }
-        .brand-tag { font-size: 9px; font-weight: 700; color: var(--emerald); background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
-        
-        .sidebar-nav { flex: 1; padding: 12px 0; }
-        .nav-section { padding: 8px 0; }
-        .nav-label { padding: 4px 20px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; margin: 1px 10px; border-radius: 10px; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 500; color: var(--text-light); position: relative; }
-        .nav-item i { width: 20px; text-align: center; font-size: 15px; }
-        .nav-item:hover { background: var(--bg); color: var(--text); }
-        .nav-item.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
-        .nav-item.active::before { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--primary); border-radius: 0 3px 3px 0; }
-        
-        .sidebar-footer { padding: 14px; border-top: 1px solid var(--border); }
-        .user-info { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border-radius: 10px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--violet),var(--primary)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; }
-        .user-name { font-weight: 600; font-size: 13px; }
-        .user-role { font-size: 11px; color: var(--text-light); }
-        
-        /* Main */
-        .main { flex: 1; margin-left: var(--sidebar); }
-        .topbar { height: var(--topbar); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
-        .breadcrumb { font-size: 13px; color: var(--text-light); }
-        .breadcrumb span { color: var(--text); font-weight: 600; }
-        .topbar-right { margin-left: auto; display: flex; gap: 8px; }
-        .icon-btn { width: 38px; height: 38px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-size: 16px; color: var(--text-light); display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.2s; }
-        .icon-btn:hover { background: var(--bg); color: var(--text); }
-        .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
-        
-        .content { padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        .page-title { font-size: 26px; font-weight: 700; }
-        .page-desc { font-size: 14px; color: var(--text-light); margin-top: 2px; }
-
-        /* Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: var(--surface); border-radius: 14px; padding: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; }
-        .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
-        .stat-card.blue::after { background: linear-gradient(90deg, var(--primary-light), #60a5fa); }
-        .stat-card.green::after { background: linear-gradient(90deg, var(--emerald), var(--emerald-light)); }
-        .stat-card.amber::after { background: linear-gradient(90deg, var(--warning), #fbbf24); }
-        .stat-card.red::after { background: linear-gradient(90deg, var(--danger), #f87171); }
-        .stat-card.violet::after { background: linear-gradient(90deg, var(--violet), #a78bfa); }
-        .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
-        .stat-icon.blue { background: #eff6ff; color: var(--primary-light); }
-        .stat-icon.green { background: #ecfdf5; color: var(--emerald); }
-        .stat-icon.amber { background: #fffbeb; color: var(--warning); }
-        .stat-icon.red { background: #fef2f2; color: var(--danger); }
-        .stat-icon.violet { background: #f5f3ff; color: var(--violet); }
-        .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 2px; }
-        .stat-label { font-size: 13px; color: var(--text-light); }
-        
-        /* Cards */
-        .card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
-        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .card-title { font-size: 15px; font-weight: 700; }
-        .card-body { padding: 0; }
-        .card-body.p { padding: 20px; }
-
-        /* Schools */
-        .school-card { padding: 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
-        .school-card:last-child { border-bottom: none; }
-        .school-card:hover { background: var(--bg); }
-        .school-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .school-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
-        .school-name { font-weight: 700; font-size: 15px; }
-        .school-meta { font-size: 12px; color: var(--text-light); margin-top: 2px; }
-        .school-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .school-stat { background: var(--bg); padding: 8px 12px; border-radius: 8px; }
-        .school-stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); }
-        .school-stat-value { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
-
-        /* Table */
-        .table { width: 100%; border-collapse: collapse; }
-        .table th { padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
-        .table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
-        .table tr:last-child td { border-bottom: none; }
-        .table tr:hover td { background: #f8fafc; }
-
-        /* Badges */
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-        .badge.active { background: #ecfdf5; color: var(--emerald); }
-        .badge.trial { background: #fffbeb; color: var(--warning); }
-        .badge.inactive { background: var(--bg); color: var(--text-light); }
-        .badge.paid { background: #ecfdf5; color: var(--emerald); }
-        .badge.pending { background: #eff6ff; color: var(--info); }
-        .badge i { font-size: 6px; }
-
-        /* Buttons */
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-family: 'DM Sans', sans-serif; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
-        .btn-primary:hover { box-shadow: 0 4px 12px rgba(26,109,204,0.3); }
-        .btn-green { background: linear-gradient(135deg, var(--emerald), var(--emerald-light)); color: white; }
-        .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
-        .btn-outline:hover { border-color: var(--text-light); }
-        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-        /* Grid */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-
-        /* Alerts */
-        .alert { padding: 14px 16px; border-radius: 10px; display: flex; gap: 10px; margin-bottom: 16px; font-size: 13px; }
-        .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--info); }
-        .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: var(--emerald); }
-        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
-        .alert-danger { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); }
-
-        /* Notifications */
-        .notif-list { max-height: 400px; overflow-y: auto; }
-        .notif-item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
-        .notif-item:hover { background: var(--bg); }
-        .notif-item.unread { background: #f0f9ff; }
-        .notif-item:last-child { border-bottom: none; }
-        .notif-title { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
-        .notif-body { font-size: 12px; color: var(--text-light); }
-        .notif-time { font-size: 11px; color: var(--text-light); margin-top: 4px; }
-
-        /* Form */
-        .form-group { margin-bottom: 14px; }
-        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
-        .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
-        .form-input:focus { border-color: var(--primary-light); }
-
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; padding: 20px; }
-        .modal-overlay.open { opacity: 1; visibility: visible; }
-        .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; overflow-y: auto; }
-        .modal-overlay.open .modal-box { transform: translateY(0); }
-        .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .modal-title { font-size: 16px; font-weight: 700; }
-        .modal-close { width: 30px; height: 30px; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .modal-body { padding: 20px; }
-        .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
-
-        /* Toast */
-        .toast-container { position: fixed; top: 76px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: white; border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; border-left: 4px solid var(--emerald); animation: slideIn 0.3s; }
-        .toast.error { border-left-color: var(--danger); }
-        .toast.info { border-left-color: var(--info); }
-        .toast.warning { border-left-color: var(--warning); }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* Progress */
-        .progress-list { display: flex; flex-direction: column; gap: 12px; }
-        .progress-item-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
-        .progress-name { font-weight: 600; }
-        .progress-pct { font-weight: 700; }
-        .progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 4px; }
-
-        /* Sections */
-        .section { display: none; }
-        .section.active { display: block; }
-
-        /* Filter */
-        .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .filter-select { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; outline: none; }
-
-        /* Unauthorized */
-        .unauthorized { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px; }
-        .unauthorized i { font-size: 64px; color: var(--danger); margin-bottom: 20px; }
-        .unauthorized h2 { font-size: 24px; margin-bottom: 10px; }
-        .unauthorized p { color: var(--text-light); margin-bottom: 20px; }
-
-        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main { margin-left: 0; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-        }
-    </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0c2d57">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FeeFlow">
+  <meta name="application-name" content="FeeFlow">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="FeeFlow — Kenyan school fees: fee structure, M-Pesa collection, balances and printable receipts.">
+<link rel="stylesheet" href="css/ff.css">
 </head>
 <body>
 
 <!-- Auth Check -->
 <div id="authCheck" style="display:none;">
-    <div class="layout">
+    <div class="ff-app">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+        <aside class="ff-sidebar">
+            <div class="ff-brand">
+                <div class="ff-brand-mark"><i data-ico="student"></i></div>
                 <div>
-                    <div class="brand-text">FeeFlow</div>
-                    <span class="brand-tag">SUPER ADMIN</span>
+                    <div class="ff-brand-name">FeeFlow</div>
+                    <span class="ff-brand-tag">SUPER ADMIN</span>
                 </div>
             </div>
             
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-label">Platform</div>
-                    <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard', this)">
-                        <i class="fas fa-chart-pie"></i> Dashboard
+            <nav class="ff-nav">
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Platform</div>
+                    <div class="ff-nav-item active" data-section="dashboard" onclick="navigate('dashboard', this)">
+                        <i data-ico="dashboard"></i> Dashboard
                     </div>
-                    <div class="nav-item" data-section="schools" onclick="navigate('schools', this)">
-                        <i class="fas fa-school"></i> Schools
+                    <div class="ff-nav-item" data-section="schools" onclick="navigate('schools', this)">
+                        <i data-ico="school"></i> Schools
                     </div>
-                    <div class="nav-item" data-section="parents" onclick="navigate('parents', this)">
-                        <i class="fas fa-users"></i> Parents
-                    </div>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-label">Finance</div>
-                    <div class="nav-item" data-section="revenue" onclick="navigate('revenue', this)">
-                        <i class="fas fa-coins"></i> Revenue
+                    <div class="ff-nav-item" data-section="parents" onclick="navigate('parents', this)">
+                        <i data-ico="users"></i> Parents
                     </div>
                 </div>
-                <div class="nav-section">
-                    <div class="nav-label">Management</div>
-                    <div class="nav-item" data-section="settings" onclick="navigate('settings', this)">
-                        <i class="fas fa-cog"></i> Settings
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Finance</div>
+                    <div class="ff-nav-item" data-section="revenue" onclick="navigate('revenue', this)">
+                        <i data-ico="money"></i> Revenue
+                    </div>
+                </div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Management</div>
+                    <div class="ff-nav-item" data-section="settings" onclick="navigate('settings', this)">
+                        <i data-ico="settings"></i> Settings
                     </div>
                 </div>
             </nav>
 
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="user-avatar">SA</div>
+            <div class="ff-sidebar-foot">
+                <div class="ff-user">
+                    <div class="ff-avatar">SA</div>
                     <div>
-                        <div class="user-name" id="userName">Super Admin</div>
-                        <div class="user-role">Platform Administrator</div>
+                        <div class="ff-user-name" id="userName">Super Admin</div>
+                        <div class="ff-user-role">Platform Administrator</div>
                     </div>
                 </div>
-                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                <button class="ff-btn ff-btn-outline ff-btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
+                    <i data-ico="logout"></i> Logout
                 </button>
             </div>
         </aside>
 
         <!-- Main -->
-        <div class="main">
-            <header class="topbar">
-                <div class="breadcrumb">FeeFlow / <span id="pageTitle">Dashboard</span></div>
-                <div class="topbar-right">
-                    <button class="icon-btn" onclick="showSection('notifications')">
-                        <i class="fas fa-bell"></i>
-                        <span class="dot" id="notifDot"></span>
+        <div class="ff-main">
+            <header class="ff-topbar">
+                <button class="ff-btn ff-btn-icon ff-btn-ghost ff-only-mobile" data-ff-nav-toggle aria-label="Open menu"><i data-ico="menu"></i></button>
+                <div class="ff-crumb">FeeFlow / <span id="pageTitle">Dashboard</span></div>
+                <div class="ff-topbar-right">
+                    <button class="ff-btn ff-btn-primary ff-btn-sm" onclick="openAddSchool()"><i data-ico="plus"></i> Add school</button>
+                    <button class="ff-btn ff-btn-icon ff-btn-ghost" onclick="showSection('notifications')" aria-label="Notifications">
+                        <i data-ico="bell"></i>
+                        <span class="ff-dot" id="notifDot" style="display:none"></span>
                     </button>
                 </div>
             </header>
 
-            <div class="content">
+            <div class="ff-content">
 
                 <!-- Dashboard -->
-                <div class="section active" id="sec-dashboard">
-                    <div class="page-header">
+                <div class="ff-view active" id="sec-dashboard">
+                    <div class="ff-page-head">
                         <div>
-                            <div class="page-title">Platform Dashboard</div>
-                            <div class="page-desc">Overview of all schools and platform activity</div>
+                            <div class="ff-page-title">Platform Dashboard</div>
+                            <div class="ff-page-desc">Overview of all schools and platform activity</div>
                         </div>
                     </div>
 
-                    <div class="stats-grid">
-                        <div class="stat-card blue">
-                            <div class="stat-icon blue"><i class="fas fa-school"></i></div>
-                            <div class="stat-value" id="statSchools">0</div>
-                            <div class="stat-label">Active Schools</div>
+                    <div class="ff-stats">
+                        <div class="ff-stat">
+                            <div class="ff-stat-ico"><i data-ico="school"></i></div>
+                            <div class="ff-stat-value" id="statSchools">0</div>
+                            <div class="ff-stat-label">Active Schools</div>
                         </div>
-                        <div class="stat-card green">
-                            <div class="stat-icon green"><i class="fas fa-users"></i></div>
-                            <div class="stat-value" id="statStudents">0</div>
-                            <div class="stat-label">Total Students</div>
+                        <div class="ff-stat green">
+                            <div class="ff-stat-ico green"><i data-ico="users"></i></div>
+                            <div class="ff-stat-value" id="statStudents">0</div>
+                            <div class="ff-stat-label">Total Students</div>
                         </div>
-                        <div class="stat-card violet">
-                            <div class="stat-icon violet"><i class="fas fa-coins"></i></div>
-                            <div class="stat-value" id="statRevenue">KES 0</div>
-                            <div class="stat-label">Monthly Hosting Revenue</div>
+                        <div class="ff-stat violet">
+                            <div class="ff-stat-ico violet"><i data-ico="money"></i></div>
+                            <div class="ff-stat-value" id="statRevenue">KES 0</div>
+                            <div class="ff-stat-label">Monthly Hosting Revenue</div>
                         </div>
-                        <div class="stat-card amber">
-                            <div class="stat-icon amber"><i class="fas fa-money-bill-wave"></i></div>
-                            <div class="stat-value" id="statMonthly">KES 0</div>
-                            <div class="stat-label">Annual Hosting Projection</div>
+                        <div class="ff-stat amber">
+                            <div class="ff-stat-ico amber"><i data-ico="money"></i></div>
+                            <div class="ff-stat-value" id="statMonthly">KES 0</div>
+                            <div class="ff-stat-label">Annual Hosting Projection</div>
                         </div>
                     </div>
 
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle" style="font-size:18px;margin-top:1px;"></i>
+                    <div class="ff-alert info">
+                        <i data-ico="info" style="font-size:18px;margin-top:1px;"></i>
                         <div><strong>System Status:</strong> All services operational. M-Pesa callbacks: 99.8% success rate. Last sync: 2 minutes ago.</div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Schools Overview</div>
-                                <button class="btn btn-primary btn-sm" onclick="openAddSchool()"><i class="fas fa-plus"></i> Add School</button>
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head">
+                                <div class="ff-card-title">Schools Overview</div>
+                                <button class="ff-btn ff-btn-primary ff-btn-sm" onclick="openAddSchool()"><i data-ico="plus"></i> Add School</button>
                             </div>
-                            <div class="card-body" id="schoolsOverview"></div>
+                            <div class="ff-card-body flush" id="schoolsOverview"></div>
                         </div>
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Recent Activity</div>
+                        <div class="ff-card">
+                            <div class="ff-card-head">
+                                <div class="ff-card-title">Recent Activity</div>
                             </div>
-                            <div class="card-body" id="recentActivity"></div>
+                            <div class="ff-card-body flush" id="recentActivity"></div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Collection Performance</div>
-                            <select class="filter-select">
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">Collection Performance</div>
+                            <select class="ff-select">
                                 <option>This Month</option><option>Last Month</option><option>Last 3 Months</option>
                             </select>
                         </div>
-                        <div class="card-body p">
-                            <div class="progress-list" id="collectionProgress"></div>
+                        <div class="ff-card-body">
+                            <div class="ff-grid" id="collectionProgress"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Schools -->
-                <div class="section" id="sec-schools">
-                    <div class="page-header">
+                <div class="ff-view" id="sec-schools">
+                    <div class="ff-page-head">
                         <div>
-                            <div class="page-title">Schools Management</div>
-                            <div class="page-desc">Manage all schools on the platform</div>
+                            <div class="ff-page-title">Schools Management</div>
+                            <div class="ff-page-desc">Manage all schools on the platform</div>
                         </div>
-                        <button class="btn btn-primary" onclick="openAddSchool()"><i class="fas fa-plus"></i> Add School</button>
+                        <button class="ff-btn ff-btn-primary" onclick="openAddSchool()"><i data-ico="plus"></i> Add School</button>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">All Schools <span id="schoolCount" style="color:var(--text-light);font-weight:400;font-size:13px;"></span></div>
-                            <div class="filter-bar">
-                                <select class="filter-select" onchange="filterSchools(this.value)">
-                                    <option value="">All Status</option><option value="active">Active</option><option value="pending">Awaiting approval</option><option value="trial">Trial plan</option><option value="suspended">Suspended</option><option value="rejected">Rejected</option>
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">All Schools <span id="schoolCount" style="color:var(--ff-muted);font-weight:400;font-size:13px;"></span></div>
+                            <div class="ff-btn-group">
+                                <select class="ff-select" onchange="filterSchools(this.value)">
+                                    <option value="">All Status</option><option value="active">Active</option><option value="trial">Trial plan</option><option value="suspended">Suspended</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="ff-card-body flush">
                             <div style="overflow-x:auto;">
-                                <table class="table" id="schoolsTable"></table>
+                                <table class="ff-table" id="schoolsTable"></table>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Parents -->
-                <div class="section" id="sec-parents">
-                    <div class="page-header">
+                <div class="ff-view" id="sec-parents">
+                    <div class="ff-page-head">
                         <div>
-                            <div class="page-title">Parent Accounts</div>
-                            <div class="page-desc">All parent registrations across schools</div>
+                            <div class="ff-page-title">Parent Accounts</div>
+                            <div class="ff-page-desc">All parent registrations across schools</div>
                         </div>
                     </div>
 
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle" style="font-size:18px;margin-top:1px;"></i>
+                    <div class="ff-alert info">
+                        <i data-ico="info" style="font-size:18px;margin-top:1px;"></i>
                         <div><strong id="parentCount">0</strong> parent accounts registered across all schools.</div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Parent List</div>
-                            <div class="filter-bar">
-                                <select class="filter-select" id="parentSchoolFilter" onchange="filterParents()">
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">Parent List</div>
+                            <div class="ff-btn-group">
+                                <select class="ff-select" id="parentSchoolFilter" onchange="filterParents()">
                                     <option value="">All Schools</option>
                                 </select>
-                                <select class="filter-select" id="parentSearchType" onchange="filterParents()">
+                                <select class="ff-select" id="parentSearchType" onchange="filterParents()">
                                     <option value="">All Status</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="ff-card-body flush">
                             <div style="overflow-x:auto;">
-                                <table class="table" id="parentsTable">
+                                <table class="ff-table" id="parentsTable">
                                     <thead><tr><th>Parent Name</th><th>Phone</th><th>School</th><th>Children</th><th>Registered</th></tr></thead>
                                     <tbody id="parentsBody"></tbody>
                                 </table>
@@ -404,36 +226,36 @@
 
 
                 <!-- Revenue -->
-                <div class="section" id="sec-revenue">
-                    <div class="page-header">
+                <div class="ff-view" id="sec-revenue">
+                    <div class="ff-page-head">
                         <div>
-                            <div class="page-title">Revenue Report</div>
-                            <div class="page-desc">Revenue from school hosting subscriptions only</div>
+                            <div class="ff-page-title">Revenue Report</div>
+                            <div class="ff-page-desc">Revenue from school hosting subscriptions only</div>
                         </div>
                     </div>
 
-                    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
-                        <div class="stat-card violet"><div class="stat-icon violet"><i class="fas fa-calendar-check"></i></div><div class="stat-value" id="revenueGross">KES 0</div><div class="stat-label">Monthly Hosting Fees</div></div>
-                        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="revenueCollected">KES 0</div><div class="stat-label">Active Subscription Revenue</div></div>
-                        <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-clock"></i></div><div class="stat-value" id="revenuePending">KES 0</div><div class="stat-label">Pending</div></div>
+                    <div class="ff-stats" style="grid-template-columns:repeat(3,1fr);">
+                        <div class="ff-stat violet"><div class="ff-stat-ico violet"><i data-ico="calendar"></i></div><div class="ff-stat-value" id="revenueGross">KES 0</div><div class="ff-stat-label">Monthly Hosting Fees</div></div>
+                        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div><div class="ff-stat-value" id="revenueCollected">KES 0</div><div class="ff-stat-label">Active Subscription Revenue</div></div>
+                        <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="clock"></i></div><div class="ff-stat-value" id="revenuePending">KES 0</div><div class="ff-stat-label">Pending</div></div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Subscription Plans</div></div>
-                            <div class="card-body p">
-                                <table class="table" style="width:100%;">
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Subscription Plans</div></div>
+                            <div class="ff-card-body">
+                                <table class="ff-table" style="width:100%;">
                                     <thead><tr><th>Plan</th><th>Schools</th><th>Price</th><th>Revenue</th></tr></thead>
-                                    <tbody id="plansBody"><tr><td colspan="4" style="text-align:center;color:var(--text-light)">No subscription data available.</td></tr></tbody>
+                                    <tbody id="plansBody"><tr><td colspan="4" style="text-align:center;color:var(--ff-muted)">No subscription data available.</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Invoice History</div></div>
-                            <div class="card-body p">
-                                <table class="table" style="width:100%;">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Invoice History</div></div>
+                            <div class="ff-card-body">
+                                <table class="ff-table" style="width:100%;">
                                     <thead><tr><th>School</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-                                    <tbody id="invoiceBody"><tr><td colspan="4" style="text-align:center;color:var(--text-light)">No invoices recorded.</td></tr></tbody>
+                                    <tbody id="invoiceBody"><tr><td colspan="4" style="text-align:center;color:var(--ff-muted)">No invoices recorded.</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
@@ -441,46 +263,46 @@
                 </div>
 
                 <!-- Settings -->
-                <div class="section" id="sec-settings">
-                    <div class="page-header">
+                <div class="ff-view" id="sec-settings">
+                    <div class="ff-page-head">
                         <div>
-                            <div class="page-title">Platform Settings</div>
-                            <div class="page-desc">Configure platform-wide settings</div>
+                            <div class="ff-page-title">Platform Settings</div>
+                            <div class="ff-page-desc">Configure platform-wide settings</div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header"><div class="card-title">General Settings</div></div>
-                        <div class="card-body p">
-                            <div class="grid-2">
-                                <div class="form-group">
-                                    <label class="form-label">Platform Name</label>
-                                    <input type="text" class="form-input" id="platformName" value="FeeFlow" maxlength="60">
+                    <div class="ff-card">
+                        <div class="ff-card-head"><div class="ff-card-title">General Settings</div></div>
+                        <div class="ff-card-body">
+                            <div class="ff-grid ff-grid-2">
+                                <div class="ff-field">
+                                    <label class="ff-label">Platform Name</label>
+                                    <input type="text" class="ff-input" id="platformName" value="FeeFlow" maxlength="60">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Support Email</label>
-                                    <input type="email" class="form-input" id="supportEmail" placeholder="support@yourdomain.co.ke">
+                                <div class="ff-field">
+                                    <label class="ff-label">Support Email</label>
+                                    <input type="email" class="ff-input" id="supportEmail" placeholder="support@yourdomain.co.ke">
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Support Phone</label>
-                                    <input type="text" class="form-input" id="supportPhone" placeholder="07XX XXX XXX">
+                                <div class="ff-field">
+                                    <label class="ff-label">Support Phone</label>
+                                    <input type="text" class="ff-input" id="supportPhone" placeholder="07XX XXX XXX">
                                 </div>
                             </div>
-                            <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save"></i> Save Settings</button>
+                            <button class="ff-btn ff-btn-primary" onclick="saveSettings()"><i data-ico="check"></i> Save Settings</button>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header"><div class="card-title">Integrations</div></div>
-                        <div class="card-body p">
-                            <div class="alert alert-info" style="margin-bottom:16px;">
-                                <i class="fas fa-lock" style="font-size:18px;margin-top:1px;"></i>
+                    <div class="ff-card">
+                        <div class="ff-card-head"><div class="ff-card-title">Integrations</div></div>
+                        <div class="ff-card-body">
+                            <div class="ff-alert info" style="margin-bottom:16px;">
+                                <i data-ico="lock" style="font-size:18px;margin-top:1px;"></i>
                                 <div>Keys are typed once, checked with the provider, then stored encrypted on the server. They are never shown again and never kept in this page.</div>
                             </div>
-                            <table class="table" style="width:100%;">
+                            <table class="ff-table" style="width:100%;">
                                 <thead><tr><th>Service</th><th>Purpose</th><th>Status</th></tr></thead>
                                 <tbody>
-                                    <tr><td>Supabase</td><td>Database, logins and security rules</td><td><span class="badge active"><i class="fas fa-circle"></i> Connected</span></td></tr>
+                                    <tr><td>Supabase</td><td>Database, logins and security rules</td><td><span class="ff-badge green"> Connected</span></td></tr>
                                     <tr><td>M-Pesa (Daraja)</td><td>STK Push fee payments (each school adds its own keys)</td><td id="intMpesa"></td></tr>
                                     <tr><td>Africa's Talking</td><td>SMS fee reminders and phone verification</td><td id="intSms"></td></tr>
                                 </tbody>
@@ -488,33 +310,33 @@
                         </div>
                     </div>
 
-                    <div class="card" id="smsCard">
-                        <div class="card-header"><div class="card-title">SMS provider (Africa's Talking)</div></div>
-                        <div class="card-body p">
-                            <div class="grid-2">
-                                <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="smsUsername" autocomplete="off" placeholder="sandbox for testing, or your app username"></div>
-                                <div class="form-group"><label class="form-label">API key</label><input type="password" class="form-input" id="smsApiKey" autocomplete="off"></div>
+                    <div class="ff-card" id="smsCard">
+                        <div class="ff-card-head"><div class="ff-card-title">SMS provider (Africa's Talking)</div></div>
+                        <div class="ff-card-body">
+                            <div class="ff-grid ff-grid-2">
+                                <div class="ff-field"><label class="ff-label">Username</label><input type="text" class="ff-input" id="smsUsername" autocomplete="off" placeholder="sandbox for testing, or your app username"></div>
+                                <div class="ff-field"><label class="ff-label">API key</label><input type="password" class="ff-input" id="smsApiKey" autocomplete="off"></div>
                             </div>
                             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                <button class="btn btn-primary" id="smsSaveBtn" onclick="saveSms()"><i class="fas fa-plug"></i> Verify &amp; save</button>
-                                <button class="btn btn-outline" id="smsRemoveBtn" style="display:none;" onclick="removeSms()"><i class="fas fa-unlink"></i> Switch SMS off</button>
+                                <button class="ff-btn ff-btn-primary" id="smsSaveBtn" onclick="saveSms()"><i data-ico="link"></i> Verify &amp; save</button>
+                                <button class="ff-btn ff-btn-outline" id="smsRemoveBtn" style="display:none;" onclick="removeSms()"><i data-ico="times"></i> Switch SMS off</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Notifications -->
-                <div class="section" id="sec-notifications">
-                    <div class="page-header">
+                <div class="ff-view" id="sec-notifications">
+                    <div class="ff-page-head">
                         <div>
-                            <div class="page-title">Notifications</div>
-                            <div class="page-desc">Platform-wide activity alerts</div>
+                            <div class="ff-page-title">Notifications</div>
+                            <div class="ff-page-desc">Platform-wide activity alerts</div>
                         </div>
-                        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all read</button>
+                        <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="markAllRead()">Mark all read</button>
                     </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="notif-list" id="notifList"></div>
+                    <div class="ff-card">
+                        <div class="ff-card-body flush">
+                            <div class="" id="notifList"></div>
                         </div>
                     </div>
                 </div>
@@ -525,71 +347,76 @@
 </div><!-- end auth check -->
 
 <!-- Add School Modal -->
-<div class="modal-overlay" id="modal-addSchool">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-school" style="margin-right:8px;color:var(--primary);"></i> <span id="modalSchoolTitleText">Add New School</span></div>
-            <button class="modal-close" onclick="closeModal('addSchool')"><i class="fas fa-times"></i></button>
+<div class="ff-modal" id="modal-addSchool">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="school"></i> <span id="modalSchoolTitleText">Add New School</span></div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('addSchool')"><i data-ico="times"></i></button>
         </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">School Name <span style="color:var(--danger);">*</span></label>
-                <input type="text" class="form-input" id="newSchoolName" placeholder="Enter school name">
+        <div class="ff-modal-body">
+            <div class="ff-alert info" style="margin-bottom:16px"><i data-ico="info"></i>
+                <div>Schools normally register themselves from the sign-in page (the <strong>School</strong> tab) and choose their own password. Use this form only when you are setting a school up on its behalf.</div>
             </div>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label class="form-label">Paybill Number</label>
-                    <input type="text" class="form-input" id="newSchoolPaybill" placeholder="e.g. 247247">
+            <div class="ff-field">
+                <label class="ff-label" for="newSchoolName">School name <span class="req">*</span></label>
+                <input type="text" class="ff-input" id="newSchoolName" placeholder="Enter school name">
+            </div>
+            <div class="ff-grid ff-grid-2">
+                <div class="ff-field">
+                    <label class="ff-label" for="newSchoolPaybill">M-Pesa paybill</label>
+                    <input type="text" class="ff-input" id="newSchoolPaybill" placeholder="e.g. 247247">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Location</label>
-                    <input type="text" class="form-input" id="newSchoolLocation" placeholder="e.g. Kisumu">
+                <div class="ff-field">
+                    <label class="ff-label" for="newSchoolLocation">Location</label>
+                    <input type="text" class="ff-input" id="newSchoolLocation" placeholder="e.g. Kisumu">
                 </div>
             </div>
-            <div class="grid-2" id="adminCredsRow">
-                <div class="form-group"><label class="form-label">Admin Email <span style="color:var(--danger);">*</span></label><input type="email" class="form-input" id="newSchoolAdminEmail" placeholder="admin@school.ac.ke" autocomplete="off"></div>
-                <div class="form-group"><label class="form-label">Temporary Password <span style="color:var(--danger);">*</span></label><input type="password" class="form-input" id="newSchoolAdminPassword" placeholder="At least 10 characters" autocomplete="new-password"></div>
+            <div class="ff-grid ff-grid-2" id="adminCredsRow">
+                <div class="ff-field"><label class="ff-label" for="newSchoolAdminEmail">Administrator email <span class="req">*</span></label><input type="email" class="ff-input" id="newSchoolAdminEmail" placeholder="admin@school.ac.ke" autocomplete="off"></div>
+                <div class="ff-field"><label class="ff-label" for="newSchoolAdminPassword">Temporary password <span class="req">*</span></label><input type="password" class="ff-input" id="newSchoolAdminPassword" placeholder="At least 10 characters" autocomplete="new-password"></div>
             </div>
-            <div class="form-group">
-                <label class="form-label">School Level</label>
-                <select class="form-input" id="newSchoolLevel">
+            <div class="ff-field">
+                <label class="ff-label" for="newSchoolLevel">School type</label>
+                <select class="ff-select" id="newSchoolLevel">
                     <option>Primary Only</option><option>Secondary Only</option><option selected>Primary & Secondary</option>
                 </select>
+                <p class="ff-hint"><i data-ico="info"></i> This decides which classes the school sees in its Fee Structure Manager.</p>
             </div>
-            <div class="form-group">
-                <label class="form-label">Subscription Plan</label>
-                <select class="form-input" id="newSchoolPlan">
+            <div class="ff-field">
+                <label class="ff-label" for="newSchoolPlan">Subscription plan</label>
+                <select class="ff-select" id="newSchoolPlan">
                     <option>Premium (KES 12,000/mo)</option><option selected>Standard (KES 6,000/mo)</option><option>Trial (14 days)</option>
                 </select>
             </div>
             <div id="editOnlyBlock" style="display:none;">
-                <div class="form-group">
-                    <label class="form-label">Account Status</label>
-                    <select class="form-input" id="editSchoolStatus"><option value="active">Active</option><option value="suspended">Suspended</option><option value="pending">Awaiting approval</option><option value="rejected">Rejected</option></select>
+                <div class="ff-field">
+                    <label class="ff-label">Account Status</label>
+                    <select class="ff-select" id="editSchoolStatus"><option value="active">Active</option><option value="suspended">Suspended</option></select>
                 </div>
-                <div class="form-group" style="border-top:1px solid var(--border);padding-top:14px;margin-top:6px;">
-                    <label class="form-label">Reset the school administrator's password</label>
+                <div class="ff-field" style="border-top:1px solid var(--ff-border);padding-top:14px;margin-top:6px;">
+                    <label class="ff-label">Reset the school administrator's password</label>
                     <div style="display:flex;gap:8px;">
-                        <input type="password" class="form-input" id="resetAdminPassword" placeholder="New password (min. 10 characters)" autocomplete="new-password">
-                        <button class="btn btn-outline" onclick="resetAdminPassword()" id="resetAdminBtn" style="white-space:nowrap;">Reset</button>
+                        <input type="password" class="ff-input" id="resetAdminPassword" placeholder="New password (min. 10 characters)" autocomplete="new-password">
+                        <button class="ff-btn ff-btn-outline" onclick="resetAdminPassword()" id="resetAdminBtn" style="white-space:nowrap;">Reset</button>
                     </div>
-                    <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Share the new password with the administrator securely. They can change it after signing in.</div>
+                    <div style="font-size:11px;color:var(--ff-muted);margin-top:6px;">Share the new password with the administrator securely. They can change it after signing in.</div>
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('addSchool')">Cancel</button>
-            <button class="btn btn-primary" onclick="addSchool()" id="saveSchoolBtn"><i class="fas fa-plus"></i> Add School</button>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('addSchool')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="addSchool()" id="saveSchoolBtn"><i data-ico="plus"></i> Add School</button>
         </div>
     </div>
 </div>
 
 <!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
+<div class="ff-toasts" id="toastContainer" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <script src="js/vendor/supabase-2.117.2.js"></script>
 <script src="js/config.js"></script>
 <script src="js/ff-client.js"></script>
+<script src="js/ff-ui.js"></script>
 <script>
 'use strict';
 // ============================================================
@@ -603,6 +430,9 @@ if (!window.FF) {
 }
 const sb = FF.sb;
 const esc = FF.escapeHtml;
+const ico = FFUI.ico;
+const money = FFUI.money;
+const fmtDate = FFUI.fmtDate;
 const PLAN_PRICE = { Premium: 12000, Standard: 6000, Trial: 0 };
 
 let me = null;
@@ -612,25 +442,50 @@ let editingSchoolId = null;
 // ---------- helpers ----------
 const val = (id) => (document.getElementById(id).value || '').trim();
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
-const statusLabel = (s) => ({ active: 'Active', suspended: 'Suspended', pending: 'Awaiting approval', rejected: 'Rejected' }[s] || 'Active');
-const statusClass = (s) => ({ pending: 'trial', suspended: 'inactive', rejected: 'inactive' }[s] || 'active');
-function timeAgo(iso) {
-    if (!iso) return 'Recently';
-    const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-    if (sec < 60) return 'Just now';
-    if (sec < 3600) return Math.floor(sec / 60) + ' min ago';
-    if (sec < 86400) return Math.floor(sec / 3600) + ' hr ago';
-    if (sec < 172800) return 'Yesterday';
-    return new Date(iso).toLocaleDateString();
-}
-async function fnErrorMessage(error) {           // Edge Function errors carry our readable message in the response body
-    try { const body = await error.context.json(); if (body && body.error) return body.error; } catch (e) { /* fall through */ }
+const statusLabel = (s) => ({ active: 'Active', suspended: 'Suspended' }[s] || 'Active');
+const statusClass = (s) => (s === 'suspended' ? 'red' : 'green');
+const timeAgo = FFUI.timeAgo;
+/* Edge Function failures need three pieces of information to be actionable: the HTTP status,
+   the message the function put in its body, and whether our own login is still valid.
+   401 is almost always "the request went out with no user token" (an expired or missing session),
+   never a broken deployment - so we say so instead of showing "non-2xx status code". */
+async function fnErrorMessage(error, what = 'That action') {
+    const res = error && error.context;
+    const status = res && res.status;
+    let body = null;
+    try { body = res ? await res.json() : null; } catch (e) { /* not JSON (e.g. the gateway's own 401) */ }
+    const msg = body && body.error ? String(body.error) : '';
+    // 401 is an AUTH problem, not a broken deployment: the request went out without a usable
+    // user token, so the gateway (or the function) refused it before any work happened.
+    if (status === 401 || /missing authorization|invalid jwt|no auth|not signed in|jwt expired|invalid token/i.test(msg)) {
+        return 'Your session has expired, so ' + what.toLowerCase() + ' was refused before it ran. Sign out and sign in again, then retry.';
+    }
+    if (msg) return msg;
+    if (status === 403) {
+        return 'Only the platform Super Admin can do that. Your account is signed in but is not a Super Admin.';
+    }
+    if (status === 429) return 'Too many attempts. Wait a minute and try again.';
     return FF.friendlyError(error);
+}
+
+/* Edge Functions are called with the signed-in user's token. If that token is missing the
+   gateway answers 401 before the function even starts, so we check first and explain. */
+async function ensureSession(what) {
+    try {
+        const { data } = await sb.auth.getSession();
+        const session = data && data.session;
+        if (session && (session.access_token || session.user)) return session;
+        FFUI.toast('Your session has expired. Please sign in again, then retry.', 'error');
+        throw Object.assign(new Error('Your session has expired. Please sign in again, then retry.'), { handled: true });
+    } catch (e) {
+        if (e.handled) throw e;
+        throw Object.assign(new Error(FF.friendlyError(e)), { handled: true });
+    }
 }
 function setBusy(btnId, busy, label) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
-    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + esc(label); }
+    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="ff-spinner"></span> ' + esc(label); }
     else { btn.disabled = false; if (btn.dataset.html) btn.innerHTML = btn.dataset.html; }
 }
 
@@ -704,7 +559,7 @@ function updateStats() {
     active.forEach(s => { groups[s.plan] = (groups[s.plan] || 0) + 1; });
     document.getElementById('plansBody').innerHTML = Object.keys(groups).length
         ? Object.entries(groups).map(([plan, count]) => `<tr><td>${esc(plan)}</td><td>${count}</td><td>KES ${(PLAN_PRICE[plan] || 0).toLocaleString()}/mo</td><td>KES ${((PLAN_PRICE[plan] || 0) * count).toLocaleString()}/mo</td></tr>`).join('')
-        : '<tr><td colspan="4" style="text-align:center;color:var(--text-light)">No subscription data available.</td></tr>';
+        : '<tr><td colspan="4" style="text-align:center;color:var(--ff-muted)">No subscription data available.</td></tr>';
 }
 
 // ============================================================
@@ -716,31 +571,31 @@ function renderSchoolsOverview() {
     document.getElementById('schoolsOverview').innerHTML = schools.length ? schools.map((s, i) => `
         <div class="school-card" onclick="showSection('schools')">
             <div class="school-card-header">
-                <div class="school-icon" style="background:${colors[i % colors.length]};"><i class="fas fa-school"></i></div>
+                <div class="school-icon" style="background:${colors[i % colors.length]};"><i data-ico="school"></i></div>
                 <div>
-                    <div class="school-name">${esc(s.name)}</div>
+                    <div class="ff-school-name">${esc(s.name)}</div>
                     <div class="school-meta">${esc(s.location || 'Location not set')} • ${esc(s.level || 'School')}</div>
                 </div>
-                <span class="badge ${statusClass(s.status)}" style="margin-left:auto;"><i class="fas fa-circle"></i> ${statusLabel(s.status)}</span>
+                <span class="ff-badge ${statusClass(s.status)}" style="margin-left:auto">${statusLabel(s.status)}</span>
             </div>
             <div class="school-stats">
                 <div class="school-stat"><div class="school-stat-label">Students</div><div class="school-stat-value">${s.students.toLocaleString()}</div></div>
-                <div class="school-stat"><div class="school-stat-label">Collection</div><div class="school-stat-value" style="color:var(--emerald);">${s.collectionRate}%</div></div>
+                <div class="school-stat"><div class="school-stat-label">Collection</div><div class="school-stat-value" style="color:var(--ff-green);">${s.collectionRate}%</div></div>
                 <div class="school-stat"><div class="school-stat-label">Plan</div><div class="school-stat-value">${esc(s.plan)}</div></div>
                 <div class="school-stat"><div class="school-stat-label">Paybill</div><div class="school-stat-value">${esc(s.paybill || '—')}</div></div>
             </div>
         </div>`).join('')
-        : '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No schools yet. Click "Add School" to onboard the first one.</p>';
+        : '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No schools yet. Click "Add School" to onboard the first one.</p>';
 }
 
 function renderRecentActivity() {
     const { notifs } = platformData;
     document.getElementById('recentActivity').innerHTML = notifs.slice(0, 6).map(n => `
-        <div class="notif-item ${n.unread ? 'unread' : ''}" style="border-bottom:1px solid var(--border);padding:12px 16px;">
-            <div class="notif-title">${esc(n.title)}</div>
-            <div class="notif-body">${esc(n.body)}</div>
-            <div class="notif-time">${esc(timeAgo(n.created_at))}</div>
-        </div>`).join('') || '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No recent activity</p>';
+        <div class="notif-item ${n.unread ? 'unread' : ''}" style="border-bottom:1px solid var(--ff-border);padding:12px 16px;">
+            <div class="ff-notif-title">${esc(n.title)}</div>
+            <div class="ff-notif-body">${esc(n.body)}</div>
+            <div class="ff-notif-time">${esc(timeAgo(n.created_at))}</div>
+        </div>`).join('') || '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No recent activity</p>';
 }
 
 function renderCollectionProgress() {
@@ -748,11 +603,11 @@ function renderCollectionProgress() {
     const colors = ['linear-gradient(90deg,#059669,#10b981)', 'linear-gradient(90deg,#3b82f6,#60a5fa)', 'linear-gradient(90deg,#f59e0b,#fbbf24)'];
     document.getElementById('collectionProgress').innerHTML = schools.map((s, i) => `
         <div>
-            <div class="progress-item-header">
-                <span class="progress-name">${esc(s.name)}</span>
-                <span class="progress-pct" style="color:${s.collectionRate >= 80 ? 'var(--emerald)' : s.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'}">${s.collectionRate}%</span>
+            <div class="ff-progress-row">
+                <span class="ff-progress-name">${esc(s.name)}</span>
+                <span class="ff-progress-pct" style="color:${s.collectionRate >= 80 ? 'var(--ff-green)' : s.collectionRate >= 60 ? 'var(--ff-amber)' : 'var(--ff-red)'}">${s.collectionRate}%</span>
             </div>
-            <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, s.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
+            <div class="ff-progress"><div class="ff-progress-fill" style="width:${Math.min(100, s.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
         </div>`).join('');
 }
 
@@ -769,23 +624,21 @@ function renderSchoolsTable(filter = '') {
                 <tr>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;color:white;font-size:14px;"><i class="fas fa-school"></i></div>
-                            <div><div style="font-weight:600;">${esc(s.name)}</div><div style="font-size:11px;color:var(--text-light);">Paybill: ${esc(s.paybill || '—')}</div></div>
+                            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--ff-navy),var(--ff-blue));display:flex;align-items:center;justify-content:center;color:white;font-size:14px;"><i data-ico="school"></i></div>
+                            <div><div style="font-weight:600;">${esc(s.name)}</div><div style="font-size:11px;color:var(--ff-muted);">Paybill: ${esc(s.paybill || '—')}</div></div>
                         </div>
                     </td>
                     <td>${esc(s.location || '—')}</td>
-                    <td>${esc(s.level || '—')}</td>
+                    <td>${esc(FFUI.levelLabel(s.level))}</td>
                     <td>${s.students.toLocaleString()}</td>
-                    <td><span style="font-weight:600;color:${s.collectionRate >= 80 ? 'var(--emerald)' : 'var(--warning)'};">${s.collectionRate}%</span></td>
+                    <td><span style="font-weight:600;color:${s.collectionRate >= 80 ? 'var(--ff-green)' : 'var(--ff-amber)'};">${s.collectionRate}%</span></td>
                     <td>${esc(s.plan)}</td>
-                    <td><span class="badge ${statusClass(s.status)}"><i class="fas fa-circle"></i> ${statusLabel(s.status)}</span></td>
+                    <td><span class="ff-badge ${statusClass(s.status)}">${statusLabel(s.status)}</span></td>
                     <td>
-                        ${s.status === 'pending' ? `<button class="btn btn-primary btn-sm" onclick="setSchoolStatus('${esc(s.id)}','active')" aria-label="Approve ${esc(s.name)}"><i class="fas fa-check"></i> Approve</button>
-                        <button class="btn btn-outline btn-sm" onclick="setSchoolStatus('${esc(s.id)}','rejected')" aria-label="Reject ${esc(s.name)}"><i class="fas fa-xmark"></i></button>` : ''}
-                        <button class="btn btn-outline btn-sm" onclick="viewSchool('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-outline btn-sm" onclick="editSchool('${esc(s.id)}')" aria-label="Edit ${esc(s.name)}"><i class="fas fa-edit"></i></button>
+                        <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="viewSchool('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i data-ico="eye"></i></button>
+                        <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="editSchool('${esc(s.id)}')" aria-label="Edit ${esc(s.name)}"><i data-ico="edit"></i></button>
                     </td>
-                </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-light);">No schools match.</td></tr>'}
+                </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--ff-muted);">No schools match.</td></tr>'}
         </tbody>`;
 }
 
@@ -799,14 +652,14 @@ function renderParents() {
     const filter = document.getElementById('parentSchoolFilter').value;
     const rows = platformData.parents.filter(p => !filter || p.school_id === filter);
     document.getElementById('parentsBody').innerHTML = rows.length === 0
-        ? '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">No parent accounts registered yet.</td></tr>'
+        ? '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ff-muted);">No parent accounts registered yet.</td></tr>'
         : rows.map(p => `
             <tr>
                 <td style="font-weight:600;">${esc(p.full_name)}</td>
                 <td>+${esc(p.phone)}</td>
                 <td>${esc(p.school_name || '—')}</td>
                 <td>${Number(p.children || 0)}</td>
-                <td style="color:var(--text-light);font-size:12px;">${p.created_at ? esc(new Date(p.created_at).toLocaleDateString()) : '—'}</td>
+                <td style="color:var(--ff-muted);font-size:12px;">${p.created_at ? esc(new Date(p.created_at).toLocaleDateString()) : '—'}</td>
             </tr>`).join('');
 }
 function filterParents() { renderParents(); }
@@ -815,12 +668,12 @@ function renderNotifications() {
     const { notifs } = platformData;
     document.getElementById('notifDot').style.display = notifs.some(n => n.unread) ? 'block' : 'none';
     document.getElementById('notifList').innerHTML = notifs.length === 0
-        ? '<p style="padding:30px;text-align:center;color:var(--text-light);font-size:13px;">No notifications</p>'
+        ? '<p style="padding:30px;text-align:center;color:var(--ff-muted);font-size:13px;">No notifications</p>'
         : notifs.map(n => `
             <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markRead(${Number(n.id)})">
-                <div class="notif-title">${esc(n.title)}</div>
-                <div class="notif-body">${esc(n.body)}</div>
-                <div class="notif-time">${esc(timeAgo(n.created_at))}</div>
+                <div class="ff-notif-title">${esc(n.title)}</div>
+                <div class="ff-notif-body">${esc(n.body)}</div>
+                <div class="ff-notif-time">${esc(timeAgo(n.created_at))}</div>
             </div>`).join('');
 }
 async function markRead(id) {
@@ -843,8 +696,8 @@ async function markAllRead() {
 // NAVIGATION
 // ============================================================
 function navigate(section, el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.ff-nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
     document.getElementById('sec-' + section).classList.add('active');
     document.getElementById('pageTitle').textContent = section.charAt(0).toUpperCase() + section.slice(1);
@@ -863,7 +716,7 @@ function setModalMode(editing) {
     document.getElementById('adminCredsRow').style.display = editing ? 'none' : '';
     document.getElementById('editOnlyBlock').style.display = editing ? 'block' : 'none';
     document.getElementById('modalSchoolTitleText').textContent = editing ? 'Edit School' : 'Add New School';
-    document.getElementById('saveSchoolBtn').innerHTML = editing ? '<i class="fas fa-save"></i> Save Changes' : '<i class="fas fa-plus"></i> Add School';
+    document.getElementById('saveSchoolBtn').innerHTML = editing ? '<i data-ico="check"></i> Save Changes' : '<i data-ico="plus"></i> Add School';
 }
 function openAddSchool() {
     editingSchoolId = null;
@@ -891,8 +744,9 @@ async function addSchool() {
 
     setBusy('saveSchoolBtn', true, 'Creating…');
     try {
+        await ensureSession('creating the school');
         const { error } = await sb.functions.invoke('admin-create-school', { body: { ...fields, admin_email: email, admin_password: password } });
-        if (error) throw Object.assign(new Error(await fnErrorMessage(error)), { handled: true });
+        if (error) throw Object.assign(new Error(await fnErrorMessage(error, 'Creating the school')), { handled: true });
         document.getElementById('newSchoolAdminPassword').value = '';          // don't leave the temporary password in the form
         closeModal('addSchool');
         showToast(`${name} created. The administrator can sign in with ${email}.`, 'success');
@@ -902,16 +756,6 @@ async function addSchool() {
     } finally {
         setBusy('saveSchoolBtn', false);
     }
-}
-
-async function setSchoolStatus(id, status) {
-    const s = platformData.schools.find(x => x.id === id);
-    if (!s) return;
-    if (status === 'rejected' && !confirm(`Reject ${s.name}? They will not be able to use FeeFlow.`)) return;
-    const { error } = await sb.from('schools').update({ status }).eq('id', id);
-    if (error) return showToast(FF.friendlyError(error), 'error');
-    showToast(status === 'active' ? `${s.name} approved. They can now sign in and set up.` : `${s.name} rejected`, 'success');
-    await loadData();
 }
 
 async function saveSchoolEdit(fields) {
@@ -927,7 +771,7 @@ async function saveSchoolEdit(fields) {
         editingSchoolId = null;
         await loadData();
     } catch (e) {
-        showToast(FF.friendlyError(e), 'error');
+        showToast(e.handled ? e.message : FF.friendlyError(e), 'error');
     } finally {
         setBusy('saveSchoolBtn', false);
     }
@@ -956,8 +800,9 @@ async function resetAdminPassword() {
     if (password.length < 10) return showToast('The new password must be at least 10 characters', 'warning');
     setBusy('resetAdminBtn', true, 'Resetting…');
     try {
+        await ensureSession('resetting the password');
         const { error } = await sb.functions.invoke('admin-reset-password', { body: { school_id: editingSchoolId, new_password: password } });
-        if (error) throw Object.assign(new Error(await fnErrorMessage(error)), { handled: true });
+        if (error) throw Object.assign(new Error(await fnErrorMessage(error, 'Resetting the password')), { handled: true });
         document.getElementById('resetAdminPassword').value = '';
         showToast("The administrator's password was reset. Share it with them securely.", 'success');
     } catch (e) {
@@ -970,7 +815,7 @@ async function resetAdminPassword() {
 function viewSchool(id) {
     const s = platformData.schools.find(x => x.id === id);
     if (!s) return;
-    alert(`${s.name}\nLocation: ${s.location || 'Not set'}\nStudents: ${s.students}\nParent accounts: ${s.parentCount}\nFee collection: ${s.collectionRate}%\nHosting plan: ${s.plan}\nMonthly hosting fee: KES ${(PLAN_PRICE[s.plan] || 0).toLocaleString()}\nStatus: ${statusLabel(s.status)}`);
+    alert(`${s.name}\nSchool type: ${FFUI.levelLabel(s.level)}\nLocation: ${s.location || 'Not set'}\nRegistered: ${FFUI.fmtDate(s.created_at)}\nStudents: ${s.students}\nParent accounts: ${s.parentCount}\nFee collection: ${s.collectionRate}%\nHosting plan: ${s.plan}\nMonthly hosting fee: KES ${(PLAN_PRICE[s.plan] || 0).toLocaleString()}\nStatus: ${statusLabel(s.status)}`);
 }
 
 // ============================================================
@@ -984,14 +829,14 @@ function applySettings() {
     renderIntegrations();
 }
 function renderIntegrations() {
-    const badge = (cls, text) => `<span class="badge ${cls}"><i class="fas fa-circle"></i> ${text}</span>`;
+    const badge = (cls, text) => `<span class="ff-badge ${cls}">${text}</span>`;
     const schools = platformData.schools || [];
     const live = schools.filter(s => s.mpesa_mode && s.mpesa_mode !== 'off').length;
     document.getElementById('intMpesa').innerHTML = live
-        ? badge('active', `${live} of ${schools.length} school${schools.length === 1 ? '' : 's'} connected`)
-        : badge('trial', 'No school connected yet');
+        ? badge('green', `${live} of ${schools.length} school${schools.length === 1 ? '' : 's'} connected`)
+        : badge('amber', 'No school connected yet');
     const smsOn = platformData.settings.sms_enabled === true;
-    document.getElementById('intSms').innerHTML = smsOn ? badge('active', 'Connected') : badge('trial', 'Not connected yet');
+    document.getElementById('intSms').innerHTML = smsOn ? badge('green', 'Connected') : badge('amber', 'Not connected yet');
     document.getElementById('smsRemoveBtn').style.display = smsOn ? '' : 'none';
 }
 async function feeApi(body) {
@@ -1041,28 +886,27 @@ async function saveSettings() {
 // ============================================================
 // TOAST (text is never interpreted as HTML)
 // ============================================================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
-    const colors = { info: 'var(--info)', success: 'var(--emerald)', error: 'var(--danger)', warning: 'var(--warning)' };
-    const icon = document.createElement('i');
-    icon.className = 'fas ' + (icons[type] || icons.info);
-    icon.style.cssText = 'color:' + (colors[type] || colors.info) + ';font-size:16px;';
-    toast.appendChild(icon);
-    toast.appendChild(document.createTextNode(' ' + message));
-    container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, type === 'error' ? 6000 : 3500);
-}
+function showToast(message, type) { FFUI.toast(message, type || 'info'); }
 
 // ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', checkAuth);
-document.querySelectorAll('.modal-overlay').forEach(m => {
-    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
 </script>
+  <script>
+    // Register the service worker so the app opens offline and can be installed on a phone.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          // a waiting worker means a new version is ready: swap it in on the next navigation
+          if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage('skip-waiting');
+        }).catch(function () { /* offline-first is a bonus, not a requirement */ });
+      });
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (refreshing) return; refreshing = true;
+      });
+    }
+  </script>
 </body>
 </html>

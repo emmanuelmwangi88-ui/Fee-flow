@@ -106,7 +106,7 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
 
   // ---------- registration validation ----------
   p = await open();
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register');
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register');
   ok(p.shown('stepRegister') && !p.shown('stepLogin'), 'Register tab opens the registration form');
   const fillReg = (o = {}) => { const v = { regName: 'Jane Wanjiku', regPhone: '712 345 678', regEmail: 'Jane@Example.com', regPassword: 'longenough1', regPassword2: 'longenough1', regSchool: 's-1', ...o }; for (const k in v) p.set(k, v[k]); };
   const tryReg = async (o, re, label) => { fillReg(o); await p.w.registerParent(); await tick(); ok(re.test(p.err('registerError')), label, p.err('registerError')); };
@@ -121,7 +121,7 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
 
   // ---------- registration success (email confirmation OFF) ----------
   p = await open({ signUpSession: true, rpc: { register_parent: () => ({ data: 'parent-uuid-1', error: null }) } });
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register');
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register');
   fillReg(); await p.w.registerParent(); await tick();
   const su = p.mock.calls.find(c => c[0] === 'signUp')[1];
   ok(su.email === 'jane@example.com' && su.password === 'longenough1', 'signUp gets lower-cased email + password');
@@ -153,16 +153,16 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
 
   // ---------- registration: email confirmation ON / duplicates / errors ----------
   p = await open({ signUpSession: false });
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); fillReg(); await p.w.registerParent(); await tick();
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register'); fillReg(); await p.w.registerParent(); await tick();
   ok(p.shown('stepVerifyReg') && p.d.getElementById('confirmEmailAddress').textContent === 'jane@example.com', 'confirmation-required flow shows "Check your email"');
   ok(!p.mock.calls.some(c => c[0] === 'rpc'), 'no parent row requested until the email is confirmed');
 
   p = await open({ signUpUser: { id: 'x', email: 'jane@example.com', identities: [] } });
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); fillReg(); await p.w.registerParent(); await tick();
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register'); fillReg(); await p.w.registerParent(); await tick();
   ok(/already exists/i.test(p.err('registerError')), 'already-registered email detected');
 
   p = await open({ signUpSession: true, rpc: { register_parent: () => ({ data: null, error: { code: '23505', message: 'A parent account with this phone number or login already exists at this school' } }) } });
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); fillReg(); await p.w.registerParent(); await tick();
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register'); fillReg(); await p.w.registerParent(); await tick();
   ok(/already exists at this school/.test(p.err('registerError')) && !p.shown('stepAddChildren'), 'duplicate phone at a school is reported, flow stops');
 
   // ---------- deferred registration (confirmed email, first login) ----------
@@ -174,7 +174,7 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
 
   // ---------- schools list & XSS ----------
   p = await open();
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); p.w.searchSchools('');
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register'); p.w.searchSchools('');
   const res = p.d.getElementById('schoolSearchResults');
   ok(res.querySelectorAll('.school-result').length === 2, 'both schools listed');
   ok(!res.querySelector('img'), 'school names are HTML-escaped (no injected <img>)');
@@ -184,7 +184,7 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
   p = await open({ schools: [] }); p.w.searchSchools(''); ok(/No schools have been registered/.test(p.d.getElementById('schoolSearchResults').textContent), 'empty platform shows a helpful message');
   p = await open({ schoolsError: { message: 'Failed to fetch' } }); p.w.searchSchools(''); ok(/No internet/.test(p.d.getElementById('schoolSearchResults').textContent), 'network failure shown while loading schools');
 
-  p = await open({ schoolsDelay: 400 }); p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); p.w.searchSchools('');
+  p = await open({ schoolsDelay: 400 }); p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register'); p.w.searchSchools('');
   ok(/Loading schools/.test(p.d.getElementById('schoolSearchResults').textContent), 'shows "Loading schools" while the list is still loading');
   await tick(500);
   ok(p.d.getElementById('schoolSearchResults').querySelectorAll('.school-result').length === 2, 'open list refreshes itself when schools arrive');
@@ -205,39 +205,6 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
   p.set('newPassword', 'brandnewpass1'); p.set('newPassword2', 'different1234'); await p.w.updatePassword(); ok(/do not match/.test(p.err('newPasswordError')), 'new password: confirmation enforced');
   p.set('newPassword2', 'brandnewpass1'); await p.w.updatePassword(); await tick();
   ok(p.mock.calls.some(c => c[0] === 'updateUser' && c[1].password === 'brandnewpass1') && p.nav().includes('parent.html'), 'password updated, then routed to the dashboard');
-
-  // ---------- a school registers itself ----------
-  p = await open();
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register');
-  p.d.getElementById('goSchoolReg').click();
-  ok(p.shown('stepSchoolRegister') && !p.shown('stepRegister'), '"Register your school" opens the school form');
-  const fillSch = (o = {}) => { const v = { srName: 'Green Hills Academy', srLevel: 'Primary Only', srLocation: 'Thika', srPhone: '0712 345 678', srAdmin: 'Mary Wanjiru', srEmail: 'Mary@GreenHills.ac.ke', srPassword: 'longenough12', srPassword2: 'longenough12', ...o }; for (const k in v) p.set(k, v[k]); };
-  const trySch = async (o, re, label) => { fillSch(o); await p.w.registerSchool(); await tick(); ok(re.test(p.err('schoolRegError')), label, p.err('schoolRegError')); };
-  await trySch({ srName: 'GH' }, /school name/i, 'school: short name rejected');
-  await trySch({ srAdmin: '' }, /your name/i, 'school: admin name required');
-  await trySch({ srPhone: '123' }, /phone/i, 'school: bad phone rejected');
-  await trySch({ srEmail: 'nope' }, /email/i, 'school: bad email rejected');
-  await trySch({ srPassword: 'short', srPassword2: 'short' }, /10 characters/i, 'school: password needs 10 characters');
-  await trySch({ srPassword2: 'different1234' }, /do not match/i, 'school: password mismatch rejected');
-  ok(!p.mock.calls.some(c => c[0] === 'signUp'), 'school: nothing sent while the form is invalid');
-  p = await open({ signUpSession: true, rpc: { register_school: () => ({ data: 'school-uuid', error: null }) } });
-  p.w.switchTab(p.d.querySelector('.role-tab[data-tab="register"]'), 'register'); p.w.showStep('stepSchoolRegister');
-  fillSch(); await p.w.registerSchool(); await tick();
-  const ss = p.mock.calls.find(c => c[0] === 'signUp')[1];
-  ok(ss.email === 'mary@greenhills.ac.ke' && ss.options.data.school_reg.name === 'Green Hills Academy' && ss.options.data.school_reg.level === 'Primary Only', 'school sign-up keeps the details in case email confirmation is needed');
-  const rs = p.mock.calls.find(c => c[0] === 'rpc' && c[1] === 'register_school');
-  ok(rs && rs[2].p_name === 'Green Hills Academy' && rs[2].p_level === 'Primary Only' && rs[2].p_admin_name === 'Mary Wanjiru' && rs[2].p_location === 'Thika', 'register_school RPC called with the school details');
-  ok(p.nav().includes('schooladmin.html'), 'after registering the admin lands on the school dashboard (which shows "waiting for approval")');
-  p = await open({ signUpSession: false });
-  p.w.showStep('stepSchoolRegister'); fillSch(); await p.w.registerSchool(); await tick();
-  ok(p.shown('stepVerifyReg') && !p.mock.calls.some(c => c[0] === 'rpc' && c[1] === 'register_school'), 'with email confirmation on, the school is created after the first sign-in instead');
-  const SU = { id: 'u-5', email: 'mary@greenhills.ac.ke', user_metadata: { school_reg: { name: 'Green Hills Academy', level: 'Primary Only', location: 'Thika', phone: '0712345678', admin_name: 'Mary Wanjiru' } } };
-  p = await open({ user: SU, profile: null, rpc: { register_school: () => ({ data: 'school-uuid', error: null }) } });
-  p.set('loginEmail', 'mary@greenhills.ac.ke'); p.set('loginPassword', 'longenough12'); await p.w.signIn(); await tick();
-  ok(p.mock.calls.some(c => c[0] === 'rpc' && c[1] === 'register_school') && p.nav().includes('schooladmin.html'), 'first sign-in after confirming email finishes the school registration');
-  p = await open({ signUpError: { message: 'User already registered' } });
-  p.w.showStep('stepSchoolRegister'); fillSch(); await p.w.registerSchool(); await tick();
-  ok(/already/i.test(p.err('schoolRegError')), 'an existing email is reported');
 
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) { console.log('FAILURES:\n - ' + failures.join('\n - ')); process.exit(1); }

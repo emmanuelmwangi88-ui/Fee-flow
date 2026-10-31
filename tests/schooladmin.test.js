@@ -81,7 +81,7 @@ const q = (p, f) => p.mock.calls.filter(c => c.kind === 'query' && f(c));
   p.set('outstandingClassFilter', ''); p.set('outstandingDaysFilter', ''); p.w.renderOutstanding();
   ok(p.text('reconDone') === '1' && p.text('reconPending') === '1' && p.text('reconFailed') === '1', 'M-Pesa tab: reconciled today / pending / failed counts');
   ok(/Manual Match/.test(p.text('unmatchedList')), 'unmatched list explains how matching works');
-  ok(p.d.querySelectorAll('#receiptsGrid .receipt-card').length === 2 && /Don Bosco Ituru/.test(p.text('receiptsGrid')) && /P\.O\. Box 5/.test(p.text('receiptsGrid')), 'receipts use the school profile');
+  ok(p.d.querySelectorAll('#receiptsGrid .ff-receipt').length === 2 && /Don Bosco Ituru/.test(p.text('receiptsGrid')) && /P\.O\. Box 5/.test(p.text('receiptsGrid')), 'receipts use the school profile');
   p.w.printReceipt('p-1'); ok(/Payment Receipt/.test(p.w.__printed) && /FF-2610-000001/.test(p.w.__printed) && !/undefined/.test(p.w.__printed) && p.w.__printCalls === 1, 'printReceipt writes a clean receipt and prints');
 
   // ---------- parents + approvals ----------
@@ -282,16 +282,6 @@ const q = (p, f) => p.mock.calls.filter(c => c.kind === 'query' && f(c));
   ok(/No internet/.test(p.toasts().join(' ')), 'load failure shows a friendly message');
   p = await openPage('schooladmin.html', base()); p.w.logout(); await tick(); ok(p.mock.calls.some(c => c.kind === 'signOut'), 'logout signs out');
   ok(!p.mock.calls.some(c => c.kind === 'query' && c.table === 'schools' && !c.filters.some(f => f[0] === 'id' && f[1] === 'sc-1') && c.op === 'select'), 'only ever asks for its own school row');
-
-  // ---------- schools that are not active yet ----------
-  for (const [status, re] of [['pending', /waiting for approval/i], ['rejected', /not approved/i], ['suspended', /suspended/i]]) {
-    const b = base(); b.tables.schools[0].status = status;
-    p = await openPage('schooladmin.html', b);
-    const gate = p.d.getElementById('statusGate');
-    ok(gate && gate.style.display === 'flex' && re.test(gate.textContent), `a ${status} school only sees a status screen`);
-  }
-  const act = base(); act.tables.schools[0].status = 'active';
-  p = await openPage('schooladmin.html', act); ok(p.d.getElementById('statusGate').style.display === 'none', 'an active school sees the normal dashboard');
 
   summary();
 })().catch(e => { console.error('HARNESS ERROR', e); process.exit(2); });

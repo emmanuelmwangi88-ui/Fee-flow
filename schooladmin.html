@@ -2,452 +2,179 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>FeeFlow — School Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="css/ff.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #0c2d57; --primary-light: #1a6dcc; --emerald: #059669; --emerald-light: #10b981;
-            --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --text: #1e293b; --text-light: #64748b;
-            --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6; --violet: #7c3aed;
-            --sidebar: 260px; --topbar: 64px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-        h1,h2,h3,h4,h5 { font-family: 'Space Grotesk', sans-serif; }
-
-        .layout { display: flex; min-height: 100vh; }
-        
-        .sidebar {
-            width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border);
-            position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 100;
-        }
-        .brand { padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
-        .brand-icon { width: 38px; height: 38px; background: linear-gradient(135deg,var(--primary),var(--emerald)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
-        .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; }
-        .brand-tag { font-size: 9px; font-weight: 700; color: var(--emerald); background: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
-        .school-name { padding: 8px 20px; font-size: 12px; color: var(--text-light); font-weight: 600; background: var(--bg); margin: 0 10px; border-radius: 8px; }
-        
-        .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
-        .nav-section { padding: 6px 0; }
-        .nav-label { padding: 4px 20px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; margin: 1px 10px; border-radius: 10px; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 500; color: var(--text-light); position: relative; }
-        .nav-item i { width: 20px; text-align: center; font-size: 15px; }
-        .nav-item:hover { background: var(--bg); color: var(--text); }
-        .nav-item.active { background: #eff6ff; color: var(--primary); font-weight: 600; }
-        .nav-item.active::before { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--primary); border-radius: 0 3px 3px 0; }
-        .nav-badge { margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--danger); color: white; }
-        .nav-badge.green { background: var(--emerald); }
-        
-        .sidebar-footer { padding: 14px; border-top: 1px solid var(--border); }
-        .user-info { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border-radius: 10px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--primary-light),var(--emerald)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px; }
-        .user-name { font-weight: 600; font-size: 13px; }
-        .user-role { font-size: 11px; color: var(--text-light); }
-        
-        .main { flex: 1; margin-left: var(--sidebar); }
-        .topbar { height: var(--topbar); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
-        .breadcrumb { font-size: 13px; color: var(--text-light); }
-        .breadcrumb span { color: var(--text); font-weight: 600; }
-        .topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-        .icon-btn { width: 38px; height: 38px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-size: 16px; color: var(--text-light); display: flex; align-items: center; justify-content: center; position: relative; transition: all 0.2s; }
-        .icon-btn:hover { background: var(--bg); color: var(--text); }
-        .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
-        
-        .content { padding: 24px; }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        .page-title { font-size: 26px; font-weight: 700; }
-        .page-desc { font-size: 14px; color: var(--text-light); margin-top: 2px; }
-        .page-header-left { flex: 1; }
-
-        /* Stats */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: var(--surface); border-radius: 14px; padding: 20px; border: 1px solid var(--border); position: relative; overflow: hidden; transition: all 0.2s; }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-        .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 14px 14px 0 0; }
-        .stat-card.blue::after { background: linear-gradient(90deg, var(--primary-light), #60a5fa); }
-        .stat-card.green::after { background: linear-gradient(90deg, var(--emerald), var(--emerald-light)); }
-        .stat-card.amber::after { background: linear-gradient(90deg, var(--warning), #fbbf24); }
-        .stat-card.red::after { background: linear-gradient(90deg, var(--danger), #f87171); }
-        .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
-        .stat-icon.blue { background: #eff6ff; color: var(--primary-light); }
-        .stat-icon.green { background: #ecfdf5; color: var(--emerald); }
-        .stat-icon.amber { background: #fffbeb; color: var(--warning); }
-        .stat-icon.red { background: #fef2f2; color: var(--danger); }
-        .stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; margin-bottom: 2px; }
-        .stat-label { font-size: 13px; color: var(--text-light); }
-        .stat-trend { position: absolute; top: 16px; right: 16px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
-        .stat-trend.up { background: #ecfdf5; color: var(--emerald); }
-        .stat-trend.down { background: #fef2f2; color: var(--danger); }
-
-        /* Cards */
-        .card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
-        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .card-title { font-size: 15px; font-weight: 700; }
-        .card-body { padding: 0; }
-        .card-body.p { padding: 20px; }
-
-        /* Table */
-        .table { width: 100%; border-collapse: collapse; }
-        .table th { padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
-        .table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .table tr:last-child td { border-bottom: none; }
-        .table tr:hover td { background: #f8fafc; }
-        .table tr.selected td { background: #eff6ff; }
-
-        /* Student cell */
-        .student-cell { display: flex; align-items: center; gap: 10px; }
-        .student-avatar { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-        .student-name { font-weight: 600; color: var(--text); }
-        .student-adm { font-size: 11px; color: var(--text-light); }
-
-        /* Badges */
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-        .badge.paid { background: #ecfdf5; color: var(--emerald); }
-        .badge.partial { background: #fffbeb; color: #b45309; }
-        .badge.unpaid { background: #fef2f2; color: var(--danger); }
-        .badge.pending { background: #eff6ff; color: var(--info); }
-        .badge.reconciled { background: #ecfdf5; color: var(--emerald); }
-        .badge.failed { background: #fef2f2; color: var(--danger); }
-        .badge.overdue { background: #fef2f2; color: var(--danger); }
-        .badge.active { background: #ecfdf5; color: var(--emerald); }
-        .badge i { font-size: 6px; }
-        .amount { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
-
-        /* Buttons */
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-family: 'DM Sans', sans-serif; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
-        .btn-primary:hover { box-shadow: 0 4px 12px rgba(26,109,204,0.3); }
-        .btn-green { background: linear-gradient(135deg, var(--emerald), var(--emerald-light)); color: white; }
-        .btn-green:hover { box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
-        .btn-orange { background: linear-gradient(135deg, #ea580c, var(--warning)); color: white; }
-        .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
-        .btn-outline:hover { border-color: var(--text-light); background: var(--bg); }
-        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-        /* Grid */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-
-        /* Alerts */
-        .alert { padding: 14px 16px; border-radius: 10px; display: flex; gap: 10px; margin-bottom: 16px; font-size: 13px; }
-        .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--info); }
-        .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
-        .alert-warning { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
-        .alert-danger { background: #fef2f2; border: 1px solid #fca5a5; color: var(--danger); }
-        .alert i { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
-        .alert-title { font-weight: 700; margin-bottom: 2px; }
-
-        /* Progress */
-        .progress-list { display: flex; flex-direction: column; gap: 14px; }
-        .progress-item-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
-        .progress-name { font-weight: 600; }
-        .progress-pct { font-weight: 700; }
-        .progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 4px; }
-
-        /* Circular Progress */
-        .circular-progress { position: relative; width: 140px; height: 140px; margin: 0 auto; }
-        .circular-progress svg { transform: rotate(-90deg); }
-        .circular-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-        .circular-pct { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; }
-        .circular-label { font-size: 12px; color: var(--text-light); }
-
-        /* Form */
-        .form-group { margin-bottom: 14px; }
-        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
-        .form-label span { color: var(--danger); }
-        .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
-        .form-input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(26,109,204,0.1); }
-        textarea.form-input { resize: vertical; min-height: 80px; }
-        .form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        /* Filter */
-        .filter-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .filter-select { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; outline: none; }
-        .search-wrap { position: relative; }
-        .search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 13px; }
-        .search-wrap input { padding-left: 32px; }
-
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; padding: 20px; }
-        .modal-overlay.open { opacity: 1; visibility: visible; }
-        .modal-box { background: white; border-radius: 16px; width: 100%; max-width: 520px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; overflow-y: auto; }
-        .modal-overlay.open .modal-box { transform: translateY(0); }
-        .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .modal-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-        .modal-close { width: 30px; height: 30px; border: none; background: var(--bg); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .modal-body { padding: 20px; }
-        .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
-
-        /* Toast */
-        .toast-container { position: fixed; top: 76px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-        .toast { background: white; border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; border-left: 4px solid var(--emerald); animation: slideIn 0.3s; max-width: 360px; }
-        .toast.error { border-left-color: var(--danger); }
-        .toast.info { border-left-color: var(--info); }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* Notifications */
-        .notif-list { max-height: 400px; overflow-y: auto; }
-        .notif-item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
-        .notif-item:hover { background: var(--bg); }
-        .notif-item.unread { background: #f0f9ff; }
-        .notif-item:last-child { border-bottom: none; }
-        .notif-title { font-weight: 600; font-size: 13px; }
-        .notif-body { font-size: 12px; color: var(--text-light); margin-top: 3px; }
-        .notif-time { font-size: 11px; color: var(--text-light); margin-top: 4px; }
-
-        /* Sections */
-        .section { display: none; }
-        .section.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Ledger */
-        .ledger { display: grid; grid-template-columns: 130px 1fr 110px 110px 110px 100px; gap: 12px; padding: 12px 20px; align-items: center; font-size: 13px; border-bottom: 1px solid var(--border); }
-        .ledger:last-child { border-bottom: none; }
-        .ledger:hover { background: var(--bg); }
-        .ledger.header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg); }
-        .ledger-date { color: var(--text-light); }
-        .ledger-desc { font-weight: 500; }
-        .ledger-debit { color: var(--danger); font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
-        .ledger-credit { color: var(--emerald); font-weight: 600; font-family: 'Space Grotesk', sans-serif; }
-        .ledger-balance { font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
-        .ledger.credit-row { background: #ecfdf5; }
-
-        /* SMS Preview */
-        .sms-preview { background: #1a1a2e; border-radius: 10px; padding: 16px; margin-top: 14px; }
-        .sms-phone { color: #9ca3af; font-size: 12px; margin-bottom: 6px; }
-        .sms-body { color: #00ff88; font-size: 13px; line-height: 1.5; font-family: 'Courier New', monospace; }
-
-        /* Settings Tabs */
-        .settings-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-        .settings-tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; font-family: 'DM Sans', sans-serif; }
-        .settings-tab:hover { color: var(--text); }
-        .settings-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .settings-section { display: none; }
-        .settings-section.active { display: block; }
-
-        /* Info Row */
-        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { color: var(--text-light); }
-        .info-value { font-weight: 600; }
-
-        /* Checkbox */
-        .checkbox-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; cursor: pointer; }
-        .checkbox-row:last-child { border-bottom: none; }
-        .checkbox-row input { width: 18px; height: 18px; accent-color: var(--primary); }
-
-        /* Live dot */
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .live-dot { width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-
-        /* Receipt */
-        .receipt-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
-        .receipt-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg); }
-        .receipt-body { padding: 18px; }
-        .receipt-logo { text-align: center; padding-bottom: 12px; border-bottom: 1px dashed var(--border); margin-bottom: 12px; }
-        .receipt-logo-name { font-weight: 700; font-size: 15px; color: var(--primary); }
-        .receipt-logo-addr { font-size: 11px; color: var(--text-light); }
-        .receipt-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
-        .receipt-row.total { border-top: 2px solid var(--border); margin-top: 8px; padding-top: 10px; font-weight: 700; font-size: 15px; }
-        .receipt-label { color: var(--text-light); }
-        .receipt-value { font-weight: 600; }
-
-        /* Unauthorized */
-        .unauthorized { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px; }
-        .unauthorized i { font-size: 64px; color: var(--danger); margin-bottom: 20px; }
-        .unauthorized h2 { font-size: 24px; margin-bottom: 10px; }
-        .unauthorized p { color: var(--text-light); margin-bottom: 20px; }
-
-        /* Overdue badge */
-        .overdue-badge { font-size: 11px; padding: 2px 7px; border-radius: 5px; font-weight: 600; }
-        .overdue-badge.d7 { background: #fffbeb; color: var(--warning); }
-        .overdue-badge.d14 { background: #fed7aa; color: #c2410c; }
-        .overdue-badge.d30 { background: #fef2f2; color: var(--danger); }
-        .overdue-badge.d60 { background: #fecaca; color: #b91c1c; }
-
-        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .grid-2 { grid-template-columns: 1fr; } }
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main { margin-left: 0; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .ledger { grid-template-columns: 1fr; gap: 4px; }
-            .ledger.header { display: none; }
-        }
-    
-body.dark{--bg:#0f172a;--surface:#111827;--border:#334155;--text:#f1f5f9;--text-light:#94a3b8;background:var(--bg);color:var(--text)}
-body.dark .topbar,body.dark .sidebar,body.dark .card,body.dark .stat-card,body.dark .form-input,body.dark .filter-select,body.dark .modal-box,body.dark .btn-outline{background:var(--surface);color:var(--text)}
-body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background:#1e293b}body.dark .nav-item.active{background:#1e3a5f;color:#93c5fd}
-.clickable-row{cursor:pointer}.clickable-row:hover td{background:#eff6ff!important}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-box{padding:12px;background:var(--bg);border-radius:9px}.detail-label{font-size:11px;color:var(--text-light);text-transform:uppercase}.detail-value{font-weight:700;margin-top:3px}
-</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0c2d57">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FeeFlow">
+  <meta name="application-name" content="FeeFlow">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="FeeFlow — Kenyan school fees: fee structure, M-Pesa collection, balances and printable receipts.">
+<link rel="stylesheet" href="css/ff.css">
 </head>
 <body>
-<div id="statusGate" role="alertdialog" aria-labelledby="statusGateTitle" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg,#f8fafc);align-items:center;justify-content:center;padding:24px;">
-  <div style="max-width:480px;text-align:center;background:#fff;border:1px solid var(--border,#e2e8f0);border-radius:16px;padding:36px 28px;box-shadow:0 10px 30px rgba(15,23,42,.08);">
-    <div style="font-size:42px;color:var(--warning,#f59e0b);margin-bottom:12px;"><i id="statusGateIcon" class="fas fa-hourglass-half" aria-hidden="true"></i></div>
-    <div id="statusGateSchool" style="font-size:13px;color:var(--text-light,#64748b);margin-bottom:6px;"></div>
-    <h2 id="statusGateTitle" style="margin:0 0 10px;font-size:22px;"></h2>
-    <p id="statusGateText" style="color:var(--text-light,#64748b);line-height:1.6;margin:0 0 22px;"></p>
-    <button class="btn btn-primary" onclick="location.reload()" style="margin-right:8px;">Check again</button>
-    <button class="btn btn-outline" onclick="FF.signOut()">Sign out</button>
-  </div>
-</div>
-
 
 <div id="app">
     <!-- Unauthorized -->
     <div id="unauthorizedPage" style="display:none;">
-        <div class="unauthorized">
-            <i class="fas fa-lock"></i>
+        <div class="ff-empty">
+            <i data-ico="lock"></i>
             <h2>Access Denied</h2>
             <p>You need to be logged in as School Admin to access this page.</p>
-            <a href="portal.html" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Go to Login</a>
+            <a href="portal.html" class="ff-btn ff-btn-primary"><i data-ico="key"></i> Go to Login</a>
         </div>
     </div>
 
     <!-- Main App -->
-    <div class="layout" id="mainApp" style="display:none;">
+    <div class="ff-app" id="mainApp" style="display:none;">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+        <aside class="ff-sidebar">
+            <div class="ff-brand">
+                <div class="ff-brand-mark"><i data-ico="student"></i></div>
                 <div>
-                    <div class="brand-text">FeeFlow</div>
-                    <span class="brand-tag">SCHOOL ADMIN</span>
+                    <div class="ff-brand-name">FeeFlow</div>
+                    <span class="ff-brand-tag">SCHOOL ADMIN</span>
                 </div>
             </div>
-            <div class="school-name" id="schoolNameDisplay"><i class="fas fa-school" style="margin-right:6px;"></i> School</div>
+            <div class="ff-school-name" id="schoolNameDisplay"><i data-ico="school"></i> <span>School</span></div>
+            <div class="ff-school-name" id="schoolLevelChip" style="display:none"><i data-ico="student"></i> <span id="schoolLevelText"></span></div>
             
-            <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <div class="nav-label">Main</div>
-                    <div class="nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
-                    <div class="nav-item" data-section="students" onclick="navigate('students',this)"><i class="fas fa-user-graduate"></i> Students <span class="nav-badge green" id="navStudentCount">0</span></div>
-                    <div class="nav-item" data-section="fees" onclick="window.location.href='fee-structure-manager.html'"><i class="fas fa-file-invoice-dollar"></i> Fee Structure</div>
-                    <div class="nav-item" data-section="payments" onclick="navigate('payments',this)"><i class="fas fa-money-bill-wave"></i> Payments</div>
+            <nav class="ff-nav">
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Main</div>
+                    <div class="ff-nav-item active" data-section="dashboard" onclick="navigate('dashboard',this)"><i data-ico="dashboard"></i> Dashboard</div>
+                    <div class="ff-nav-item" data-section="students" onclick="navigate('students',this)"><i data-ico="student"></i> Students <span class="ff-nav-badge" id="navStudentCount">0</span></div>
+                    <div class="ff-nav-item" data-section="fees" onclick="window.location.href='fee-structure-manager.html'"><i data-ico="receipt"></i> Fee Structure</div>
+                    <div class="ff-nav-item" data-section="payments" onclick="navigate('payments',this)"><i data-ico="money"></i> Payments</div>
                 </div>
-                <div class="nav-section">
-                    <div class="nav-label">Finance</div>
-                    <div class="nav-item" data-section="ledger" onclick="navigate('ledger',this)"><i class="fas fa-book"></i> Fee Ledger</div>
-                    <div class="nav-item" data-section="outstanding" onclick="navigate('outstanding',this)"><i class="fas fa-exclamation-circle"></i> Outstanding <span class="nav-badge" id="navOverdueCount">0</span></div>
-                    <div class="nav-item" data-section="mpesa" onclick="navigate('mpesa',this)"><i class="fas fa-mobile-alt"></i> M-Pesa Reconcile</div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Finance</div>
+                    <div class="ff-nav-item" data-section="ledger" onclick="navigate('ledger',this)"><i data-ico="book"></i> Fee Ledger</div>
+                    <div class="ff-nav-item" data-section="outstanding" onclick="navigate('outstanding',this)"><i data-ico="alert"></i> Outstanding <span class="ff-nav-badge" id="navOverdueCount">0</span></div>
+                    <div class="ff-nav-item" data-section="mpesa" onclick="navigate('mpesa',this)"><i data-ico="mobile"></i> M-Pesa Reconcile</div>
+                    <div class="ff-nav-item" data-section="adjustments" onclick="window.location.href='fee-adjustments.html'"><i data-ico="receipt"></i> Bursaries &amp; Discounts</div>
                 </div>
-                <div class="nav-section">
-                    <div class="nav-label">Tools</div>
-                    <div class="nav-item" data-section="reminders" onclick="navigate('reminders',this)"><i class="fas fa-bullhorn"></i> Bulk Reminders</div>
-                    <div class="nav-item" data-section="receipts" onclick="navigate('receipts',this)"><i class="fas fa-receipt"></i> Receipts</div>
-                    <div class="nav-item" data-section="reports" onclick="navigate('reports',this)"><i class="fas fa-chart-bar"></i> Reports</div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Tools</div>
+                    <div class="ff-nav-item" data-section="reminders" onclick="navigate('reminders',this)"><i data-ico="send"></i> Bulk Reminders</div>
+                    <div class="ff-nav-item" data-section="receipts" onclick="navigate('receipts',this)"><i data-ico="receipt"></i> Receipts</div>
+                    <div class="ff-nav-item" data-section="reports" onclick="navigate('reports',this)"><i data-ico="chart"></i> Reports</div>
                 </div>
-                <div class="nav-section">
-                    <div class="nav-label">Management</div>
-<div class="nav-item" data-section="parents" onclick="navigate('parents',this)"><i class="fas fa-users"></i> Parent Directory <span class="nav-badge green" id="navParentCount">0</span></div>
-                    <div class="nav-item" data-section="classes" onclick="navigate('classes',this)"><i class="fas fa-chalkboard"></i> Classes</div>
-                    <div class="nav-item" data-section="settings" onclick="navigate('settings',this)"><i class="fas fa-cog"></i> Settings</div>
+                <div class="ff-nav-group">
+                    <div class="ff-nav-label">Management</div>
+<div class="ff-nav-item" data-section="parents" onclick="navigate('parents',this)"><i data-ico="users"></i> Parent Directory <span class="ff-nav-badge" id="navParentCount">0</span></div>
+                    <div class="ff-nav-item" data-section="classes" onclick="navigate('classes',this)"><i data-ico="dashboard"></i> Classes</div>
+                    <div class="ff-nav-item" data-section="settings" onclick="navigate('settings',this)"><i data-ico="settings"></i> Settings</div>
                 </div>
             </nav>
 
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="user-avatar" id="userAvatar">SA</div>
+            <div class="ff-sidebar-foot">
+                <div class="ff-user">
+                    <div class="ff-avatar" id="userAvatar">SA</div>
                     <div>
-                        <div class="user-name" id="userName">School Admin</div>
-                        <div class="user-role" id="userSchool">School</div>
+                        <div class="ff-user-name" id="userName">School Admin</div>
+                        <div class="ff-user-role" id="userSchool">School</div>
                     </div>
                 </div>
-                <button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                <button class="ff-btn ff-btn-outline ff-btn-sm" style="width:100%;margin-top:10px;" onclick="logout()">
+                    <i data-ico="logout"></i> Logout
                 </button>
             </div>
         </aside>
 
         <!-- Main -->
-        <div class="main">
-            <header class="topbar">
-                <div class="breadcrumb">FeeFlow / <span id="breadcrumb">Dashboard</span></div>
-                <div class="topbar-right">
-                    <button class="icon-btn" onclick="showSection('notifications')">
-                        <i class="fas fa-bell"></i>
-                        <span class="dot" id="notifDot"></span>
+        <div class="ff-main">
+            <header class="ff-topbar">
+                <button class="ff-btn ff-btn-icon ff-btn-ghost ff-only-mobile" data-ff-nav-toggle aria-label="Open menu"><i data-ico="menu"></i></button>
+                <div class="ff-crumb">FeeFlow / <span id="breadcrumb">Dashboard</span></div>
+                <div class="ff-topbar-right">
+                    <span class="ff-badge navy" id="topLevelBadge" style="display:none"></span>
+                    <button class="ff-btn ff-btn-icon ff-btn-ghost" onclick="showSection('notifications')" aria-label="Notifications">
+                        <i data-ico="bell"></i>
+                        <span class="ff-dot" id="notifDot" style="display:none"></span>
                     </button>
                 </div>
             </header>
 
-            <div class="content">
+            <div class="ff-content">
 
                 <!-- DASHBOARD -->
-                <div class="section active" id="sec-dashboard">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Dashboard</div>
-                            <div class="page-desc" id="termInfo">Current Term</div>
+                <div class="ff-view active" id="sec-dashboard">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Dashboard</div>
+                            <div class="ff-page-desc" id="termInfo">Current Term</div>
                         </div>
                         <div style="display:flex;gap:8px;">
-                            <button class="btn btn-outline" onclick="exportDashboard()"><i class="fas fa-download"></i> Export</button>
-                            <button class="btn btn-primary" onclick="openModal('recordPayment')"><i class="fas fa-plus"></i> Record Payment</button>
+                            <button class="ff-btn ff-btn-outline" onclick="exportDashboard()"><i data-ico="download"></i> Export</button>
+                            <button class="ff-btn ff-btn-primary" onclick="openModal('recordPayment')"><i data-ico="plus"></i> Record Payment</button>
                         </div>
                     </div>
 
-                    <div class="alert alert-warning" id="deadlineAlert">
-                        <i class="fas fa-clock"></i>
+                    <div class="ff-alert warning" id="deadlineAlert">
+                        <i data-ico="clock"></i>
                         <div>
-                            <div class="alert-title">Fee Deadline: Not configured</div>
+                            <div class="ff-alert-title">Fee Deadline: Not configured</div>
                             <div><span id="overdueCountAlert">0</span> students have overdue balances. <a href="#" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))" style="font-weight:600;">Send bulk reminders →</a></div>
                         </div>
                     </div>
 
-                    <div class="alert alert-info" id="pendingAlert" style="display:none;">
-                        <i class="fas fa-user-clock"></i>
-                        <div><div class="alert-title">Parent link requests waiting</div>
+                    <div class="ff-alert info" id="pendingAlert" style="display:none;">
+                        <i data-ico="clock"></i>
+                        <div><div class="ff-alert-title">Parent link requests waiting</div>
                         <div><span id="pendingAlertCount">0</span> parent(s) asked to link a child. <a href="#" onclick="showSection('parents');return false;" style="font-weight:600;">Review requests →</a></div></div>
                     </div>
 
-                    <div class="stats-grid">
-                        <div class="stat-card blue">
-                            <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
-                            <div class="stat-icon blue"><i class="fas fa-users"></i></div>
-                            <div class="stat-value" id="statStudents">0</div>
-                            <div class="stat-label">Total Students</div>
+                    <div class="ff-stats">
+                        <div class="ff-stat">
+                            <div class="ff-stat-trend up"><i data-ico="upload"></i> 12%</div>
+                            <div class="ff-stat-ico"><i data-ico="users"></i></div>
+                            <div class="ff-stat-value" id="statStudents">0</div>
+                            <div class="ff-stat-label">Total Students</div>
                         </div>
-                        <div class="stat-card green">
-                            <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 8%</div>
-                            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                            <div class="stat-value" id="statCollected">KES 0</div>
-                            <div class="stat-label">Fees Collected</div>
+                        <div class="ff-stat green">
+                            <div class="ff-stat-trend up"><i data-ico="upload"></i> 8%</div>
+                            <div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div>
+                            <div class="ff-stat-value" id="statCollected">KES 0</div>
+                            <div class="ff-stat-label">Fees Collected</div>
                         </div>
-                        <div class="stat-card amber">
-                            <div class="stat-trend down"><i class="fas fa-arrow-down"></i> 3%</div>
-                            <div class="stat-icon amber"><i class="fas fa-clock"></i></div>
-                            <div class="stat-value" id="statOutstanding">KES 0</div>
-                            <div class="stat-label">Outstanding</div>
+                        <div class="ff-stat amber">
+                            <div class="ff-stat-trend down"><i data-ico="download"></i> 3%</div>
+                            <div class="ff-stat-ico amber"><i data-ico="clock"></i></div>
+                            <div class="ff-stat-value" id="statOutstanding">KES 0</div>
+                            <div class="ff-stat-label">Outstanding</div>
                         </div>
-                        <div class="stat-card red">
-                            <div class="stat-trend down"><i class="fas fa-arrow-up"></i> 5%</div>
-                            <div class="stat-icon red"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="stat-value" id="statOverdue">0</div>
-                            <div class="stat-label">Overdue Accounts</div>
+                        <div class="ff-stat red">
+                            <div class="ff-stat-trend down"><i data-ico="upload"></i> 5%</div>
+                            <div class="ff-stat-ico red"><i data-ico="alert"></i></div>
+                            <div class="ff-stat-value" id="statOverdue">0</div>
+                            <div class="ff-stat-label">Overdue Accounts</div>
                         </div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Recent Payments</div>
-                                <div class="filter-bar">
-                                    <select class="filter-select" id="recentClassFilter" onchange="renderRecentPayments()">
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head">
+                                <div class="ff-card-title">Recent Payments</div>
+                                <div class="ff-btn-group">
+                                    <select class="ff-select" id="recentClassFilter" onchange="renderRecentPayments()">
                                         <option value="">All Classes</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="card-body">
+                            <div class="ff-card-body flush">
                                 <div style="overflow-x:auto;">
-                                    <table class="table">
+                                    <table class="ff-table">
                                         <thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
                                         <tbody id="recentPaymentsBody"></tbody>
                                     </table>
@@ -456,31 +183,31 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                         </div>
 
                         <div>
-                            <div class="card">
-                                <div class="card-header"><div class="card-title">Collection Rate</div></div>
-                                <div class="card-body p">
-                                    <div class="circular-progress">
+                            <div class="ff-card">
+                                <div class="ff-card-head"><div class="ff-card-title">Collection Rate</div></div>
+                                <div class="ff-card-body">
+                                    <div class="ff-circular">
                                         <svg viewBox="0 0 140 140" width="140" height="140">
                                             <circle cx="70" cy="70" r="58" fill="none" stroke="#e2e8f0" stroke-width="12"/>
                                             <circle cx="70" cy="70" r="58" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="364.42" stroke-dashoffset="72.88" id="collectionCircle"/>
-                                            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:var(--primary)"/><stop offset="100%" style="stop-color:var(--emerald)"/></linearGradient></defs>
+                                            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%"><stop offset="0%" style="stop-color:var(--ff-navy)"/><stop offset="100%" style="stop-color:var(--ff-green)"/></linearGradient></defs>
                                         </svg>
-                                        <div class="circular-value">
-                                            <div class="circular-pct" id="collectionPct">80%</div>
-                                            <div class="circular-label">collected</div>
+                                        <div class="ff-circular-value">
+                                            <div class="ff-circular-pct" id="collectionPct">80%</div>
+                                            <div class="ff-circular-label">collected</div>
                                         </div>
                                     </div>
                                     <div style="display:flex;justify-content:center;gap:20px;font-size:12px;margin-top:12px;">
-                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--emerald);border-radius:2px;margin-right:4px;"></span>Collected</span>
-                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--border);border-radius:2px;margin-right:4px;"></span>Outstanding</span>
+                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--ff-green);border-radius:2px;margin-right:4px;"></span>Collected</span>
+                                        <span><span style="display:inline-block;width:8px;height:8px;background:var(--ff-border);border-radius:2px;margin-right:4px;"></span>Outstanding</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="card" style="margin-top:16px;">
-                                <div class="card-header"><div class="card-title">Class Performance</div></div>
-                                <div class="card-body p">
-                                    <div class="progress-list" id="classPerformance"></div>
+                            <div class="ff-card" style="margin-top:16px;">
+                                <div class="ff-card-head"><div class="ff-card-title">Class Performance</div></div>
+                                <div class="ff-card-body">
+                                    <div class="ff-grid" id="classPerformance"></div>
                                 </div>
                             </div>
                         </div>
@@ -488,27 +215,27 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
 
                 <!-- STUDENTS -->
-                <div class="section" id="sec-students">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Students</div>
-                            <div class="page-desc">Manage enrolled students</div>
+                <div class="ff-view" id="sec-students">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Students</div>
+                            <div class="ff-page-desc">Manage enrolled students</div>
                         </div>
-                        <button class="btn btn-primary" onclick="openModal('addStudent')"><i class="fas fa-plus"></i> Add Student</button>
+                        <button class="ff-btn ff-btn-primary" onclick="openModal('addStudent')"><i data-ico="plus"></i> Add Student</button>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">All Students <span id="studentTableCount" style="font-weight:400;color:var(--text-light);font-size:13px;"></span></div>
-                            <div class="filter-bar">
-                                <div class="search-wrap">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" class="filter-select" placeholder="Search name, ADM..." id="studentSearch" oninput="renderStudents()" style="width:200px;">
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">All Students <span id="studentTableCount" style="font-weight:400;color:var(--ff-muted);font-size:13px;"></span></div>
+                            <div class="ff-btn-group">
+                                <div class="ff-school-pick">
+                                    <i data-ico="search"></i>
+                                    <input type="text" class="ff-select" placeholder="Search name, ADM..." id="studentSearch" oninput="renderStudents()" style="width:200px;">
                                 </div>
-                                <select class="filter-select" id="studentClassFilter" onchange="renderStudents()">
+                                <select class="ff-select" id="studentClassFilter" onchange="renderStudents()">
                                     <option value="">All Classes</option>
                                 </select>
-                                <select class="filter-select" id="studentStatusFilter" onchange="renderStudents()">
+                                <select class="ff-select" id="studentStatusFilter" onchange="renderStudents()">
                                     <option value="">All Status</option>
                                     <option value="paid">Paid</option>
                                     <option value="partial">Partial</option>
@@ -517,9 +244,9 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                                 </select>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="ff-card-body flush">
                             <div style="overflow-x:auto;">
-                                <table class="table">
+                                <table class="ff-table">
                                     <thead><tr><th>Student</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
                                     <tbody id="studentsBody"></tbody>
                                 </table>
@@ -529,43 +256,43 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
 
                 <!-- FEE STRUCTURE -->
-                <div class="section" id="sec-fees">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Fee Structure</div>
-                            <div class="page-desc">Build and publish your fees in the Fee Structure Manager</div>
+                <div class="ff-view" id="sec-fees">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Fee Structure</div>
+                            <div class="ff-page-desc">Build and publish your fees in the Fee Structure Manager</div>
                         </div>
-                        <button class="btn btn-primary" onclick="location.href='fee-structure-manager.html'"><i class="fas fa-edit"></i> Open Fee Structure Manager</button>
+                        <button class="ff-btn ff-btn-primary" onclick="location.href='fee-structure-manager.html'"><i data-ico="edit"></i> Open Fee Structure Manager</button>
                     </div>
-                    <div class="card"><div class="card-body p" id="feeSummary"></div></div>
+                    <div class="ff-card"><div class="ff-card-body" id="feeSummary"></div></div>
                 </div>
 
-                <div class="section" id="sec-payments">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Payments</div>
-                            <div class="page-desc">All payment transactions</div>
+                <div class="ff-view" id="sec-payments">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Payments</div>
+                            <div class="ff-page-desc">All payment transactions</div>
                         </div>
                         <div style="display:flex;gap:8px;">
-                            <button class="btn btn-outline" onclick="exportPayments()"><i class="fas fa-download"></i> Export</button>
-                            <button class="btn btn-primary" onclick="openModal('recordPayment')"><i class="fas fa-plus"></i> Record Payment</button>
+                            <button class="ff-btn ff-btn-outline" onclick="exportPayments()"><i data-ico="download"></i> Export</button>
+                            <button class="ff-btn ff-btn-primary" onclick="openModal('recordPayment')"><i data-ico="plus"></i> Record Payment</button>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title" style="display:flex;align-items:center;gap:8px;">
-                                Transactions <span class="live-dot"></span> <span style="font-size:11px;color:var(--emerald);font-weight:500;">Live</span>
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title" style="display:flex;align-items:center;gap:8px;">
+                                Transactions <span class="ff-live-dot"></span> <span style="font-size:11px;color:var(--ff-green);font-weight:500;">Live</span>
                             </div>
-                            <div class="filter-bar">
-                                <select class="filter-select"><option>All Methods</option><option>M-Pesa</option><option>Bank</option><option>Cash</option></select>
-                                <select class="filter-select"><option>All Status</option><option>Reconciled</option><option>Pending</option><option>Failed</option></select>
-                                <input type="date" class="filter-select" style="width:150px;">
+                            <div class="ff-btn-group">
+                                <select class="ff-select"><option>All Methods</option><option>M-Pesa</option><option>Bank</option><option>Cash</option></select>
+                                <select class="ff-select"><option>All Status</option><option>Reconciled</option><option>Pending</option><option>Failed</option></select>
+                                <input type="date" class="ff-select" style="width:150px;">
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="ff-card-body flush">
                             <div style="overflow-x:auto;">
-                                <table class="table">
+                                <table class="ff-table">
                                     <thead><tr><th>Ref / Code</th><th>Student</th><th>Class</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
                                     <tbody id="paymentsBody"></tbody>
                                 </table>
@@ -575,33 +302,33 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
 
                 <!-- FEE LEDGER -->
-                <div class="section" id="sec-ledger">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Fee Ledger</div>
-                            <div class="page-desc">Student financial ledger — charges and payments</div>
+                <div class="ff-view" id="sec-ledger">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Fee Ledger</div>
+                            <div class="ff-page-desc">Student financial ledger — charges and payments</div>
                         </div>
-                        <div class="filter-bar">
-                            <select class="filter-select" id="ledgerStudentSelect" onchange="loadLedger()">
+                        <div class="ff-btn-group">
+                            <select class="ff-select" id="ledgerStudentSelect" onchange="loadLedger()">
                                 <option value="">Select Student...</option>
                             </select>
-                            <button class="btn btn-outline" onclick="printLedger()"><i class="fas fa-print"></i> Print</button>
+                            <button class="ff-btn ff-btn-outline" onclick="printLedger()"><i data-ico="print"></i> Print</button>
                         </div>
                     </div>
 
                     <div id="ledgerPlaceholder">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            <div><div class="alert-title">Select a Student</div>Choose a student from the dropdown above to view their complete fee ledger.</div>
+                        <div class="ff-alert info">
+                            <i data-ico="info"></i>
+                            <div><div class="ff-alert-title">Select a Student</div>Choose a student from the dropdown above to view their complete fee ledger.</div>
                         </div>
                     </div>
 
                     <div id="ledgerContent" style="display:none;">
-                        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;" id="ledgerStats"></div>
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Transaction History</div></div>
-                            <div class="card-body">
-                                <div class="ledger header"><div>Date</div><div>Description</div><div>Debit</div><div>Credit</div><div>Balance</div><div>Ref</div></div>
+                        <div class="ff-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;" id="ledgerStats"></div>
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Transaction History</div></div>
+                            <div class="ff-card-body flush">
+                                <div class="ff-ledger-row head"><div>Date</div><div>Description</div><div>Debit</div><div>Credit</div><div>Balance</div><div>Ref</div></div>
                                 <div id="ledgerRows"></div>
                             </div>
                         </div>
@@ -609,40 +336,40 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
 
                 <!-- OUTSTANDING -->
-                <div class="section" id="sec-outstanding">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Outstanding Balances</div>
-                            <div class="page-desc">Students with overdue or partial balances</div>
+                <div class="ff-view" id="sec-outstanding">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Outstanding Balances</div>
+                            <div class="ff-page-desc">Students with overdue or partial balances</div>
                         </div>
                         <div style="display:flex;gap:8px;">
-                            <button class="btn btn-outline" onclick="exportOutstanding()"><i class="fas fa-download"></i> Export</button>
-                            <button class="btn btn-orange" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))"><i class="fas fa-bullhorn"></i> Send Reminders</button>
+                            <button class="ff-btn ff-btn-outline" onclick="exportOutstanding()"><i data-ico="download"></i> Export</button>
+                            <button class="ff-btn ff-btn-orange" onclick="navigate('reminders', document.querySelector('[data-section=reminders]'))"><i data-ico="send"></i> Send Reminders</button>
                         </div>
                     </div>
 
-                    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
-                        <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-exclamation-circle"></i></div><div class="stat-value" id="outstandingTotal">0</div><div class="stat-label">Overdue Accounts</div></div>
-                        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-coins"></i></div><div class="stat-value" id="outstandingAmount">KES 0</div><div class="stat-label">Total Outstanding</div></div>
-                        <div class="stat-card" style="--after:bg:linear-gradient(90deg,#f97316,#f59e0b)"><div class="stat-icon" style="background:#fff7ed;color:#f97316"><i class="fas fa-clock"></i></div><div class="stat-value" id="outstanding30">0</div><div class="stat-label">30+ Days Overdue</div></div>
-                        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="outstandingPartial">0</div><div class="stat-label">Partial Payments</div></div>
+                    <div class="ff-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+                        <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="alert"></i></div><div class="ff-stat-value" id="outstandingTotal">0</div><div class="ff-stat-label">Overdue Accounts</div></div>
+                        <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="money"></i></div><div class="ff-stat-value" id="outstandingAmount">KES 0</div><div class="ff-stat-label">Total Outstanding</div></div>
+                        <div class="ff-stat" style="--after:bg:linear-gradient(90deg,#f97316,#f59e0b)"><div class="ff-stat-ico" style="background:#fff7ed;color:#f97316"><i data-ico="clock"></i></div><div class="ff-stat-value" id="outstanding30">0</div><div class="ff-stat-label">30+ Days Overdue</div></div>
+                        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div><div class="ff-stat-value" id="outstandingPartial">0</div><div class="ff-stat-label">Partial Payments</div></div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Overdue & Partial Report</div>
-                            <div class="filter-bar">
-                                <select class="filter-select" id="outstandingClassFilter" onchange="renderOutstanding()">
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">Overdue & Partial Report</div>
+                            <div class="ff-btn-group">
+                                <select class="ff-select" id="outstandingClassFilter" onchange="renderOutstanding()">
                                     <option value="">All Classes</option>
                                 </select>
-                                <select class="filter-select" id="outstandingDaysFilter" onchange="renderOutstanding()">
+                                <select class="ff-select" id="outstandingDaysFilter" onchange="renderOutstanding()">
                                     <option value="">All</option><option value="7">7+ Days</option><option value="14">14+ Days</option><option value="30">30+ Days</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="ff-card-body flush">
                             <div style="overflow-x:auto;">
-                                <table class="table">
+                                <table class="ff-table">
                                     <thead><tr><th>Student</th><th>Class</th><th>Balance</th><th>Last Payment</th><th>Days Overdue</th><th>Parent Phone</th><th>Actions</th></tr></thead>
                                     <tbody id="outstandingBody"></tbody>
                                 </table>
@@ -652,157 +379,157 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
 
                 <!-- M-PESA RECONCILE -->
-                <div class="section" id="sec-mpesa">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">M-Pesa Reconciliation</div>
-                            <div class="page-desc">Auto &amp; manual matching of M-Pesa payments</div>
+                <div class="ff-view" id="sec-mpesa">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">M-Pesa Reconciliation</div>
+                            <div class="ff-page-desc">Auto &amp; manual matching of M-Pesa payments</div>
                         </div>
                         <div style="display:flex;gap:8px;">
-                            <button class="btn btn-outline" onclick="autoReconcile()"><i class="fas fa-sync-alt"></i> Auto-Reconcile</button>
-                            <button class="btn btn-green" onclick="openModal('manualReconcile')"><i class="fas fa-link"></i> Manual Match</button>
+                            <button class="ff-btn ff-btn-outline" onclick="autoReconcile()"><i data-ico="refresh"></i> Auto-Reconcile</button>
+                            <button class="ff-btn ff-btn-green" onclick="openModal('manualReconcile')"><i data-ico="link"></i> Manual Match</button>
                         </div>
                     </div>
 
-                    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
-                        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-double"></i></div><div class="stat-value" id="reconDone">0</div><div class="stat-label">Reconciled Today</div></div>
-                        <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-hourglass-half"></i></div><div class="stat-value" id="reconPending">0</div><div class="stat-label">Unmatched</div></div>
-                        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div class="stat-value" id="reconFailed">0</div><div class="stat-label">Failed</div></div>
+                    <div class="ff-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+                        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="check"></i></div><div class="ff-stat-value" id="reconDone">0</div><div class="ff-stat-label">Reconciled Today</div></div>
+                        <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="clock"></i></div><div class="ff-stat-value" id="reconPending">0</div><div class="ff-stat-label">Unmatched</div></div>
+                        <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="timesCircle"></i></div><div class="ff-stat-value" id="reconFailed">0</div><div class="ff-stat-label">Failed</div></div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Unmatched Transactions</div></div>
-                            <div class="card-body" id="unmatchedList"></div>
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Unmatched Transactions</div></div>
+                            <div class="ff-card-body flush" id="unmatchedList"></div>
                         </div>
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Reconciliation Log</div></div>
-                            <div class="card-body" id="reconLog"></div>
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Reconciliation Log</div></div>
+                            <div class="ff-card-body flush" id="reconLog"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- BULK REMINDERS -->
-                <div class="section" id="sec-reminders">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Bulk Reminders</div>
-                            <div class="page-desc">Remind parents of fee balances in the app and by SMS</div>
+                <div class="ff-view" id="sec-reminders">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Bulk Reminders</div>
+                            <div class="ff-page-desc">Remind parents of fee balances in the app and by SMS</div>
                         </div>
-                        <button class="btn btn-outline" onclick="openModal('editTemplate')"><i class="fas fa-edit"></i> Edit Template</button>
+                        <button class="ff-btn ff-btn-outline" onclick="openModal('editTemplate')"><i data-ico="edit"></i> Edit Template</button>
                     </div>
 
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <div class="ff-alert warning">
+                        <i data-ico="alert"></i>
                         <div>
-                            <div class="alert-title"><span id="reminderCount">0</span> parents have overdue balances</div>
+                            <div class="ff-alert-title"><span id="reminderCount">0</span> parents have overdue balances</div>
                             <div>SMS reminders are charged by the SMS provider (about KES 0.40 each). In-app reminders are free.</div>
                         </div>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Select Recipients</div>
+                    <div class="ff-grid ff-grid-2">
+                        <div class="ff-card">
+                            <div class="ff-card-head">
+                                <div class="ff-card-title">Select Recipients</div>
                                 <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
                                     <input type="checkbox" id="selectAllReminders" onchange="toggleAllReminders()"> Select All
                                 </label>
                             </div>
-                            <div class="card-body p">
+                            <div class="ff-card-body">
                                 <div style="max-height:300px;overflow-y:auto;" id="reminderRecipients"></div>
-                                <div style="padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:13px;">
+                                <div style="padding-top:12px;border-top:1px solid var(--ff-border);display:flex;justify-content:space-between;font-size:13px;">
                                     <span>Selected: <strong id="selectedCount">0</strong></span>
-                                    <span style="color:var(--text-light);">Cost: <strong id="selectedCost">KES 0</strong></span>
+                                    <span style="color:var(--ff-muted);">Cost: <strong id="selectedCost">KES 0</strong></span>
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <div class="card">
-                                <div class="card-header"><div class="card-title">Message Preview</div></div>
-                                <div class="card-body p">
-                                    <div class="form-group">
-                                        <label class="form-label">Template</label>
-                                        <select class="form-input" id="smsTemplate" onchange="updateSmsPreview()">
+                            <div class="ff-card">
+                                <div class="ff-card-head"><div class="ff-card-title">Message Preview</div></div>
+                                <div class="ff-card-body">
+                                    <div class="ff-field">
+                                        <label class="ff-label">Template</label>
+                                        <select class="ff-input" id="smsTemplate" onchange="updateSmsPreview()">
                                             <option value="deadline">Fee Deadline Reminder</option>
                                             <option value="overdue">Overdue Balance Notice</option>
                                             <option value="welcome">Welcome / First Reminder</option>
                                             <option value="custom">Custom Message</option>
                                         </select>
                                     </div>
-                                    <div class="sms-preview">
-                                        <div class="sms-phone">To: +254 7XX XXX XXX (<span id="previewCount">0</span> recipients)</div>
-                                        <div class="sms-body" id="smsPreviewText"></div>
+                                    <div class="ff-alert info">
+                                        <div class="ff-notif-time">To: +254 7XX XXX XXX (<span id="previewCount">0</span> recipients)</div>
+                                        <div class="ff-sms-body" id="smsPreviewText"></div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Send via</label>
-                                        <div class="checkbox-row"><input type="checkbox" id="remindInapp" checked><label for="remindInapp">Parent's FeeFlow dashboard (free)</label></div>
-                                        <div class="checkbox-row"><input type="checkbox" id="remindSms"><label for="remindSms">SMS to the parent's phone (charged per message)</label></div>
+                                    <div class="ff-field">
+                                        <label class="ff-label">Send via</label>
+                                        <div class="ff-check"><input type="checkbox" id="remindInapp" checked><label for="remindInapp">Parent's FeeFlow dashboard (free)</label></div>
+                                        <div class="ff-check"><input type="checkbox" id="remindSms"><label for="remindSms">SMS to the parent's phone (charged per message)</label></div>
                                     </div>
-                                    <div class="form-hint" style="margin-bottom:8px;"><i class="fas fa-info-circle"></i> Each parent gets one personal message with the balance and how to pay. A number receives at most one reminder SMS a day.</div>
-                                    <button class="btn btn-orange" style="width:100%;justify-content:center;margin-top:16px;" onclick="sendBulkReminders()">
-                                        <i class="fas fa-paper-plane"></i> Send Reminders
+                                    <div class="ff-hint" style="margin-bottom:8px;"><i data-ico="info"></i> Each parent gets one personal message with the balance and how to pay. A number receives at most one reminder SMS a day.</div>
+                                    <button class="ff-btn ff-btn-orange" style="width:100%;justify-content:center;margin-top:16px;" onclick="sendBulkReminders()">
+                                        <i data-ico="send"></i> Send Reminders
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="card" style="margin-top:16px;">
-                                <div class="card-header"><div class="card-title">Reminder History</div></div>
-                                <div class="card-body" id="reminderHistory"></div>
+                            <div class="ff-card" style="margin-top:16px;">
+                                <div class="ff-card-head"><div class="ff-card-title">Reminder History</div></div>
+                                <div class="ff-card-body flush" id="reminderHistory"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- RECEIPTS -->
-                <div class="section" id="sec-receipts">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Receipts</div>
-                            <div class="page-desc">Payment receipts and confirmations</div>
+                <div class="ff-view" id="sec-receipts">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Receipts</div>
+                            <div class="ff-page-desc">Payment receipts and confirmations</div>
                         </div>
-                        <button class="btn btn-outline" onclick="exportReceipts()"><i class="fas fa-download"></i> Bulk Export</button>
+                        <button class="ff-btn ff-btn-outline" onclick="exportReceipts()"><i data-ico="download"></i> Bulk Export</button>
                     </div>
-                    <div class="grid-2" id="receiptsGrid"></div>
+                    <div class="ff-grid ff-grid-2" id="receiptsGrid"></div>
                 </div>
 
                 <!-- REPORTS -->
-                <div class="section" id="sec-reports">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Reports</div>
-                            <div class="page-desc">Termly and annual financial reports</div>
+                <div class="ff-view" id="sec-reports">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Reports</div>
+                            <div class="ff-page-desc">Termly and annual financial reports</div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Collection Report — Current Term</div>
-                            <select class="filter-select">
+                    <div class="ff-card">
+                        <div class="ff-card-head">
+                            <div class="ff-card-title">Collection Report — Current Term</div>
+                            <select class="ff-select">
                                 <option>Current Term</option>
                             </select>
                         </div>
-                        <div class="card-body p">
-                            <div class="grid-3" style="margin-bottom:20px;">
-                                <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="reportCollected">KES 0</div><div class="stat-label">Collected</div></div>
-                                <div class="stat-card amber"><div class="stat-icon amber"><i class="fas fa-clock"></i></div><div class="stat-value" id="reportPartial">KES 0</div><div class="stat-label">Partial</div></div>
-                                <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div class="stat-value" id="reportOutstanding">KES 0</div><div class="stat-label">Outstanding</div></div>
+                        <div class="ff-card-body">
+                            <div class="ff-grid ff-grid-3" style="margin-bottom:20px;">
+                                <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="checkCircle"></i></div><div class="ff-stat-value" id="reportCollected">KES 0</div><div class="ff-stat-label">Collected</div></div>
+                                <div class="ff-stat amber"><div class="ff-stat-ico amber"><i data-ico="clock"></i></div><div class="ff-stat-value" id="reportPartial">KES 0</div><div class="ff-stat-label">Partial</div></div>
+                                <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="timesCircle"></i></div><div class="ff-stat-value" id="reportOutstanding">KES 0</div><div class="ff-stat-label">Outstanding</div></div>
                             </div>
-                            <div class="progress-list" style="margin-bottom:20px;">
+                            <div class="ff-grid" style="margin-bottom:20px;">
                                 <div>
-                                    <div class="progress-item-header"><span class="progress-name">M-Pesa</span><span class="progress-pct" style="color:var(--emerald);" id="reportMpesa">67%</span></div>
-                                    <div class="progress-track"><div class="progress-fill" id="reportMpesaBar" style="width:67%;background:linear-gradient(90deg,var(--emerald),var(--emerald-light));"></div></div>
+                                    <div class="ff-progress-row"><span class="ff-progress-name">M-Pesa</span><span class="ff-progress-pct" style="color:var(--ff-green);" id="reportMpesa">67%</span></div>
+                                    <div class="ff-progress"><div class="ff-progress-fill" id="reportMpesaBar" style="width:67%;background:linear-gradient(90deg,var(--ff-green),var(--ff-green));"></div></div>
                                 </div>
                                 <div>
-                                    <div class="progress-item-header"><span class="progress-name">Bank Transfer</span><span class="progress-pct" style="color:var(--primary-light);" id="reportBank">23%</span></div>
-                                    <div class="progress-track"><div class="progress-fill" id="reportBankBar" style="width:23%;background:linear-gradient(90deg,var(--primary-light),#60a5fa);"></div></div>
+                                    <div class="ff-progress-row"><span class="ff-progress-name">Bank Transfer</span><span class="ff-progress-pct" style="color:var(--ff-blue);" id="reportBank">23%</span></div>
+                                    <div class="ff-progress"><div class="ff-progress-fill" id="reportBankBar" style="width:23%;background:linear-gradient(90deg,var(--ff-blue),#60a5fa);"></div></div>
                                 </div>
                                 <div>
-                                    <div class="progress-item-header"><span class="progress-name">Cash</span><span class="progress-pct" style="color:var(--warning);" id="reportCash">10%</span></div>
-                                    <div class="progress-track"><div class="progress-fill" id="reportCashBar" style="width:10%;background:linear-gradient(90deg,var(--warning),#fbbf24);"></div></div>
+                                    <div class="ff-progress-row"><span class="ff-progress-name">Cash</span><span class="ff-progress-pct" style="color:var(--ff-amber);" id="reportCash">10%</span></div>
+                                    <div class="ff-progress"><div class="ff-progress-fill" id="reportCashBar" style="width:10%;background:linear-gradient(90deg,var(--ff-amber),#fbbf24);"></div></div>
                                 </div>
                             </div>
 
-                            <table class="table">
+                            <table class="ff-table">
                                 <thead><tr><th>Class</th><th>Students</th><th>Expected</th><th>Collected</th><th>Outstanding</th><th>Rate</th></tr></thead>
                                 <tbody id="reportClassBody"></tbody>
                             </table>
@@ -812,30 +539,30 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
 
 
                 <!-- PARENT DIRECTORY (school records only) -->
-                <div class="section" id="sec-parents">
-                    <div class="page-header"><div><div class="page-title">Parent Directory</div><div class="page-desc">Parents registered specifically with this school</div></div></div>
-                    <div class="card" id="pendingLinksCard" style="display:none;margin-bottom:20px;">
-                        <div class="card-header"><div class="card-title"><i class="fas fa-user-clock" style="color:var(--warning);margin-right:6px;"></i> Pending Link Requests <span id="pendingLinksCount"></span></div></div>
-                        <div class="card-body"><div class="alert alert-info" style="margin:12px 16px;"><i class="fas fa-info-circle"></i><div>Approve a request only if you recognise the parent and the child. Approved parents can see that child's fees and make payments.</div></div>
-                        <div style="overflow:auto"><table class="table"><thead><tr><th>Parent</th><th>Phone</th><th>Child</th><th>Admission No.</th><th>Class</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pendingLinksBody"></tbody></table></div></div>
+                <div class="ff-view" id="sec-parents">
+                    <div class="ff-page-head"><div><div class="ff-page-title">Parent Directory</div><div class="ff-page-desc">Parents registered specifically with this school</div></div></div>
+                    <div class="ff-card" id="pendingLinksCard" style="display:none;margin-bottom:20px;">
+                        <div class="ff-card-head"><div class="ff-card-title"><i data-ico="clock" style="color:var(--ff-amber);margin-right:6px;"></i> Pending Link Requests <span id="pendingLinksCount"></span></div></div>
+                        <div class="ff-card-body flush"><div class="ff-alert info" style="margin:12px 16px;"><i data-ico="info"></i><div>Approve a request only if you recognise the parent and the child. Approved parents can see that child's fees and make payments.</div></div>
+                        <div style="overflow:auto"><table class="ff-table"><thead><tr><th>Parent</th><th>Phone</th><th>Child</th><th>Admission No.</th><th>Class</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pendingLinksBody"></tbody></table></div></div>
                     </div>
-                    <div class="card"><div class="card-header"><div class="card-title">Registered Parents <span id="parentCount"></span></div></div><div class="card-body"><div style="overflow:auto"><table class="table"><thead><tr><th>Parent</th><th>Phone</th><th>Email</th><th>Children</th><th>Combined Balance</th><th>Registered</th></tr></thead><tbody id="parentsBody"></tbody></table></div></div></div>
+                    <div class="ff-card"><div class="ff-card-head"><div class="ff-card-title">Registered Parents <span id="parentCount"></span></div></div><div class="ff-card-body flush"><div style="overflow:auto"><table class="ff-table"><thead><tr><th>Parent</th><th>Phone</th><th>Email</th><th>Children</th><th>Combined Balance</th><th>Registered</th></tr></thead><tbody id="parentsBody"></tbody></table></div></div></div>
                 </div>
 
                 <!-- CLASSES -->
-                <div class="section" id="sec-classes">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Classes</div>
-                            <div class="page-desc">Classes appear automatically from your students</div>
+                <div class="ff-view" id="sec-classes">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Classes</div>
+                            <div class="ff-page-desc">Classes appear automatically from your students</div>
                         </div>
                         
                     </div>
 
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="ff-card">
+                        <div class="ff-card-body flush">
                             <div style="overflow-x:auto;">
-                                <table class="table">
+                                <table class="ff-table">
                                     <thead><tr><th>Class</th><th>Level</th><th>Streams</th><th>Students</th><th>Collection</th></tr></thead>
                                     <tbody id="classesBody"></tbody>
                                 </table>
@@ -845,97 +572,101 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                 </div>
 
                 <!-- SETTINGS -->
-                <div class="section" id="sec-settings">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Settings</div>
-                            <div class="page-desc">School configuration and preferences</div>
+                <div class="ff-view" id="sec-settings">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Settings</div>
+                            <div class="ff-page-desc">School configuration and preferences</div>
                         </div>
                     </div>
 
-                    <div class="settings-tabs">
-                        <button class="settings-tab active" onclick="switchSettingsTab('school',this)">School Info</button>
-                        <button class="settings-tab" onclick="switchSettingsTab('paybill',this)">Paybill</button>
-                        <button class="settings-tab" onclick="switchSettingsTab('terms',this)">Term Dates</button>
-                        <button class="settings-tab" onclick="switchSettingsTab('notifications',this)">Notifications</button>
-                        <button class="settings-tab" onclick="switchSettingsTab('appearance',this)">Appearance</button>
+                    <div class="ff-tabs">
+                        <button class="ff-tab active" onclick="switchSettingsTab('school',this)">School Info</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('paybill',this)">Paybill</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('terms',this)">Term Dates</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('notifications',this)">Notifications</button>
+                        <button class="ff-tab" onclick="switchSettingsTab('appearance',this)">Appearance</button>
                     </div>
 
                     <!-- School Info -->
-                    <div class="settings-section active" id="settings-school">
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">School Information</div></div>
-                            <div class="card-body p">
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">School Name</label><input type="text" class="form-input" id="schoolNameInput" value="School"></div>
-                                    <div class="form-group"><label class="form-label">School Code</label><input type="text" class="form-input" id="schoolCodeInput" value="" disabled></div>
+                    <div class="ff-view" id="settings-school">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">School Information</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label" for="schoolNameInput">School name</label><input type="text" class="ff-input" id="schoolNameInput" value="School"></div>
+                                    <div class="ff-field"><label class="ff-label" for="schoolCodeInput">School code</label><input type="text" class="ff-input" id="schoolCodeInput" value="" disabled></div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="schoolAddressInput" value=""></div>
-                                    <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="schoolPhoneInput" value=""></div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">School type</label>
+                                        <input type="text" class="ff-input" id="schoolLevelInfo" value="" disabled>
+                                        <p class="ff-hint"><i data-ico="info"></i> Chosen when the school registered. It decides which classes appear in the Fee Structure Manager. Ask the platform team if it needs to change.</p>
+                                    </div>
+                                    <div class="ff-field"><label class="ff-label" for="schoolPhoneInput">School phone</label><input type="tel" class="ff-input" id="schoolPhoneInput" value=""></div>
                                 </div>
-                                <button class="btn btn-primary" onclick="saveSchoolInfo()"><i class="fas fa-save"></i> Save</button>
+                                <div class="ff-field"><label class="ff-label" for="schoolAddressInput">Address</label><input type="text" class="ff-input" id="schoolAddressInput" value=""></div>
+                                <button class="ff-btn ff-btn-primary" onclick="saveSchoolInfo()"><i data-ico="check"></i> Save</button>
                             </div>
                         </div>
-                        <div class="card" style="margin-top:20px;">
-                            <div class="card-header"><div class="card-title">Change Password</div></div>
-                            <div class="card-body p">
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-input" id="newPasswordInput" placeholder="At least 10 characters" autocomplete="new-password"></div>
-                                    <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" class="form-input" id="newPasswordInput2" placeholder="Repeat new password" autocomplete="new-password"></div>
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Change Password</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">New Password</label><input type="password" class="ff-input" id="newPasswordInput" placeholder="At least 10 characters" autocomplete="new-password"></div>
+                                    <div class="ff-field"><label class="ff-label">Confirm New Password</label><input type="password" class="ff-input" id="newPasswordInput2" placeholder="Repeat new password" autocomplete="new-password"></div>
                                 </div>
-                                <button class="btn btn-primary" onclick="changePassword()"><i class="fas fa-lock"></i> Change Password</button>
+                                <button class="ff-btn ff-btn-primary" onclick="changePassword()"><i data-ico="lock"></i> Change Password</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Paybill -->
-                    <div class="settings-section" id="settings-paybill">
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">M-Pesa Paybill Configuration</div></div>
-                            <div class="card-body p">
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">Paybill Number</label><input type="text" class="form-input" id="paybillInput" value=""></div>
+                    <div class="ff-view" id="settings-paybill">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">M-Pesa Paybill Configuration</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Paybill Number</label><input type="text" class="ff-input" id="paybillInput" value=""></div>
                                 </div>
-                                <div class="alert alert-info" style="margin-bottom:14px;"><i class="fas fa-info-circle"></i><div>Parents pay to this paybill using the student's admission number as the account number. FeeFlow's M-Pesa connection (STK Push) is set up securely by the platform, so no API keys are needed here.</div></div>
+                                <div class="ff-alert info" style="margin-bottom:14px;"><i data-ico="info"></i><div>Parents pay to this paybill using the student's admission number as the account number. FeeFlow's M-Pesa connection (STK Push) is set up securely by the platform, so no API keys are needed here.</div></div>
                                 <div style="display:flex;gap:8px;">
-                                    <button class="btn btn-primary" onclick="savePaybill()"><i class="fas fa-save"></i> Save</button>
+                                    <button class="ff-btn ff-btn-primary" onclick="savePaybill()"><i data-ico="check"></i> Save</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="card" style="margin-top:20px;" id="mpesaCard">
-                            <div class="card-header"><div class="card-title">Automatic M-Pesa payments (STK Push)</div></div>
-                            <div class="card-body p">
-                                <div class="form-hint" id="mpesaStatusLine" style="margin-bottom:14px;">Checking M-Pesa connection…</div>
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">Environment</label>
-                                        <select class="form-input" id="mpesaEnv"><option value="sandbox">Sandbox (testing, no real money)</option><option value="production">Production (real money)</option></select></div>
-                                    <div class="form-group"><label class="form-label">Account type</label>
-                                        <select class="form-input" id="mpesaType"><option value="paybill">Paybill</option><option value="till">Buy Goods Till</option></select></div>
+                        <div class="ff-card" style="margin-top:20px;" id="mpesaCard">
+                            <div class="ff-card-head"><div class="ff-card-title">Automatic M-Pesa payments (STK Push)</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-hint" id="mpesaStatusLine" style="margin-bottom:14px;">Checking M-Pesa connection…</div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Environment</label>
+                                        <select class="ff-input" id="mpesaEnv"><option value="sandbox">Sandbox (testing, no real money)</option><option value="production">Production (real money)</option></select></div>
+                                    <div class="ff-field"><label class="ff-label">Account type</label>
+                                        <select class="ff-input" id="mpesaType"><option value="paybill">Paybill</option><option value="till">Buy Goods Till</option></select></div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">Paybill / Till number</label><input type="text" class="form-input" id="mpesaShortcode" inputmode="numeric" autocomplete="off"></div>
-                                    <div class="form-group"><label class="form-label">Consumer key</label><input type="password" class="form-input" id="mpesaKey" autocomplete="off" placeholder="From the Daraja portal"></div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Paybill / Till number</label><input type="text" class="ff-input" id="mpesaShortcode" inputmode="numeric" autocomplete="off"></div>
+                                    <div class="ff-field"><label class="ff-label">Consumer key</label><input type="password" class="ff-input" id="mpesaKey" autocomplete="off" placeholder="From the Daraja portal"></div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group"><label class="form-label">Consumer secret</label><input type="password" class="form-input" id="mpesaSecret" autocomplete="off"></div>
-                                    <div class="form-group"><label class="form-label">Lipa Na M-Pesa passkey</label><input type="password" class="form-input" id="mpesaPasskey" autocomplete="off"></div>
+                                <div class="ff-row">
+                                    <div class="ff-field"><label class="ff-label">Consumer secret</label><input type="password" class="ff-input" id="mpesaSecret" autocomplete="off"></div>
+                                    <div class="ff-field"><label class="ff-label">Lipa Na M-Pesa passkey</label><input type="password" class="ff-input" id="mpesaPasskey" autocomplete="off"></div>
                                 </div>
-                                <div class="form-hint" style="margin-bottom:12px;"><i class="fas fa-lock"></i> Your keys are checked with Safaricom, then stored encrypted. They are never shown again.</div>
+                                <div class="ff-hint" style="margin-bottom:12px;"><i data-ico="lock"></i> Your keys are checked with Safaricom, then stored encrypted. They are never shown again.</div>
                                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                    <button class="btn btn-primary" id="mpesaSaveBtn" onclick="saveMpesa()"><i class="fas fa-plug"></i> Verify &amp; save</button>
-                                    <button class="btn btn-outline" id="mpesaRemoveBtn" style="display:none;" onclick="removeMpesa()"><i class="fas fa-unlink"></i> Disconnect</button>
+                                    <button class="ff-btn ff-btn-primary" id="mpesaSaveBtn" onclick="saveMpesa()"><i data-ico="link"></i> Verify &amp; save</button>
+                                    <button class="ff-btn ff-btn-outline" id="mpesaRemoveBtn" style="display:none;" onclick="removeMpesa()"><i data-ico="times"></i> Disconnect</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Term Dates -->
-                    <div class="settings-section" id="settings-terms">
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Term Configuration</div><button class="btn btn-primary btn-sm" onclick="openModal('addTerm')"><i class="fas fa-plus"></i> Add Term</button></div>
-                            <div class="card-body">
-                                <table class="table">
+                    <div class="ff-view" id="settings-terms">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Term Configuration</div><button class="ff-btn ff-btn-primary ff-btn-sm" onclick="openModal('addTerm')"><i data-ico="plus"></i> Add Term</button></div>
+                            <div class="ff-card-body flush">
+                                <table class="ff-table">
                                     <thead><tr><th>Term</th><th>Start</th><th>End</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
                                     <tbody id="termsBody"></tbody>
                                 </table>
@@ -944,43 +675,43 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
                     </div>
 
                     <!-- Notifications -->
-                    <div class="settings-section" id="settings-notifications">
-                        <div class="card">
-                            <div class="card-header"><div class="card-title">Notification Preferences</div></div>
-                            <div class="card-body p">
-                                <div class="checkbox-row"><input type="checkbox" id="notifPayReceived" checked><label for="notifPayReceived">Payment received confirmation</label></div>
-                                <div class="checkbox-row"><input type="checkbox" id="notifDeadline" checked><label for="notifDeadline">Fee deadline reminders (7 days before)</label></div>
-                                <div class="checkbox-row"><input type="checkbox" id="notifOverdue" checked><label for="notifOverdue">Overdue balance alerts</label></div>
-                                <div class="checkbox-row"><input type="checkbox" id="notifReceipt" checked><label for="notifReceipt">Auto-generate PDF receipts</label></div>
-                                <div class="checkbox-row"><input type="checkbox" id="notifUnmatched"><label for="notifUnmatched">Admin alert for unmatched payments</label></div>
-                                <div class="form-group" style="margin-top:16px;"><label class="form-label">SMS Sender ID</label><input type="text" class="form-input" id="smsSenderInput" placeholder="Your approved SMS sender ID"></div>
-                                <button class="btn btn-primary" onclick="saveNotifications()" style="margin-top:12px;"><i class="fas fa-save"></i> Save</button>
+                    <div class="ff-view" id="settings-notifications">
+                        <div class="ff-card">
+                            <div class="ff-card-head"><div class="ff-card-title">Notification Preferences</div></div>
+                            <div class="ff-card-body">
+                                <div class="ff-check"><input type="checkbox" id="notifPayReceived" checked><label for="notifPayReceived">Payment received confirmation</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifDeadline" checked><label for="notifDeadline">Fee deadline reminders (7 days before)</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifOverdue" checked><label for="notifOverdue">Overdue balance alerts</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifReceipt" checked><label for="notifReceipt">Auto-generate PDF receipts</label></div>
+                                <div class="ff-check"><input type="checkbox" id="notifUnmatched"><label for="notifUnmatched">Admin alert for unmatched payments</label></div>
+                                <div class="ff-field" style="margin-top:16px;"><label class="ff-label">SMS Sender ID</label><input type="text" class="ff-input" id="smsSenderInput" placeholder="Your approved SMS sender ID"></div>
+                                <button class="ff-btn ff-btn-primary" onclick="saveNotifications()" style="margin-top:12px;"><i data-ico="check"></i> Save</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
 
-                    <div class="settings-section" id="settings-appearance">
-                        <div class="card"><div class="card-header"><div class="card-title">Appearance & Accessibility</div></div><div class="card-body p">
-                            <div class="form-group"><label class="form-label">Color mode</label><select class="form-input" id="themeSelect" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="system">Use device setting</option></select></div>
-                            <div class="checkbox-row"><input type="checkbox" id="compactTables" onchange="savePreferences()"><label for="compactTables">Compact table spacing</label></div>
-                            <button class="btn btn-primary" onclick="savePreferences()"><i class="fas fa-save"></i> Save Preferences</button>
+                    <div class="ff-view" id="settings-appearance">
+                        <div class="ff-card"><div class="ff-card-head"><div class="ff-card-title">Appearance & Accessibility</div></div><div class="ff-card-body">
+                            <div class="ff-field"><label class="ff-label">Color mode</label><select class="ff-input" id="themeSelect" onchange="setTheme(this.value)"><option value="light">Light</option><option value="dark">Dark</option><option value="system">Use device setting</option></select></div>
+                            <div class="ff-check"><input type="checkbox" id="compactTables" onchange="savePreferences()"><label for="compactTables">Compact table spacing</label></div>
+                            <button class="ff-btn ff-btn-primary" onclick="savePreferences()"><i data-ico="check"></i> Save Preferences</button>
                         </div></div>
                     </div>
 
                 <!-- NOTIFICATIONS -->
-                <div class="section" id="sec-notifications">
-                    <div class="page-header">
-                        <div class="page-header-left">
-                            <div class="page-title">Notifications</div>
-                            <div class="page-desc">Activity alerts for your school</div>
+                <div class="ff-view" id="sec-notifications">
+                    <div class="ff-page-head">
+                        <div class="ff-page-head-left">
+                            <div class="ff-page-title">Notifications</div>
+                            <div class="ff-page-desc">Activity alerts for your school</div>
                         </div>
-                        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all read</button>
+                        <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="markAllRead()">Mark all read</button>
                     </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="notif-list" id="notifList"></div>
+                    <div class="ff-card">
+                        <div class="ff-card-body flush">
+                            <div class="" id="notifList"></div>
                         </div>
                     </div>
                 </div>
@@ -991,150 +722,151 @@ body.dark .table th,body.dark .table tr:hover td,body.dark .user-info{background
 </div><!-- end app -->
 
 <!-- MODALS -->
-<div class="modal-overlay" id="modal-recordPayment">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-money-bill-wave" style="color:var(--emerald);"></i> Record Payment</div>
-            <button class="modal-close" onclick="closeModal('recordPayment')"><i class="fas fa-times"></i></button>
+<div class="ff-modal" id="modal-recordPayment">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="money" style="color:var(--ff-green);"></i> Record Payment</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('recordPayment')"><i data-ico="times"></i></button>
         </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">Student <span>*</span></label>
-                <select class="form-input" id="payStudentSelect"></select>
+        <div class="ff-modal-body">
+            <div class="ff-field">
+                <label class="ff-label">Student <span>*</span></label>
+                <select class="ff-input" id="payStudentSelect"></select>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Amount (KES) <span>*</span></label>
-                    <input type="number" class="form-input" id="payAmount" placeholder="e.g. 5000">
+            <div class="ff-row">
+                <div class="ff-field">
+                    <label class="ff-label">Amount (KES) <span>*</span></label>
+                    <input type="number" class="ff-input" id="payAmount" placeholder="e.g. 5000">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Method <span>*</span></label>
-                    <select class="form-input" id="payMethod">
+                <div class="ff-field">
+                    <label class="ff-label">Method <span>*</span></label>
+                    <select class="ff-input" id="payMethod">
                         <option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option>
                     </select>
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Reference / M-Pesa Code</label>
-                <input type="text" class="form-input" id="payRef" placeholder="Enter payment reference">
+            <div class="ff-field">
+                <label class="ff-label">Reference / M-Pesa Code</label>
+                <input type="text" class="ff-input" id="payRef" placeholder="Enter payment reference">
             </div>
-            <div class="form-group">
-                <label class="form-label">Notes</label>
-                <textarea class="form-input" id="payNotes" placeholder="Optional notes..."></textarea>
+            <div class="ff-field">
+                <label class="ff-label">Notes</label>
+                <textarea class="ff-input" id="payNotes" placeholder="Optional notes..."></textarea>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('recordPayment')">Cancel</button>
-            <button class="btn btn-green" onclick="recordPayment()" id="recordPaymentBtn"><i class="fas fa-check"></i> Record</button>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('recordPayment')">Cancel</button>
+            <button class="ff-btn ff-btn-green" onclick="recordPayment()" id="recordPaymentBtn"><i data-ico="check"></i> Record</button>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="modal-addStudent">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-user-plus" style="color:var(--primary);"></i> Add Student</div>
-            <button class="modal-close" onclick="closeModal('addStudent')"><i class="fas fa-times"></i></button>
+<div class="ff-modal" id="modal-addStudent">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="user" style="color:var(--ff-navy);"></i> Add Student</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('addStudent')"><i data-ico="times"></i></button>
         </div>
-        <div class="modal-body">
-            <div class="form-group"><label class="form-label">Full Name <span>*</span></label><input type="text" class="form-input" id="newStudentName" placeholder="Enter student full name"></div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Class <span>*</span></label>
-                    <select class="form-input" id="newStudentClass">
+        <div class="ff-modal-body">
+            <div class="ff-field"><label class="ff-label">Full Name <span>*</span></label><input type="text" class="ff-input" id="newStudentName" placeholder="Enter student full name"></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Class <span>*</span></label>
+                    <select class="ff-input" id="newStudentClass">
                         <option>PP1</option><option>PP2</option><option>Class 1</option><option>Class 2</option><option>Class 3</option><option>Class 4</option><option>Class 5</option><option>Class 6</option><option>Class 7</option><option>Class 8</option><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Stream</label><input type="text" class="form-input" id="newStudentStream" value="A" maxlength="1" style="width:80px;"></div>
+                <div class="ff-field"><label class="ff-label">Stream</label><input type="text" class="ff-input" id="newStudentStream" value="A" maxlength="1" style="width:80px;"></div>
             </div>
-            <div class="form-group"><label class="form-label">Admission Number</label><input type="text" class="form-input" id="newStudentAdm" placeholder="Leave blank to generate automatically (e.g. ADM-2026-001)"><div class="form-hint">Parents use this number as the M-Pesa account reference.</div></div>
-            <div class="form-group"><label class="form-label">Parent Name <span>*</span></label><input type="text" class="form-input" id="newStudentParent" placeholder="e.g. John Kamau"></div>
-            <div class="form-group"><label class="form-label">Parent Phone (+254) <span>*</span></label><input type="tel" class="form-input" id="newStudentPhone" placeholder="7XX XXX XXX"></div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Gender</label>
-                    <select class="form-input" id="newStudentGender"><option>Female</option><option>Male</option></select>
+            <div class="ff-field"><label class="ff-label">Admission Number</label><input type="text" class="ff-input" id="newStudentAdm" placeholder="Leave blank to generate automatically (e.g. ADM-2026-001)"><div class="ff-hint">Parents use this number as the M-Pesa account reference.</div></div>
+            <div class="ff-field"><label class="ff-label">Parent Name <span>*</span></label><input type="text" class="ff-input" id="newStudentParent" placeholder="e.g. John Kamau"></div>
+            <div class="ff-field"><label class="ff-label">Parent Phone (+254) <span>*</span></label><input type="tel" class="ff-input" id="newStudentPhone" placeholder="7XX XXX XXX"></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Gender</label>
+                    <select class="ff-input" id="newStudentGender"><option>Female</option><option>Male</option></select>
                 </div>
-                <div class="form-group"><label class="form-label">Boarding</label>
+                <div class="ff-field"><label class="ff-label">Boarding</label>
                     <label style="display:flex;align-items:center;gap:8px;padding:10px 0;font-size:13px;"><input type="checkbox" id="newStudentBoarding"> Boarder (pays boarding fees)</label>
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('addStudent')">Cancel</button>
-            <button class="btn btn-primary" onclick="addStudent()" id="addStudentBtn"><i class="fas fa-plus"></i> Add Student</button>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('addStudent')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="addStudent()" id="addStudentBtn"><i data-ico="plus"></i> Add Student</button>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="modal-manualReconcile">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-link" style="color:var(--emerald);"></i> Manual M-Pesa Match</div>
-            <button class="modal-close" onclick="closeModal('manualReconcile')"><i class="fas fa-times"></i></button>
+<div class="ff-modal" id="modal-manualReconcile">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="link" style="color:var(--ff-green);"></i> Manual M-Pesa Match</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('manualReconcile')"><i data-ico="times"></i></button>
         </div>
-        <div class="modal-body">
-            <div class="alert alert-warning" style="margin-bottom:14px;"><i class="fas fa-exclamation-triangle"></i>Match an unmatched M-Pesa transaction to a student.</div>
-            <div class="form-group"><label class="form-label">Transaction Ref <span>*</span></label><input type="text" class="form-input" id="reconRef" placeholder="e.g. R7K2MNP4QX"></div>
-            <div class="form-group"><label class="form-label">Match to Student <span>*</span></label><select class="form-input" id="reconStudent"></select></div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Amount <span>*</span></label><input type="number" class="form-input" id="reconAmount" placeholder="KES"></div>
-                <div class="form-group"><label class="form-label">Statement Date</label><input type="date" class="form-input" id="reconDate"></div>
+        <div class="ff-modal-body">
+            <div class="ff-alert warning" style="margin-bottom:14px;"><i data-ico="alert"></i>Match an unmatched M-Pesa transaction to a student.</div>
+            <div class="ff-field"><label class="ff-label">Transaction Ref <span>*</span></label><input type="text" class="ff-input" id="reconRef" placeholder="e.g. R7K2MNP4QX"></div>
+            <div class="ff-field"><label class="ff-label">Match to Student <span>*</span></label><select class="ff-input" id="reconStudent"></select></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Amount <span>*</span></label><input type="number" class="ff-input" id="reconAmount" placeholder="KES"></div>
+                <div class="ff-field"><label class="ff-label">Statement Date</label><input type="date" class="ff-input" id="reconDate"></div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('manualReconcile')">Cancel</button>
-            <button class="btn btn-green" onclick="manualReconcile()" id="reconcileBtn"><i class="fas fa-check"></i> Reconcile</button>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('manualReconcile')">Cancel</button>
+            <button class="ff-btn ff-btn-green" onclick="manualReconcile()" id="reconcileBtn"><i data-ico="check"></i> Reconcile</button>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="modal-editTemplate">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-edit"></i> Edit SMS Template</div>
-            <button class="modal-close" onclick="closeModal('editTemplate')"><i class="fas fa-times"></i></button>
+<div class="ff-modal" id="modal-editTemplate">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="edit"></i> Edit SMS Template</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('editTemplate')"><i data-ico="times"></i></button>
         </div>
-        <div class="modal-body">
-            <div class="form-group"><label class="form-label">Template Name</label><input type="text" class="form-input" value="Fee Deadline Reminder"></div>
-            <div class="form-group">
-                <label class="form-label">SMS Message</label>
-                <textarea class="form-input" rows="4" id="smsTemplateText">{{SCHOOL}}: Dear Parent, your child {{STUDENT}} has a fee balance of KES {{BALANCE}} for {{TERM}}. Pay via M-Pesa Paybill {{PAYBILL}}, Account: {{REF}}. Deadline: {{DEADLINE}}. Call {{PHONE}}.</textarea>
-                <div class="form-hint">Placeholders: {{SCHOOL}}, {{STUDENT}}, {{BALANCE}}, {{TERM}}, {{PAYBILL}}, {{REF}}, {{DEADLINE}}, {{PHONE}}</div>
+        <div class="ff-modal-body">
+            <div class="ff-field"><label class="ff-label">Template Name</label><input type="text" class="ff-input" value="Fee Deadline Reminder"></div>
+            <div class="ff-field">
+                <label class="ff-label">SMS Message</label>
+                <textarea class="ff-input" rows="4" id="smsTemplateText">{{SCHOOL}}: Dear Parent, your child {{STUDENT}} has a fee balance of KES {{BALANCE}} for {{TERM}}. Pay via M-Pesa Paybill {{PAYBILL}}, Account: {{REF}}. Deadline: {{DEADLINE}}. Call {{PHONE}}.</textarea>
+                <div class="ff-hint">Placeholders: {{SCHOOL}}, {{STUDENT}}, {{BALANCE}}, {{TERM}}, {{PAYBILL}}, {{REF}}, {{DEADLINE}}, {{PHONE}}</div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('editTemplate')">Cancel</button>
-            <button class="btn btn-primary" onclick="closeModal('editTemplate');showToast('Template saved')"><i class="fas fa-save"></i> Save</button>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('editTemplate')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="closeModal('editTemplate');showToast('Template saved')"><i data-ico="check"></i> Save</button>
         </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="modal-addTerm">
-    <div class="modal-box">
-        <div class="modal-header">
-            <div class="modal-title"><i class="fas fa-calendar"></i> Add Term</div>
-            <button class="modal-close" onclick="closeModal('addTerm')"><i class="fas fa-times"></i></button>
+<div class="ff-modal" id="modal-addTerm">
+    <div class="ff-modal-box">
+        <div class="ff-modal-head">
+            <div class="ff-modal-title"><i data-ico="calendar"></i> Add Term</div>
+            <button class="ff-modal-close" aria-label="Close" onclick="closeModal('addTerm')"><i data-ico="times"></i></button>
         </div>
-        <div class="modal-body">
-            <div class="form-group"><label class="form-label">Term Name</label><input type="text" class="form-input" placeholder="Enter term name" id="newTermName"></div>
-            <div class="form-row">
-                <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-input" id="newTermStart"></div>
-                <div class="form-group"><label class="form-label">End Date</label><input type="date" class="form-input" id="newTermEnd"></div>
+        <div class="ff-modal-body">
+            <div class="ff-field"><label class="ff-label">Term Name</label><input type="text" class="ff-input" placeholder="Enter term name" id="newTermName"></div>
+            <div class="ff-row">
+                <div class="ff-field"><label class="ff-label">Start Date</label><input type="date" class="ff-input" id="newTermStart"></div>
+                <div class="ff-field"><label class="ff-label">End Date</label><input type="date" class="ff-input" id="newTermEnd"></div>
             </div>
-            <div class="form-group"><label class="form-label">Fee Deadline</label><input type="date" class="form-input" id="newTermDeadline"></div>
+            <div class="ff-field"><label class="ff-label">Fee Deadline</label><input type="date" class="ff-input" id="newTermDeadline"></div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeModal('addTerm')">Cancel</button>
-            <button class="btn btn-primary" onclick="addTerm()"><i class="fas fa-plus"></i> Add</button>
+        <div class="ff-modal-foot">
+            <button class="ff-btn ff-btn-outline" onclick="closeModal('addTerm')">Cancel</button>
+            <button class="ff-btn ff-btn-primary" onclick="addTerm()"><i data-ico="plus"></i> Add</button>
         </div>
     </div>
 </div>
 
 <!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
+<div class="ff-toasts" id="toastContainer" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <script src="js/vendor/supabase-2.117.2.js"></script>
 <script src="js/config.js"></script>
 <script src="js/ff-client.js"></script>
+<script src="js/ff-ui.js"></script>
 <script>
 'use strict';
 // ============================================================
@@ -1159,31 +891,20 @@ const schoolData = { students: [], payments: [], parents: [], links: [], pending
 const $ = (id) => document.getElementById(id);
 const val = (id) => ($(id) && $(id).value || '').trim();
 const num = (v) => Number(v || 0);
-const money = (n) => 'KES ' + num(n).toLocaleString();
+const money = FFUI.money;
+const ico = FFUI.ico;
 const sum = (arr, f) => arr.reduce((a, x) => a + num(f(x)), 0);
 const COLORS = ['#2b7fd4', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6', '#ef4444'];
 function colorFor(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return `linear-gradient(135deg,${COLORS[h % COLORS.length]},#1e293b)`; }
-const initialsOf = (name) => String(name || '?').split(/\s+/).filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
-function fmtDate(v) { return v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
-function fmtDateTime(v) {
-    if (!v) return '—';
-    const d = new Date(v);
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-}
-function timeAgo(iso) {
-    if (!iso) return 'Recently';
-    const sec = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-    if (sec < 60) return 'Just now';
-    if (sec < 3600) return Math.floor(sec / 60) + ' min ago';
-    if (sec < 86400) return Math.floor(sec / 3600) + ' hr ago';
-    if (sec < 172800) return 'Yesterday';
-    return fmtDate(iso);
-}
+const initialsOf = FFUI.initials;
+const fmtDate = FFUI.fmtDate;
+const fmtDateTime = FFUI.fmtDateTime;
+const timeAgo = FFUI.timeAgo;
 const isToday = (iso) => !!iso && new Date(iso).toDateString() === new Date().toDateString();
-const cap = (s) => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1);
+const cap = FFUI.cap;
 function setBusy(btnId, busy, label) {
     const btn = $(btnId); if (!btn) return;
-    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + esc(label); }
+    if (busy) { btn.dataset.html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="ff-spinner"></span> ' + esc(label); }
     else { btn.disabled = false; if (btn.dataset.html) btn.innerHTML = btn.dataset.html; }
 }
 function dbMessage(e) {                                  // friendlier messages for the rules this page can trip
@@ -1193,13 +914,7 @@ function dbMessage(e) {                                  // friendlier messages 
     if (e && e.code === '23505') return 'That record already exists.';
     return FF.friendlyError(e);
 }
-function normalizeKePhone(raw) {
-    const d = String(raw || '').replace(/\D/g, '');
-    if (/^254[17]\d{8}$/.test(d)) return d;
-    if (/^0[17]\d{8}$/.test(d)) return '254' + d.slice(1);
-    if (/^[17]\d{8}$/.test(d)) return '254' + d;
-    return null;
-}
+const normalizeKePhone = FFUI.normalizeKePhone;
 const METHOD_LABEL = { mpesa_stk: 'M-Pesa', mpesa_c2b: 'M-Pesa', bank: 'Bank Transfer', cash: 'Cash', cheque: 'Cheque' };
 const METHOD_KEY = { 'M-Pesa': 'mpesa_c2b', 'Bank Transfer': 'bank', 'Cash': 'cash', 'Cheque': 'cheque' };
 const PAY_STATUS = { completed: 'reconciled', pending: 'pending', failed: 'failed', cancelled: 'failed', timeout: 'failed' };
@@ -1231,26 +946,6 @@ async function fetchAll(make, max = 20000) {            // PostgREST returns at 
 
 function activeTerm() { return schoolData.terms.find(t => t.status === 'active') || null; }
 
-
-// A school that is not active yet (waiting for approval, rejected or suspended) only sees a status screen.
-const GATE_TEXT = {
-    pending:   ['fa-hourglass-half', 'Your school is waiting for approval', 'Thank you for registering. The FeeFlow team reviews every school before it goes live, usually within one working day. You will be able to use everything here as soon as it is approved.'],
-    rejected:  ['fa-circle-xmark', 'Your registration was not approved', 'Please contact FeeFlow support to find out why and how to continue.'],
-    suspended: ['fa-pause-circle', 'This school account is suspended', 'Please contact FeeFlow support to restore access.']
-};
-function applyStatusGate() {
-    const el = document.getElementById('statusGate');
-    if (!el) return;
-    const st = school && school.status;
-    const g = GATE_TEXT[st];
-    if (!g) { el.style.display = 'none'; return; }
-    document.getElementById('statusGateIcon').className = 'fas ' + g[0];
-    document.getElementById('statusGateTitle').textContent = g[1];
-    document.getElementById('statusGateText').textContent = g[2] + (school.admin_note ? ' Note from FeeFlow: ' + school.admin_note : '');
-    document.getElementById('statusGateSchool').textContent = school.name || '';
-    el.style.display = 'flex';
-}
-
 async function loadData() {
     try {
         const [schoolR, students, payments, parentsR, linksR, notifR, termsR, remR, feeR, umR] = await Promise.all([
@@ -1268,7 +963,6 @@ async function loadData() {
         for (const r of [schoolR, parentsR, linksR, notifR, termsR, remR, feeR]) if (r.error) throw r.error;
 
         school = schoolR.data || school;
-        applyStatusGate();
         schoolData.terms = termsR.data || [];
         const deadline = (activeTerm() || {}).deadline || null;
         allStudents = students.map(r => mapStudent(r, deadline));
@@ -1314,7 +1008,7 @@ function mapPayment(p, byId) {
         note: p.note || '', created: p.created_at, completed: p.completed_at, date: fmtDateTime(p.completed_at || p.created_at), parentId: p.parent_id
     };
 }
-function levelOf(name) { return /^PP/i.test(name) ? 'Pre-Primary' : /^Form/i.test(name) ? 'Secondary' : 'Primary'; }
+function levelOf(name) { const n = String(name || ''); return /^(PP|Pre)/i.test(n) ? 'Pre-Primary' : /^(Form|Grade\s*(7|8|9|10|11|12))/i.test(n) ? 'Secondary' : 'Primary'; }
 function classOrder(name) {
     const m = String(name).match(/^(PP|Class|Grade|Form)\s*(\d+)/i);
     if (!m) return [9, 0, name];
@@ -1370,8 +1064,16 @@ function renderAll() {
 }
 
 function renderSchoolHeader() {
+    const label = FFUI.levelLabel(school.level);
     $('userSchool').textContent = school.name || 'School';
-    $('schoolNameDisplay').innerHTML = '<i class="fas fa-school" style="margin-right:6px;"></i> ' + esc(school.name || 'School');
+    $('schoolNameDisplay').innerHTML = '<i data-ico="school"></i> ' + esc(school.name || 'School');
+    $('schoolNameDisplay').title = label;
+    const chip = $('schoolLevelChip');
+    if (chip) { chip.style.display = 'flex'; $('schoolLevelText').textContent = label; }
+    const badge = $('topLevelBadge');
+    if (badge) { badge.style.display = 'inline-flex'; badge.textContent = label; }
+    const info = $('schoolLevelInfo');
+    if (info) info.value = label;
 }
 
 function renderStats() {
@@ -1402,12 +1104,13 @@ function renderStats() {
 function renderTermBanner() {
     const t = activeTerm();
     $('termInfo').textContent = t ? `${t.name} • ${fmtDate(t.start_date)} – ${fmtDate(t.end_date)}` : 'No active term. Add one under Settings → Term Dates.';
-    const title = document.querySelector('#deadlineAlert .alert-title');
+    const title = document.querySelector('#deadlineAlert .ff-alert-title');
     if (title) title.textContent = t && t.deadline ? 'Fee Deadline: ' + fmtDate(t.deadline) : 'Fee Deadline: Not configured';
 }
 
-function payIcon(p) { const m = p.method === 'M-Pesa'; return `<i class="fas ${m ? 'fa-mobile-alt' : 'fa-university'}" style="color:${m ? 'var(--emerald)' : 'var(--primary-light)'};margin-right:4px;"></i> ${esc(p.method)}`; }
-const statusBadge = (s) => `<span class="badge ${esc(s)}"><i class="fas fa-circle"></i> ${esc(cap(s))}</span>`;
+const BADGE_TONE = { reconciled: 'green', paid: 'green', linked: 'green', active: 'green', pending: 'blue', partial: 'amber', upcoming: 'amber', unpaid: 'amber', trial: 'amber', overdue: 'red', failed: 'red', rejected: 'red', suspended: 'red', inactive: '' };
+function payIcon(p) { const m = p.method === 'M-Pesa'; const tone = m ? 'var(--ff-green)' : 'var(--ff-blue)'; return `<span style="display:inline-flex;align-items:center;gap:5px;color:${tone};font-weight:600">${ico(m ? 'mobile' : 'bank', 'ff-ico-sm')} ${esc(p.method)}</span>`; }
+const statusBadge = (s) => `<span class="ff-badge ${BADGE_TONE[s] || ''}">${esc(cap(s))}</span>`;
 
 function renderRecentPayments() {
     const filter = $('recentClassFilter').value;
@@ -1415,12 +1118,12 @@ function renderRecentPayments() {
     $('recentPaymentsBody').innerHTML = rows.length ? rows.map(p => {
         const st = allStudents.find(s => s.id === p.studentId) || {};
         return `<tr>
-            <td><div class="student-cell"><div class="student-avatar" style="background:${st.color || '#94a3b8'};">${esc(st.initials || '?')}</div><div class="student-name">${esc(p.studentName)}</div></div></td>
-            <td class="amount" style="color:${p.status === 'reconciled' ? 'var(--emerald)' : 'var(--warning)'};">${money(p.amount)}</td>
+            <td><div class="ff-person"><div class="ff-avatar-sm" style="background:${st.color || '#94a3b8'};">${esc(st.initials || '?')}</div><div class="ff-person-name">${esc(p.studentName)}</div></div></td>
+            <td class="num" style="color:${p.status === 'reconciled' ? 'var(--ff-green)' : 'var(--ff-amber)'};">${money(p.amount)}</td>
             <td>${payIcon(p)}</td>
             <td>${statusBadge(p.status)}</td>
-            <td style="color:var(--text-light);font-size:12px;">${esc(p.date)}</td></tr>`;
-    }).join('') : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light);">No payments yet.</td></tr>';
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(p.date)}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--ff-muted);">No payments yet.</td></tr>';
     const classes = [...new Set(schoolData.students.map(s => s.class))].sort();
     $('recentClassFilter').innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option ${c === filter ? 'selected' : ''}>${esc(c)}</option>`).join('');
 }
@@ -1430,10 +1133,10 @@ function renderClassPerformance() {
     const perf = schoolData.classes.slice().sort((a, b) => b.collectionRate - a.collectionRate).slice(0, 6);
     $('classPerformance').innerHTML = perf.length ? perf.map((p, i) => `
         <div>
-            <div class="progress-item-header"><span class="progress-name">${esc(p.name)}</span>
-                <span class="progress-pct" style="color:${p.collectionRate >= 80 ? 'var(--emerald)' : p.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'};">${p.collectionRate}%</span></div>
-            <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, p.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
-        </div>`).join('') : '<p style="padding:16px;color:var(--text-light);font-size:13px;">Add students to see class performance.</p>';
+            <div class="ff-progress-row"><span class="ff-progress-name">${esc(p.name)}</span>
+                <span class="ff-progress-pct" style="color:${p.collectionRate >= 80 ? 'var(--ff-green)' : p.collectionRate >= 60 ? 'var(--ff-amber)' : 'var(--ff-red)'};">${p.collectionRate}%</span></div>
+            <div class="ff-progress"><div class="ff-progress-fill" style="width:${Math.min(100, p.collectionRate)}%;background:${colors[i % colors.length]};"></div></div>
+        </div>`).join('') : '<p style="padding:16px;color:var(--ff-muted);font-size:13px;">Add students to see class performance.</p>';
 }
 
 function fillClassFilters() {
@@ -1455,17 +1158,17 @@ function renderStudents() {
     else if (status) rows = rows.filter(s => s.feeStatus === status);                                   // paid / partial / unpaid by payments made
     $('studentTableCount').textContent = `(${rows.length})`;
     $('studentsBody').innerHTML = rows.length ? rows.map(s => `
-        <tr class="clickable-row" onclick="viewStudentProfile('${esc(s.id)}')">
-            <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${esc(s.initials)}</div><div><div class="student-name">${esc(s.name)}</div><div class="student-adm">${esc(s.adm)}</div></div></div></td>
+        <tr class="ff-clickable" onclick="viewStudentProfile('${esc(s.id)}')">
+            <td><div class="ff-person"><div class="ff-avatar-sm" style="background:${s.color};">${esc(s.initials)}</div><div><div class="ff-person-name">${esc(s.name)}</div><div class="ff-person-sub">${esc(s.adm)}</div></div></div></td>
             <td>${esc(s.class)}</td>
-            <td class="amount">${s.noFee ? '<span style="color:var(--text-light);font-size:12px;" title="No fee structure matches this class">Not set</span>' : money(s.total)}</td>
-            <td class="amount" style="color:var(--emerald);">${money(s.paid)}</td>
-            <td class="amount" style="color:${s.balance > 0 ? 'var(--danger)' : 'var(--emerald)'};">${money(s.balance)}</td>
+            <td class="num">${s.noFee ? '<span style="color:var(--ff-muted);font-size:12px;" title="No fee structure matches this class">Not set</span>' : money(s.total)}</td>
+            <td class="num" style="color:var(--ff-green);">${money(s.paid)}</td>
+            <td class="num" style="color:${s.balance > 0 ? 'var(--ff-red)' : 'var(--ff-green)'};">${money(s.balance)}</td>
             <td>${statusBadge(s.status)}</td>
             <td onclick="event.stopPropagation()">
-                <button class="btn btn-outline btn-sm" onclick="viewStudentProfile('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i class="fas fa-eye"></i></button>
-                <button class="btn btn-outline btn-sm" onclick="openRecordPaymentFor('${esc(s.id)}')" aria-label="Record payment for ${esc(s.name)}"><i class="fas fa-plus"></i></button>
-            </td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No students found. Use "Add Student" to enrol the first one.</td></tr>';
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="viewStudentProfile('${esc(s.id)}')" aria-label="View ${esc(s.name)}"><i data-ico="eye"></i></button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="openRecordPaymentFor('${esc(s.id)}')" aria-label="Record payment for ${esc(s.name)}"><i data-ico="plus"></i></button>
+            </td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No students found. Use "Add Student" to enrol the first one.</td></tr>';
 }
 
 function renderFeeSummary() {
@@ -1476,30 +1179,30 @@ function renderFeeSummary() {
     if (pub && pub.data && Array.isArray(pub.data.levels)) { levels = pub.data.levels.length; grades = sum(pub.data.levels, l => (l.grades || []).length); }
     $('feeSummary').innerHTML = `
         <div class="alert ${pub ? 'alert-info' : 'alert-warning'}" style="margin-bottom:16px;">
-            <i class="fas ${pub ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+            ${ico(pub ? 'checkCircle' : 'alert')}
             <div>
-                <div class="alert-title">${pub ? 'Fee structure published' : 'No fee structure published yet'}</div>
+                <div class="ff-alert-title">${pub ? 'Fee structure published' : 'No fee structure published yet'}</div>
                 <div>${pub ? `Published ${esc(fmtDate(pub.published_at))} • ${levels} level(s), ${grades} grade(s). Parents see this structure, and every student's total is calculated from it automatically.`
                            : 'Students show no fee until you build and publish a fee structure.'}</div>
             </div>
         </div>
-        ${unbilled.length && pub ? `<div class="alert alert-warning" style="margin-bottom:16px;"><i class="fas fa-exclamation-triangle"></i><div>
-            <div class="alert-title">${unbilled.length} student(s) have no fee assigned</div>
+        ${unbilled.length && pub ? `<div class="ff-alert warning" style="margin-bottom:16px;"><i data-ico="alert"></i><div>
+            <div class="ff-alert-title">${unbilled.length} student(s) have no fee assigned</div>
             <div>Their class name does not match a grade in the published structure: <strong>${classes.map(esc).join(', ')}</strong>. Rename the grade in the Fee Structure Manager or correct the student's class, then publish again.</div></div></div>` : ''}
 `;
 }
 
 function renderPayments() {
     $('paymentsBody').innerHTML = schoolData.payments.length ? schoolData.payments.map(p => `
-        <tr class="clickable-row" onclick="viewTransaction('${esc(p.id)}')">
+        <tr class="ff-clickable" onclick="viewTransaction('${esc(p.id)}')">
             <td style="font-weight:700;font-family:'Space Grotesk',sans-serif;">${esc(p.ref)}</td>
             <td style="font-weight:500;">${esc(p.studentName)}</td>
-            <td style="font-size:12px;color:var(--text-light);">${esc(p.class)}</td>
-            <td class="amount" style="color:${p.status === 'reconciled' ? 'var(--emerald)' : 'var(--warning)'};">${money(p.amount)}</td>
+            <td style="font-size:12px;color:var(--ff-muted);">${esc(p.class)}</td>
+            <td class="num" style="color:${p.status === 'reconciled' ? 'var(--ff-green)' : 'var(--ff-amber)'};">${money(p.amount)}</td>
             <td>${payIcon(p)}</td>
             <td>${statusBadge(p.status)}</td>
-            <td style="font-size:12px;color:var(--text-light);">${esc(p.date)}</td></tr>`).join('')
-        : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No payments recorded yet.</td></tr>';
+            <td style="font-size:12px;color:var(--ff-muted);">${esc(p.date)}</td></tr>`).join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No payments recorded yet.</td></tr>';
 }
 
 function renderOutstanding() {
@@ -1511,15 +1214,15 @@ function renderOutstanding() {
     $('outstandingBody').innerHTML = rows.length ? rows.map(s => {
         const oc = s.overdueDays >= 60 ? 'd60' : s.overdueDays >= 30 ? 'd30' : s.overdueDays >= 14 ? 'd14' : s.overdueDays >= 7 ? 'd7' : '';
         return `<tr>
-            <td><div class="student-cell"><div class="student-avatar" style="background:${s.color};">${esc(s.initials)}</div><div><div class="student-name">${esc(s.name)}</div><div class="student-adm">${esc(s.adm)}</div></div></div></td>
+            <td><div class="ff-person"><div class="ff-avatar-sm" style="background:${s.color};">${esc(s.initials)}</div><div><div class="ff-person-name">${esc(s.name)}</div><div class="ff-person-sub">${esc(s.adm)}</div></div></div></td>
             <td>${esc(s.class)}</td>
-            <td class="amount" style="color:var(--danger);font-weight:700;">${money(s.balance)}</td>
-            <td style="color:var(--text-light);font-size:12px;">${esc(s.lastPayment)}</td>
-            <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${oc}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--text-light);">—</span>'}</td>
+            <td class="num" style="color:var(--ff-red);font-weight:700;">${money(s.balance)}</td>
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(s.lastPayment)}</td>
+            <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${oc}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--ff-muted);">—</span>'}</td>
             <td style="font-size:12px;">${esc(s.parentPhone)}</td>
-            <td><button class="btn btn-outline btn-sm" onclick="sendReminder('${esc(s.id)}')" aria-label="Send reminder"><i class="fas fa-paper-plane"></i></button>
-                <button class="btn btn-outline btn-sm" onclick="viewStudentLedger('${esc(s.id)}')" aria-label="View ledger"><i class="fas fa-eye"></i></button></td></tr>`;
-    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-light);">No outstanding balances. 🎉</td></tr>';
+            <td><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="sendReminder('${esc(s.id)}')" aria-label="Send reminder"><i data-ico="send"></i></button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="viewStudentLedger('${esc(s.id)}')" aria-label="View ledger"><i data-ico="eye"></i></button></td></tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No outstanding balances. 🎉</td></tr>';
 }
 
 function renderMpesa() {
@@ -1529,29 +1232,27 @@ function renderMpesa() {
     $('reconFailed').textContent = mp.filter(p => ['failed', 'cancelled', 'timeout'].includes(p.rawStatus)).length;
     renderUnmatched();
     $('reconLog').innerHTML = mp.slice(0, 10).map(p => `
-        <div style="display:flex;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-            <div><strong>${esc(p.ref)}</strong><div style="font-size:12px;color:var(--text-light);">${esc(p.studentName)} • ${esc(p.date)}</div></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--ff-border);font-size:13px;">
+            <div><strong>${esc(p.ref)}</strong><div style="font-size:12px;color:var(--ff-muted);">${esc(p.studentName)} • ${esc(p.date)}</div></div>
             <div style="text-align:right;"><div style="font-weight:700;">${money(p.amount)}</div>${statusBadge(p.status)}</div></div>`).join('')
-        || '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No M-Pesa activity yet.</p>';
+        || '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No M-Pesa activity yet.</p>';
 }
 
 function renderReceipts() {
     const rows = schoolData.payments.filter(p => p.status === 'reconciled').slice(0, 6);
     $('receiptsGrid').innerHTML = rows.length ? rows.map(p => `
-        <div class="receipt-card">
-            <div class="receipt-header"><div style="font-weight:700;font-size:13px;">Receipt #${esc(p.receiptNo || p.ref)}</div>
-                <span class="badge paid"><i class="fas fa-circle"></i> Confirmed</span></div>
-            <div class="receipt-body">
-                <div class="receipt-logo"><div class="receipt-logo-name">${esc(school.name || 'School')}</div>
-                    <div class="receipt-logo-addr">${esc([school.address, school.phone].filter(Boolean).join(' • ') || 'Address not set')}</div></div>
-                <div class="receipt-row"><span class="receipt-label">Student</span><span class="receipt-value">${esc(p.studentName)}</span></div>
-                <div class="receipt-row"><span class="receipt-label">Class</span><span class="receipt-value">${esc(p.class)}</span></div>
-                <div class="receipt-row"><span class="receipt-label">Method</span><span class="receipt-value">${esc(p.method)}${p.ref !== '—' ? ' (' + esc(p.ref) + ')' : ''}</span></div>
-                <div class="receipt-row"><span class="receipt-label">Date</span><span class="receipt-value">${esc(p.date)}</span></div>
-                <div class="receipt-row total"><span class="receipt-label">Amount</span><span class="receipt-value" style="color:var(--emerald);">${money(p.amount)}</span></div>
-                <div style="text-align:center;margin-top:12px;"><button class="btn btn-outline btn-sm" onclick="printReceipt('${esc(p.id)}')"><i class="fas fa-print"></i> Print / PDF</button></div>
-            </div></div>`).join('')
-        : '<p style="padding:30px;color:var(--text-light);">Receipts appear here once payments are confirmed.</p>';
+        <div class="ff-receipt">
+            <div class="ff-receipt-head"><div style="font-weight:700;font-size:13px;">Receipt #${esc(p.receiptNo || p.ref)}</div>
+                <span class="ff-badge green"> Confirmed</span></div>
+                <div class="ff-receipt-logo"><div class="ff-receipt-school">${esc(school.name || 'School')}</div>
+                    <div class="ff-receipt-sub">${esc([school.address, school.phone].filter(Boolean).join(' • ') || 'Address not set')}</div></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Student</span><span class="ff-receipt-value">${esc(p.studentName)}</span></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Class</span><span class="ff-receipt-value">${esc(p.class)}</span></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Method</span><span class="ff-receipt-value">${esc(p.method)}${p.ref !== '—' ? ' (' + esc(p.ref) + ')' : ''}</span></div>
+                <div class="ff-receipt-row"><span class="ff-receipt-label">Date</span><span class="ff-receipt-value">${esc(p.date)}</span></div>
+                <div class="ff-receipt-row total"><span class="ff-receipt-label">Amount</span><span class="ff-receipt-value" style="color:var(--ff-green);">${money(p.amount)}</span></div>
+                <div style="text-align:center;margin-top:12px;"><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="printReceipt('${esc(p.id)}')"><i data-ico="print"></i> Print / PDF</button></div></div>`).join('')
+        : '<p style="padding:30px;color:var(--ff-muted);">Receipts appear here once payments are confirmed.</p>';
 }
 
 function renderParents() {
@@ -1562,18 +1263,18 @@ function renderParents() {
         const kids = activeKids(p.id), balance = sum(kids, k => k.balance);
         return `<tr><td style="font-weight:600">${esc(p.name)}</td><td>+${esc(p.phone)}</td><td>${esc(p.email || '—')}</td>
             <td>${kids.map(k => esc(k.name)).join(', ') || 'None linked'}</td>
-            <td class="amount" style="color:${balance ? 'var(--danger)' : 'var(--emerald)'}">${money(balance)}</td>
-            <td style="color:var(--text-light);font-size:12px;">${esc(fmtDate(p.created))}</td></tr>`;
-    }).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-light)">No parents registered for this school yet.</td></tr>';
+            <td class="num" style="color:${balance ? 'var(--ff-red)' : 'var(--ff-green)'}">${money(balance)}</td>
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(fmtDate(p.created))}</td></tr>`;
+    }).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--ff-muted)">No parents registered for this school yet.</td></tr>';
 
     $('pendingLinksCard').style.display = pendingLinks.length ? 'block' : 'none';
     $('pendingLinksCount').textContent = '(' + pendingLinks.length + ')';
     $('pendingLinksBody').innerHTML = pendingLinks.map(l => `
         <tr><td style="font-weight:600">${esc(l.parent.name)}</td><td>+${esc(l.parent.phone)}</td>
             <td>${esc(l.student.name)}</td><td>${esc(l.student.adm)}</td><td>${esc(l.student.class)}</td>
-            <td style="color:var(--text-light);font-size:12px;">${esc(timeAgo(l.created_at))}</td>
-            <td><button class="btn btn-green btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',true)"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn btn-outline btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',false)"><i class="fas fa-times"></i> Reject</button></td></tr>`).join('');
+            <td style="color:var(--ff-muted);font-size:12px;">${esc(timeAgo(l.created_at))}</td>
+            <td><button class="ff-btn ff-btn-green ff-btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',true)"><i data-ico="check"></i> Approve</button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="resolveLink('${esc(l.parent_id)}','${esc(l.student_id)}',false)"><i data-ico="times"></i> Reject</button></td></tr>`).join('');
 }
 
 async function resolveLink(parentId, studentId, approve) {
@@ -1588,18 +1289,18 @@ async function resolveLink(parentId, studentId, approve) {
 function renderClasses() {
     $('classesBody').innerHTML = schoolData.classes.length ? schoolData.classes.map(c => `
         <tr><td style="font-weight:600;">${esc(c.name)}</td><td>${esc(c.level)}</td><td>${c.streams}</td><td>${c.students}</td>
-            <td><span style="font-weight:700;color:${c.collectionRate >= 80 ? 'var(--emerald)' : c.collectionRate >= 60 ? 'var(--warning)' : 'var(--danger)'};">${c.collectionRate}%</span></td></tr>`).join('')
-        : '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">Classes appear automatically as you add students.</td></tr>';
+            <td><span style="font-weight:700;color:${c.collectionRate >= 80 ? 'var(--ff-green)' : c.collectionRate >= 60 ? 'var(--ff-amber)' : 'var(--ff-red)'};">${c.collectionRate}%</span></td></tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ff-muted);">Classes appear automatically as you add students.</td></tr>';
 }
 
 function renderTerms() {
     $('termsBody').innerHTML = schoolData.terms.length ? schoolData.terms.map(t => `
         <tr><td style="font-weight:600;">${esc(t.name)}</td><td>${esc(fmtDate(t.start_date))}</td><td>${esc(fmtDate(t.end_date))}</td>
-            <td style="color:${t.status === 'active' ? 'var(--danger)' : 'var(--text-light)'};font-weight:${t.status === 'active' ? '700' : ''};">${esc(fmtDate(t.deadline))}</td>
-            <td><span class="badge ${t.status === 'active' ? 'paid' : 'pending'}"><i class="fas fa-circle"></i> ${esc(cap(t.status))}</span></td>
-            <td><button class="btn btn-outline btn-sm" onclick="setActiveTerm('${esc(t.id)}')"><i class="fas fa-check"></i> Active</button>
-                <button class="btn btn-outline btn-sm" onclick="deleteTerm('${esc(t.id)}')" aria-label="Delete term"><i class="fas fa-trash"></i></button></td></tr>`).join('')
-        : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">No terms yet. Add a term to set the fee deadline used for overdue tracking.</td></tr>';
+            <td style="color:${t.status === 'active' ? 'var(--ff-red)' : 'var(--ff-muted)'};font-weight:${t.status === 'active' ? '700' : ''};">${esc(fmtDate(t.deadline))}</td>
+            <td><span class="ff-badge ${t.status === 'active' ? 'green' : 'blue'}">${esc(cap(t.status))}</span></td>
+            <td><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="setActiveTerm('${esc(t.id)}')"><i data-ico="check"></i> Active</button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="deleteTerm('${esc(t.id)}')" aria-label="Delete term"><i data-ico="trash"></i></button></td></tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ff-muted);">No terms yet. Add a term to set the fee deadline used for overdue tracking.</td></tr>';
 }
 
 function renderNotifications() {
@@ -1607,9 +1308,9 @@ function renderNotifications() {
     $('notifDot').style.display = n.some(x => x.unread) ? 'block' : 'none';
     $('notifList').innerHTML = n.length ? n.map(x => `
         <div class="notif-item ${x.unread ? 'unread' : ''}" onclick="markNotifRead(${Number(x.id)})">
-            <div class="notif-title">${esc(x.title)}</div><div class="notif-body">${esc(x.body)}</div>
-            <div class="notif-time">${esc(timeAgo(x.created_at))}</div></div>`).join('')
-        : '<p style="padding:30px;text-align:center;color:var(--text-light);">No notifications</p>';
+            <div class="ff-notif-title">${esc(x.title)}</div><div class="ff-notif-body">${esc(x.body)}</div>
+            <div class="ff-notif-time">${esc(timeAgo(x.created_at))}</div></div>`).join('')
+        : '<p style="padding:30px;text-align:center;color:var(--ff-muted);">No notifications</p>';
 }
 
 function renderReminderRecipients() {
@@ -1619,16 +1320,16 @@ function renderReminderRecipients() {
     $('selectedCost').textContent = 'KES 0.00';
     $('previewCount').textContent = owing.length;
     $('reminderRecipients').innerHTML = owing.map(s => `
-        <div class="checkbox-row"><input type="checkbox" class="reminder-check" data-id="${esc(s.id)}" onchange="updateReminderCounts()" checked>
-            <label style="flex:1;"><strong>${esc(s.name)}</strong> <span style="color:var(--text-light);font-size:12px;">(${esc(s.class)})</span></label>
-            <span style="font-weight:700;color:var(--danger);font-size:12px;">${money(s.balance)}</span></div>`).join('')
-        || '<p style="padding:16px;color:var(--text-light);font-size:13px;">Nobody owes fees right now.</p>';
+        <div class="ff-reminder-row"><label class="ff-check"><input type="checkbox" class="reminder-check" data-id="${esc(s.id)}" onchange="updateReminderCounts()" checked>
+            <span><strong>${esc(s.name)}</strong> <span style="color:var(--ff-muted);font-size:12px;">(${esc(s.class)})</span></span></label>
+            <span class="ff-money">${money(s.balance)}</span></div>`).join('')
+        || '<p style="padding:16px;color:var(--ff-muted);font-size:13px;">Nobody owes fees right now.</p>';
     updateSmsPreview();
     $('reminderHistory').innerHTML = schoolData.reminderHistory.length ? schoolData.reminderHistory.map(r => `
-        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--ff-border);">
             <div style="font-weight:600;font-size:13px;">${r.recipient_count} parent(s) notified</div>
-            <div style="font-size:12px;color:var(--text-light);margin-top:2px;">${esc(fmtDateTime(r.created_at))}${r.channels && r.channels.length ? ' · ' + esc(r.channels.join(' + ')) : ''}${(r.sms_sent || r.sms_failed) ? ` · SMS: ${num(r.sms_sent)} sent, ${num(r.sms_failed)} failed` : ''}</div></div>`).join('')
-        : '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No reminders sent yet.</p>';
+            <div style="font-size:12px;color:var(--ff-muted);margin-top:2px;">${esc(fmtDateTime(r.created_at))}${r.channels && r.channels.length ? ' · ' + esc(r.channels.join(' + ')) : ''}${(r.sms_sent || r.sms_failed) ? ` · SMS: ${num(r.sms_sent)} sent, ${num(r.sms_failed)} failed` : ''}</div></div>`).join('')
+        : '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No reminders sent yet.</p>';
 }
 
 function renderReports() {
@@ -1643,10 +1344,10 @@ function renderReports() {
     $('reportClassBody').innerHTML = schoolData.classes.map(c => {
         const list = S.filter(s => s.class.replace(/[A-Z]$/, '').trim() === c.name);
         const expected = sum(list, s => s.total), collected = sum(list, s => s.paid), rate = expected > 0 ? Math.round(collected / expected * 100) : 0;
-        return `<tr><td style="font-weight:600;">${esc(c.name)}</td><td>${list.length}</td><td class="amount">${money(expected)}</td>
-            <td class="amount" style="color:var(--emerald);">${money(collected)}</td><td class="amount" style="color:var(--danger);">${money(Math.max(0, expected - collected))}</td>
-            <td><span class="badge ${rate >= 80 ? 'paid' : rate >= 60 ? 'partial' : 'unpaid'}"><i class="fas fa-circle"></i> ${rate}%</span></td></tr>`;
-    }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light);">No data yet.</td></tr>';
+        return `<tr><td style="font-weight:600;">${esc(c.name)}</td><td>${list.length}</td><td class="num">${money(expected)}</td>
+            <td class="num" style="color:var(--ff-green);">${money(collected)}</td><td class="num" style="color:var(--ff-red);">${money(Math.max(0, expected - collected))}</td>
+            <td><span class="ff-badge ${rate >= 80 ? 'green' : rate >= 60 ? 'amber' : 'red'}">${rate}%</span></td></tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ff-muted);">No data yet.</td></tr>';
 }
 
 function populateSelects() {
@@ -1662,16 +1363,16 @@ function populateSelects() {
 // NAVIGATION
 // ============================================================
 function navigate(section, el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.ff-nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
     $('sec-' + section).classList.add('active');
     $('breadcrumb').textContent = cap(section);
 }
 function showSection(section) { navigate(section, document.querySelector(`[data-section=${section}]`)); }
 function switchSettingsTab(tab, btn) {
-    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.ff-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
     if (btn) btn.classList.add('active');
     $('settings-' + tab).classList.add('active');
     if (tab === 'paybill') loadMpesaStatus();
@@ -1688,9 +1389,9 @@ function loadLedger() {
     $('ledgerContent').style.display = student ? 'block' : 'none';
     if (!student) return;
     $('ledgerStats').innerHTML = `
-        <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-arrow-down"></i></div><div class="stat-value">${money(student.paid)}</div><div class="stat-label">Total Paid</div></div>
-        <div class="stat-card red"><div class="stat-icon red"><i class="fas fa-arrow-up"></i></div><div class="stat-value">${money(student.balance)}</div><div class="stat-label">Balance Due</div></div>
-        <div class="stat-card blue"><div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div><div class="stat-value">${money(student.total)}</div><div class="stat-label">Total Billed</div></div>`;
+        <div class="ff-stat green"><div class="ff-stat-ico green"><i data-ico="download"></i></div><div class="ff-stat-value">${money(student.paid)}</div><div class="ff-stat-label">Total Paid</div></div>
+        <div class="ff-stat red"><div class="ff-stat-ico red"><i data-ico="upload"></i></div><div class="ff-stat-value">${money(student.balance)}</div><div class="ff-stat-label">Balance Due</div></div>
+        <div class="ff-stat"><div class="ff-stat-ico"><i data-ico="receipt"></i></div><div class="ff-stat-value">${money(student.total)}</div><div class="ff-stat-label">Total Billed</div></div>`;
     let running = student.total;
     const rows = [{ date: '—', desc: 'Current fee charges', debit: student.total, credit: 0, balance: running, ref: 'FEES' }];
     schoolData.payments.filter(p => p.studentId === id && p.rawStatus === 'completed').slice().reverse().forEach(p => {
@@ -1698,31 +1399,31 @@ function loadLedger() {
         rows.push({ date: p.date, desc: p.method + ' payment', debit: 0, credit: p.amount, balance: running, ref: p.ref, creditRow: true });
     });
     $('ledgerRows').innerHTML = rows.map(r => `
-        <div class="ledger ${r.creditRow ? 'credit-row' : ''}"><div class="ledger-date">${esc(r.date)}</div><div class="ledger-desc">${esc(r.desc)}</div>
-            <div class="ledger-debit">${r.debit > 0 ? money(r.debit) : '—'}</div><div class="ledger-credit">${r.credit > 0 ? money(r.credit) : '—'}</div>
-            <div class="ledger-balance">${money(r.balance)}</div><div style="font-size:11px;color:var(--text-light);">${esc(r.ref)}</div></div>`).join('');
+        <div class="ledger ${r.creditRow ? 'credit-row' : ''}"><div class="ff-ledger-date">${esc(r.date)}</div><div class="ff-ledger-desc">${esc(r.desc)}</div>
+            <div class="ff-ledger-debit">${r.debit > 0 ? money(r.debit) : '—'}</div><div class="ff-ledger-credit">${r.credit > 0 ? money(r.credit) : '—'}</div>
+            <div class="ff-ledger-balance">${money(r.balance)}</div><div style="font-size:11px;color:var(--ff-muted);">${esc(r.ref)}</div></div>`).join('');
 }
 function printLedger() { window.print(); }
 
 function ensureDetailModal() {
     if ($('modal-details')) return;
-    document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay" id="modal-details"><div class="modal-box" style="max-width:720px"><div class="modal-header"><div class="modal-title" id="detailTitle">Details</div><button class="modal-close" onclick="closeModal('details')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detailBody"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('details')">Close</button></div></div></div>`);
+    document.body.insertAdjacentHTML('beforeend', `<div class="ff-modal" id="modal-details"><div class="ff-modal-box wide"><div class="ff-modal-head"><div class="ff-modal-title" id="detailTitle">Details</div><button class="ff-modal-close" type="button" onclick="closeModal('details')" aria-label="Close"><i data-ico="times"></i></button></div><div class="ff-modal-body" id="detailBody"></div><div class="ff-modal-foot"><button class="ff-btn ff-btn-outline" type="button" onclick="closeModal('details')">Close</button></div></div></div>`);
     $('modal-details').addEventListener('click', e => { if (e.target.id === 'modal-details') closeModal('details'); });
 }
-const detailBox = (label, value, style) => `<div class="detail-box"><div class="detail-label">${esc(label)}</div><div class="detail-value" ${style ? `style="${style}"` : ''}>${value}</div></div>`;
+const detailBox = (label, value, style) => `<div class="ff-field"><div class="ff-label">${esc(label)}</div><div class="ff-detail-value" ${style ? `style="${style}"` : ''}>${value}</div></div>`;
 
 function viewTransaction(id) {
     const p = schoolData.payments.find(x => x.id === id); if (!p) return;
     ensureDetailModal();
-    $('detailTitle').innerHTML = '<i class="fas fa-receipt"></i> Transaction ' + esc(p.ref);
-    $('detailBody').innerHTML = `<div class="detail-grid">
+    $('detailTitle').innerHTML = '<i data-ico="receipt"></i> Transaction ' + esc(p.ref);
+    $('detailBody').innerHTML = `<div class="ff-grid ff-grid-2">
         ${detailBox('Student', esc(p.studentName))}${detailBox('Admission / Class', esc(p.adm) + ' • ' + esc(p.class))}
         ${detailBox('Reference / M-Pesa code', esc(p.ref))}
-        ${detailBox('Amount', money(p.amount), 'color:var(--emerald)')}${detailBox('Method', esc(p.method))}
+        ${detailBox('Amount', money(p.amount), 'color:var(--ff-green)')}${detailBox('Method', esc(p.method))}
         ${detailBox('Status', esc(cap(p.status)))}${detailBox('Date', esc(p.date))}
         ${detailBox('Receipt No.', esc(p.receiptNo || '—'))}${detailBox('Note', esc(p.note || '—'))}</div>
-        <div style="margin-top:16px"><button class="btn btn-primary" onclick="printReceipt('${esc(p.id)}')"><i class="fas fa-print"></i> Print Receipt</button>
-        <button class="btn btn-outline" onclick="closeModal('details');viewStudentProfile('${esc(p.studentId)}')"><i class="fas fa-user"></i> Student Profile</button></div>`;
+        <div style="margin-top:16px"><button class="ff-btn ff-btn-primary" onclick="printReceipt('${esc(p.id)}')"><i data-ico="print"></i> Print Receipt</button>
+        <button class="ff-btn ff-btn-outline" onclick="closeModal('details');viewStudentProfile('${esc(p.studentId)}')"><i data-ico="user"></i> Student Profile</button></div>`;
     openModal('details');
 }
 function viewStudentProfile(id) {
@@ -1730,18 +1431,18 @@ function viewStudentProfile(id) {
     const tx = schoolData.payments.filter(p => p.studentId === id);
     const parentNames = schoolData.links.filter(l => l.student_id === id && l.status === 'active').map(l => (schoolData.parents.find(p => p.id === l.parent_id) || {}).name).filter(Boolean);
     ensureDetailModal();
-    $('detailTitle').innerHTML = '<i class="fas fa-user-graduate"></i> ' + esc(st.name);
-    $('detailBody').innerHTML = `<div class="detail-grid">
+    $('detailTitle').innerHTML = '<i data-ico="student"></i> ' + esc(st.name);
+    $('detailBody').innerHTML = `<div class="ff-grid ff-grid-2">
         ${detailBox('Admission', esc(st.adm))}${detailBox('Class', esc(st.class) + (st.boarding ? ' (boarder)' : ''))}
-        ${detailBox('Total billed', st.noFee ? 'Not set' : money(st.total))}${detailBox('Balance', money(st.balance), 'color:var(--danger)')}
+        ${detailBox('Total billed', st.noFee ? 'Not set' : money(st.total))}${detailBox('Balance', money(st.balance), 'color:var(--ff-red)')}
         ${detailBox('Guardian', esc(st.parentName || '—') + '<br>' + esc(st.parentPhone))}${detailBox('Status', esc(cap(st.status)))}
         ${detailBox('Linked parent accounts', esc(parentNames.join(', ') || 'None yet'))}</div>
         <h4 style="margin:20px 0 10px">Payment Transactions</h4>
-        <div style="overflow:auto"><table class="table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>
-        ${tx.length ? tx.map(p => `<tr class="clickable-row" onclick="viewTransaction('${esc(p.id)}')"><td>${esc(p.ref)}</td><td class="amount">${money(p.amount)}</td><td>${esc(p.method)}</td><td>${esc(p.date)}</td></tr>`).join('') : '<tr><td colspan="4">No payments yet.</td></tr>'}
+        <div style="overflow:auto"><table class="ff-table"><thead><tr><th>Reference</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead><tbody>
+        ${tx.length ? tx.map(p => `<tr class="ff-clickable" onclick="viewTransaction('${esc(p.id)}')"><td>${esc(p.ref)}</td><td class="num">${money(p.amount)}</td><td>${esc(p.method)}</td><td>${esc(p.date)}</td></tr>`).join('') : '<tr><td colspan="4">No payments yet.</td></tr>'}
         </tbody></table></div>
-        <div style="margin-top:14px;"><button class="btn btn-outline" onclick="closeModal('details');viewStudentLedger('${esc(st.id)}')"><i class="fas fa-book"></i> View Ledger</button>
-        <button class="btn btn-green" onclick="closeModal('details');openRecordPaymentFor('${esc(st.id)}')"><i class="fas fa-plus"></i> Record Payment</button></div>`;
+        <div style="margin-top:14px;"><button class="ff-btn ff-btn-outline" onclick="closeModal('details');viewStudentLedger('${esc(st.id)}')"><i data-ico="book"></i> View Ledger</button>
+        <button class="ff-btn ff-btn-green" onclick="closeModal('details');openRecordPaymentFor('${esc(st.id)}')"><i data-ico="plus"></i> Record Payment</button></div>`;
     openModal('details');
 }
 function printReceipt(id) {
@@ -1902,7 +1603,7 @@ async function sendReminder(studentId) {
 function renderMpesaStatus(s) {
     const on = !!(s && s.configured);
     $('mpesaStatusLine').innerHTML = on
-        ? `<strong style="color:var(--emerald);">Connected</strong> — ${s.environment === 'production' ? 'live (real money)' : 'sandbox (testing)'}, ${esc(s.shortcode_type)} ${esc(s.shortcode)}. Paybill-menu payments: ${s.c2b_registered ? 'matched automatically' : 'not registered yet (parents can still pay by STK Push; other payments will show under Payments to match)'}.`
+        ? `<strong style="color:var(--ff-green);">Connected</strong> — ${s.environment === 'production' ? 'live (real money)' : 'sandbox (testing)'}, ${esc(s.shortcode_type)} ${esc(s.shortcode)}. Paybill-menu payments: ${s.c2b_registered ? 'matched automatically' : 'not registered yet (parents can still pay by STK Push; other payments will show under Payments to match)'}.`
         : 'Not connected. Parents are shown your paybill and their child\'s admission number to pay from the M-Pesa menu.';
     $('mpesaRemoveBtn').style.display = on ? '' : 'none';
     if (on) { $('mpesaEnv').value = s.environment; $('mpesaType').value = s.shortcode_type; $('mpesaShortcode').value = s.shortcode; }
@@ -1936,16 +1637,16 @@ async function removeMpesa() {
 function renderUnmatched() {
     const list = schoolData.unmatched || [];
     if (!list.length) {
-        $('unmatchedList').innerHTML = '<p style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">No unmatched transactions. Payments made through FeeFlow are matched to students automatically. Use "Manual Match" for a payment you find on your paybill statement.</p>';
+        $('unmatchedList').innerHTML = '<p style="padding:20px;text-align:center;color:var(--ff-muted);font-size:13px;">No unmatched transactions. Payments made through FeeFlow are matched to students automatically. Use "Manual Match" for a payment you find on your paybill statement.</p>';
         return;
     }
     const opts = '<option value="">Choose student…</option>' + schoolData.students.map(s => `<option value="${esc(s.id)}">${esc(s.name)} (${esc(s.adm)}, ${esc(s.class)})</option>`).join('');
-    $('unmatchedList').innerHTML = '<p class="form-hint" style="padding:10px 16px 0;">These payments reached your paybill with an account number that matches no student. Choose the right student so the money is credited.</p>' + list.map(u => `
-        <div class="checkbox-row" style="flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;">
+    $('unmatchedList').innerHTML = '<p class="ff-hint" style="padding:10px 16px 0;">These payments reached your paybill with an account number that matches no student. Choose the right student so the money is credited.</p>' + list.map(u => `
+        <div class="ff-check" style="flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;">
             <div style="flex:1;min-width:200px;"><strong>${esc(money(u.amount))}</strong>
-                <div style="font-size:12px;color:var(--text-light);">${esc(u.trans_id)} · account "${esc(u.bill_ref || 'none')}" · ${esc(u.payer_name || u.msisdn || '')} · ${esc(fmtDateTime(u.trans_time))}</div></div>
-            <select class="form-input" id="um-${esc(u.id)}" style="max-width:240px;">${opts}</select>
-            <button class="btn btn-primary btn-sm" onclick="resolveUnmatched('${esc(u.id)}')">Match</button>
+                <div style="font-size:12px;color:var(--ff-muted);">${esc(u.trans_id)} · account "${esc(u.bill_ref || 'none')}" · ${esc(u.payer_name || u.msisdn || '')} · ${esc(fmtDateTime(u.trans_time))}</div></div>
+            <select class="ff-input" id="um-${esc(u.id)}" style="max-width:240px;">${opts}</select>
+            <button class="ff-btn ff-btn-primary ff-btn-sm" onclick="resolveUnmatched('${esc(u.id)}')">Match</button>
         </div>`).join('');
 }
 async function resolveUnmatched(id) {
@@ -2083,20 +1784,7 @@ function exportDashboard() { window.print(); }
 // ============================================================
 // TOAST (text is never interpreted as HTML)
 // ============================================================
-function showToast(message, type = 'info') {
-    const container = $('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    const icons = { info: 'fa-info-circle', success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle' };
-    const colors = { info: 'var(--info)', success: 'var(--emerald)', error: 'var(--danger)', warning: 'var(--warning)' };
-    const icon = document.createElement('i');
-    icon.className = 'fas ' + (icons[type] || icons.info);
-    icon.style.cssText = 'color:' + (colors[type] || colors.info) + ';font-size:16px;';
-    toast.appendChild(icon);
-    toast.appendChild(document.createTextNode(' ' + message));
-    container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, type === 'error' ? 6000 : 3500);
-}
+function showToast(message, type) { FFUI.toast(message, type || 'info'); }
 
 // ============================================================
 // INIT
@@ -2107,7 +1795,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const t = $('themeSelect'); if (t) t.value = theme;
     checkAuth();
 });
-document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }); });
 </script>
+  <script>
+    // Register the service worker so the app opens offline and can be installed on a phone.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          // a waiting worker means a new version is ready: swap it in on the next navigation
+          if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage('skip-waiting');
+        }).catch(function () { /* offline-first is a bonus, not a requirement */ });
+      });
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (refreshing) return; refreshing = true;
+      });
+    }
+  </script>
 </body>
 </html>
