@@ -126,7 +126,7 @@
         const off = num(a.amount) < 0;
         return `<tr${a.active ? '' : ' style="opacity:.5"'}>
           <td><strong>${esc(s.name || 'Unknown pupil')}</strong><div class="ff-hint">${esc(s.adm || '')} · ${esc(s.klass || '')}</div></td>
-          <td><span class="ff-badge ${off ? 'ff-badge-green' : 'ff-badge-amber'}">${esc(kindLabel(a.kind))}</span></td>
+          <td><span class="ff-badge ${off ? 'ff-badge green' : 'ff-badge amber'}">${esc(kindLabel(a.kind))}</span></td>
           <td class="ff-money ${off ? '' : 'ff-money-neg'}" style="font-weight:700">${a.active ? (off ? '−' : '+') : ''}${money(Math.abs(num(a.amount)))}</td>
           <td style="max-width:260px">${esc(a.reason)}</td>
           <td>${esc(a.term_name || '—')}${a.standing ? '<div class="ff-hint">standing</div>' : ''}</td>
@@ -240,7 +240,7 @@
     $('historyList').innerHTML = `<div class="ff-reminder-list">${hist.map(h => `
       <div class="ff-reminder-row">
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700">Version ${h.version}${h.superseded_at ? '' : ' <span class="ff-badge ff-badge-green">current</span>'}</div>
+          <div style="font-weight:700">Version ${h.version}${h.superseded_at ? '' : ' <span class="ff-badge green">current</span>'}</div>
           <div class="ff-hint">Published ${esc(FFUI.fmtDateTime(h.published_at))} · ${esc((h.term_names || []).join(', '))}</div>
         </div>
         <button class="ff-btn ff-btn-outline ff-btn-sm" type="button" onclick="FA.showHistory('${h.id}')">View</button>
@@ -487,7 +487,7 @@
     const h = (window.FA.history || []).find(x => String(x.id) === String(id));
     if (!h) return;
     $('historyDetailCard').hidden = false;
-    $('historyDetailTitle').innerHTML = `Version ${h.version}${h.superseded_at ? '' : ' <span class="ff-badge ff-badge-green">current</span>'}`;
+    $('historyDetailTitle').innerHTML = `Version ${h.version}${h.superseded_at ? '' : ' <span class="ff-badge green">current</span>'}`;
     $('historyDetailSub').textContent = `Published ${FFUI.fmtDateTime(h.published_at)} · ${(h.term_names || []).join(', ')}`;
     const levels = (h.data && h.data.levels) || [];
     $('historyDetailBody').innerHTML = levels.length

@@ -81,7 +81,7 @@ const FIELDS = { regSchoolName: 'Don Bosco Ituru', regSchoolLocation: 'Gatundu, 
   const pickLevel = (pg, level) => { pg.d.querySelector('#levelCards .ff-level-card[data-level="' + level + '"]').click(); };
 
   // ---------- validation happens in the browser, before any request ----------
-  const fill = (over = {}) => Object.entries({ ...FIELDS, ...over }).forEach(([k, v]) => p.set(k, v));
+  const fill = (over = {}) => { const { agree, ...rest } = over; Object.entries({ ...FIELDS, ...rest }).forEach(([k, v]) => p.set(k, v)); p.d.getElementById('regSchoolAgree').checked = agree !== false; };
   p = await open(); p.d.querySelector('.ff-tab[data-tab="school"]').click(); fill({ regSchoolName: 'D' });
   await p.w.registerSchool();
   ok(/school name/i.test(p.err('registerSchoolError')) && !p.mock.calls.some(c => c[0] === 'signUp'), 'a too-short school name is rejected without contacting the server');
@@ -114,6 +114,9 @@ const FIELDS = { regSchoolName: 'Don Bosco Ituru', regSchoolLocation: 'Gatundu, 
   p = await open({ signUpSession: true, rpc: { register_school: () => ({ data: 'school-uuid-1', error: null }) } });
   p.d.querySelector('.ff-tab[data-tab="school"]').click();
   pickLevel(p, 'Primary & Secondary');
+  fill({ agree: false });
+  await p.w.registerSchool();
+  ok(/Terms of Use|authorised/i.test(p.err('registerSchoolError')) && !p.mock.calls.some(c => c[0] === 'signUp'), 'school registration needs the authorisation checkbox');
   fill();
   await p.w.registerSchool(); await tick(80);
 

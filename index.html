@@ -3,19 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="refresh" content="0; url=portal.html">
-  <title>FeeFlow</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <title>FeeFlow — School fees for Kenyan schools</title>
+  <meta name="description" content="FeeFlow helps Kenyan schools set CBC and 8-4-4 fee structures, collect fees by M-Pesa, track balances and give parents clear, private access to their children's fees.">
   <meta name="theme-color" content="#0c2d57">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="FeeFlow">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:title" content="FeeFlow — School fees for Kenyan schools">
+  <meta property="og:description" content="Fee structures, M-Pesa collection, balances and receipts, in one place for schools and parents.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <script>location.replace('portal.html');</script>
+  <link rel="stylesheet" href="css/ff.css">
+  <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
-  <p>Redirecting to <a href="portal.html">FeeFlow</a>…</p>
+<a class="lp-skip" href="#main">Skip to content</a>
+
+<header class="lp-head">
+  <div class="lp-wrap">
+    <a class="lp-logo" href="index.html" aria-label="FeeFlow home"><span class="ff-brand-mark"><i data-ico="school"></i></span> FeeFlow</a>
+    <nav class="lp-nav" id="lpNav" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#who">Schools &amp; parents</a>
+      <a href="#security">Privacy &amp; security</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="lp-head-cta">
+      <button class="ff-btn ff-btn-icon ff-btn-ghost" id="lpTheme" type="button" aria-label="Switch light or dark theme"><i data-ico="sun"></i></button>
+      <a class="ff-btn ff-btn-outline lp-hide-sm" href="portal.html">Sign in</a>
+      <a class="ff-btn ff-btn-primary" href="portal.html?mode=school">Register your school</a>
+      <button class="ff-btn ff-btn-icon ff-btn-ghost lp-menu-btn" id="lpMenu" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="lpNav"><i data-ico="menu"></i></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="lp-hero">
+    <div class="lp-wrap">
+      <div>
+        <span class="lp-pill"><i data-ico="checkCircle" data-size="ff-ico-sm"></i> Built for Kenyan schools · CBC &amp; 8-4-4</span>
+        <h1>School fees, <em>clear for everyone</em>.</h1>
+        <p class="lp-lede">FeeFlow lets a school set its fee structure, collect by M-Pesa, and see who has paid and who hasn't — while each parent sees only their own children's balances and receipts.</p>
+        <div class="lp-actions">
+          <a class="ff-btn ff-btn-primary" href="portal.html?mode=school"><i data-ico="school" data-size="ff-ico-sm"></i> Register your school</a>
+          <a class="ff-btn ff-btn-outline" href="portal.html?mode=parent"><i data-ico="user" data-size="ff-ico-sm"></i> I'm a parent</a>
+          <a class="ff-btn ff-btn-ghost" href="portal.html">Sign in <i data-ico="arrowRight" data-size="ff-ico-sm"></i></a>
+        </div>
+        <div class="lp-trust">
+          <span><i data-ico="check" data-size="ff-ico-sm"></i> Free trial plan for every new school</span>
+          <span><i data-ico="check" data-size="ff-ico-sm"></i> Works on any phone</span>
+          <span><i data-ico="check" data-size="ff-ico-sm"></i> Data Protection Act, 2019 aware</span>
+        </div>
+      </div>
+      <div aria-hidden="true">
+        <div class="lp-mock">
+          <div class="lp-mock-top"><span>Term 2 collection</span><small>Example data</small></div>
+          <div class="lp-mock-stats">
+            <div class="lp-mock-stat"><b>KES 1.2M</b><span>Collected</span></div>
+            <div class="lp-mock-stat"><b>KES 460K</b><span>Outstanding</span></div>
+            <div class="lp-mock-stat"><b>72%</b><span>Paid up</span></div>
+          </div>
+          <div class="lp-mock-bar"><i></i></div>
+          <div class="lp-mock-row"><span class="ff-avatar">AW</span><span class="grow">Amani Wanjiru<small>Grade 4 · M-Pesa matched</small></span><span class="ff-badge green">Paid</span></div>
+          <div class="lp-mock-row"><span class="ff-avatar">BO</span><span class="grow">Brian Otieno<small>Grade 7 · balance KES 8,500</small></span><span class="ff-badge amber">Partial</span></div>
+          <div class="lp-mock-row"><span class="ff-avatar">CK</span><span class="grow">Cynthia Kamau<small>Form 2 · balance KES 24,000</small></span><span class="ff-badge red">Unpaid</span></div>
+        </div>
+        <p class="lp-note">Illustration with example figures, not real pupils.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="features">
+    <div class="lp-wrap">
+      <div class="lp-center">
+        <div class="lp-eyebrow">What FeeFlow does</div>
+        <h2>Everything a bursar does, in one place</h2>
+        <p class="lp-sub">From publishing the fee structure to printing a receipt, each step is recorded so any figure can be explained.</p>
+      </div>
+      <div class="lp-grid c3">
+        <article class="lp-card"><span class="lp-ico"><i data-ico="receipt"></i></span><h3>Fee structures that follow your school</h3><p>Primary, junior, senior or both. Build fees per grade and term, copy between grades, and publish. Every published version is kept.</p></article>
+        <article class="lp-card"><span class="lp-ico g"><i data-ico="mobile"></i></span><h3>M-Pesa collection</h3><p>Parents pay by STK Push or paybill. Payments are matched to the right pupil, and unmatched ones are queued for the school to resolve.</p></article>
+        <article class="lp-card"><span class="lp-ico a"><i data-ico="book"></i></span><h3>Ledger, arrears and receipts</h3><p>Balances are worked out by the database from the fee structure and confirmed payments, never typed in by hand. Receipts are numbered and printable.</p></article>
+        <article class="lp-card"><span class="lp-ico v"><i data-ico="star"></i></span><h3>Bursaries, waivers and discounts</h3><p>Sibling, staff-child and scholarship rules, one-off waivers, and arrears brought forward. Each carries its reason for the audit trail.</p></article>
+        <article class="lp-card"><span class="lp-ico"><i data-ico="clock"></i></span><h3>Late fees you control</h3><p>Optional, with a grace period, charged once per pupil per term. Switched off until you turn them on.</p></article>
+        <article class="lp-card"><span class="lp-ico g"><i data-ico="send"></i></span><h3>Reminders by SMS</h3><p>Send fee reminders to guardians with outstanding balances, with a record of what was sent, skipped or failed.</p></article>
+        <article class="lp-card"><span class="lp-ico a"><i data-ico="swap"></i></span><h3>Transport and meals</h3><p>Bus routes and meal plans with their own prices. Assign a pupil and the charge is added, and updated if the price changes.</p></article>
+        <article class="lp-card"><span class="lp-ico v"><i data-ico="users"></i></span><h3>A parent portal</h3><p>Parents link their children, see fees and balances, pay, and download receipts. The school approves each link first.</p></article>
+        <article class="lp-card"><span class="lp-ico"><i data-ico="chart"></i></span><h3>Reports and exports</h3><p>Outstanding fees, collection summaries and CSV exports for the board, the auditor or the Ministry.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec alt" id="how">
+    <div class="lp-wrap">
+      <div class="lp-center"><div class="lp-eyebrow">How it works</div><h2>Up and running in an afternoon</h2></div>
+      <div class="lp-grid c4">
+        <div class="lp-step"><span class="n">1</span><h3>Register the school</h3><p>Create the school account and sign in straight away. Choose primary, secondary or both.</p></div>
+        <div class="lp-step"><span class="n">2</span><h3>Set the fees</h3><p>Fill in the fee structure for each grade and publish it. Add your pupils and their guardians' phone numbers.</p></div>
+        <div class="lp-step"><span class="n">3</span><h3>Parents join</h3><p>Parents register, find the school, and ask to link their child. You approve the link once you recognise them.</p></div>
+        <div class="lp-step"><span class="n">4</span><h3>Collect and track</h3><p>Payments arrive by M-Pesa, balances update, receipts are issued, and reminders go to those still owing.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="who">
+    <div class="lp-wrap">
+      <div class="lp-center"><div class="lp-eyebrow">Made for both sides of the fee desk</div><h2>For schools and for parents</h2></div>
+      <div class="lp-grid c2">
+        <div class="lp-card lp-aud"><span class="lp-ico"><i data-ico="school"></i></span><h3>School administrators</h3>
+          <ul>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> One place for fees, payments, arrears and receipts</li>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> No more matching M-Pesa messages by hand</li>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> A clear view of who owes what, by class</li>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> Your school's data is visible only to your school</li>
+          </ul>
+          <a class="ff-btn ff-btn-primary" href="portal.html?mode=school">Register your school <i data-ico="arrowRight" data-size="ff-ico-sm"></i></a>
+        </div>
+        <div class="lp-card lp-aud"><span class="lp-ico g"><i data-ico="user"></i></span><h3>Parents and guardians</h3>
+          <ul>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> See exactly what is owed for each child</li>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> Pay by M-Pesa from your phone</li>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> Keep receipts for every payment</li>
+            <li><i data-ico="check" data-size="ff-ico-sm"></i> Only you and the school can see your child's fees</li>
+          </ul>
+          <a class="ff-btn ff-btn-outline" href="portal.html?mode=parent">Create a parent account <i data-ico="arrowRight" data-size="ff-ico-sm"></i></a>
+          <p class="ff-hint" style="margin-top:10px">Your school must already be registered on FeeFlow.</p>
+        </div>
+      </div>
+      <div class="lp-center" style="margin-top:46px">
+        <div class="lp-eyebrow">Aligned to the Kenyan curriculum</div>
+        <p class="lp-sub" style="margin-top:8px">Fee structures use the structure schools actually run, including the CBC stages and the 8-4-4 classes still being phased out.</p>
+        <div class="lp-cbc" style="justify-content:center">
+          <span class="lp-chip">Pre-Primary<small>PP1–PP2</small></span>
+          <span class="lp-chip">Lower &amp; Upper Primary<small>Grade 1–6</small></span>
+          <span class="lp-chip">Junior School<small>Grade 7–9</small></span>
+          <span class="lp-chip">Senior School<small>Grade 10–12</small></span>
+          <span class="lp-chip">8-4-4<small>Form 1–4</small></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec alt" id="security">
+    <div class="lp-wrap">
+      <div class="lp-center"><div class="lp-eyebrow">Privacy &amp; security</div><h2>Children's records deserve care</h2>
+        <p class="lp-sub">FeeFlow holds pupils' names and guardians' phone numbers, which is personal data under Kenya's Data Protection Act, 2019. Here is how that is handled.</p></div>
+      <div class="lp-grid c3">
+        <article class="lp-card"><span class="lp-ico"><i data-ico="shield"></i></span><h3>Each school is walled off</h3><p>Database rules let a school see only its own records, and a parent only their own linked children.</p></article>
+        <article class="lp-card"><span class="lp-ico g"><i data-ico="lock"></i></span><h3>Money can't be edited from a browser</h3><p>Totals are computed on the server and only confirmed payments reduce a balance. Changes are written to an audit log.</p></article>
+        <article class="lp-card"><span class="lp-ico a"><i data-ico="file"></i></span><h3>Clear roles and clear terms</h3><p>The school is the data controller for its pupils' records; FeeFlow processes them on its behalf. Read the <a href="legal/privacy.html">Privacy Policy</a>, <a href="legal/terms.html">Terms</a> and <a href="legal/data-protection.html">Data Protection notice</a>.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="faq">
+    <div class="lp-wrap">
+      <div class="lp-center"><div class="lp-eyebrow">Questions</div><h2>Frequently asked</h2></div>
+      <div class="lp-faq">
+        <details><summary>How does a school get started?</summary><p>Choose “Register your school”, fill in the school and administrator details, and you can sign in straight away. New schools start on a free trial plan.</p></details>
+        <details><summary>How do parents get access?</summary><p>A parent registers, selects the school, and asks to link a child using the admission number. The school approves the request, so strangers cannot see a child's fees.</p></details>
+        <details><summary>Does FeeFlow hold our money?</summary><p>No. Parents pay into the school's own M-Pesa paybill. FeeFlow records and matches the payments; it does not keep the funds.</p></details>
+        <details><summary>Is M-Pesa payment set up automatically?</summary><p>Each school connects its own M-Pesa (Daraja) credentials in its settings before STK Push works. Until then, parents are shown the paybill and the admission number to pay with.</p></details>
+        <details><summary>Does it support CBC?</summary><p>Yes. Fee structures cover PP1–PP2, Grade 1–6, Junior School (Grade 7–9) and Senior School (Grade 10–12), as well as 8-4-4 classes for schools still running them.</p></details>
+        <details><summary>Where is our data stored, and who can see it?</summary><p>On a managed cloud database with row-level access rules. A school sees only its own data and a parent only their linked children. See the <a href="legal/data-protection.html">Data Protection notice</a> for details and your rights.</p></details>
+        <details><summary>Does it work on a phone?</summary><p>Yes. FeeFlow is built mobile-first and can be installed to the home screen from your browser.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-wrap">
+    <div class="lp-cta">
+      <h2>Ready to make school fees simple?</h2>
+      <p>Register your school in a couple of minutes, or sign in to carry on where you left off.</p>
+      <div class="lp-actions" style="justify-content:center;margin-top:0">
+        <a class="ff-btn" href="portal.html?mode=school">Register your school</a>
+        <a class="ff-btn ghost" href="portal.html">Sign in</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="lp-foot">
+  <div class="lp-wrap">
+    <div class="cols">
+      <div><a class="lp-logo" href="index.html" style="padding:0"><span class="ff-brand-mark"><i data-ico="school"></i></span> FeeFlow</a>
+        <p style="margin-top:12px;max-width:280px">School fee management for Kenyan schools and the parents they serve.</p></div>
+      <div><h4>Product</h4><a href="#features">Features</a><a href="#how">How it works</a><a href="#faq">FAQ</a></div>
+      <div><h4>Get started</h4><a href="portal.html?mode=school">Register a school</a><a href="portal.html?mode=parent">Parent sign-up</a><a href="portal.html">Sign in</a></div>
+      <div><h4>Legal</h4><a href="legal/privacy.html">Privacy Policy</a><a href="legal/terms.html">Terms of Use</a><a href="legal/data-protection.html">Data Protection</a></div>
+    </div>
+    <p class="legal">© <span id="lpYear">2026</span> FeeFlow Kenya. We process personal data under the Data Protection Act, 2019. FeeFlow does not hold or move school funds; payments go to each school's own M-Pesa account.</p>
+  </div>
+</footer>
+
+<script src="js/ff-ui.js"></script>
+<script>
+(function () {
+  var nav = document.getElementById('lpNav'), btn = document.getElementById('lpMenu');
+  btn.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  nav.addEventListener('click', function (e) { if (e.target.tagName === 'A') { nav.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } });
+  document.getElementById('lpTheme').addEventListener('click', function () { FFUI.setTheme(FFUI.loadTheme() === 'dark' ? 'light' : 'dark'); });
+  document.getElementById('lpYear').textContent = new Date().getFullYear();
+  if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+})();
+</script>
 </body>
 </html>

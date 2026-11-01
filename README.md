@@ -38,10 +38,11 @@ In Supabase → Authentication → URL Configuration, add every address you use 
 portal.html  parent.html  schooladmin.html  fee-structure-manager.html  fee-adjustments.html  superadmin.html  index.html
 css/ff.css     shared look for every page
 js/            config.js, ff-client.js, ff-ui.js, fee-manager.js, fee-adjustments.js, vendor/ (pinned supabase-js)
+js/business.js your registered business details (shown on the legal pages)
 legal/         privacy, terms, data protection (add your real business details)
 sw.js, manifest.webmanifest   installable app + offline shell
 supabase/
-  migrations/  the exact SQL applied to the live database, in order (0001 ... 0013)
+  migrations/  the exact SQL applied to the live database, in order (0001 ... 0014)
   functions/   Edge Functions: admin-create-school, admin-reset-password, fee-api, fee-callback
   tests/       SQL security tests (roll back; run in the Supabase SQL editor)
 tests/         front-end tests (simulated browser + mock Supabase)
@@ -51,7 +52,7 @@ tests/         front-end tests (simulated browser + mock Supabase)
 
 ```bash
 npm install      # jsdom, for the front-end tests only
-npm test         # 584 front-end checks
+npm test         # front-end checks
 ```
 SQL tests are in `supabase/tests/` (`rls_smoke.sql`, `access_matrix.sql`, `migration_0006.sql`, `fee_adjustments.sql`); each ends with a deliberate error that rolls everything back, and a successful run is a message listing only `PASS` lines. Re-run them after any schema or policy change.
 

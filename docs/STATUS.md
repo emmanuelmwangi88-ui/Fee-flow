@@ -8,7 +8,16 @@
 - M-Pesa via `fee-api` / `fee-callback`; reconcile cron; SMS reminders (needs keys).
 - Installable PWA shell, legal pages, shared UI. 584 front-end checks plus SQL tests (`supabase/tests/`) pass.
 
+## Added in the latest round
+- Landing page (`index.html`) explaining FeeFlow, with links into the portal (`portal.html?mode=school|parent`).
+- Portal redesign, consent checkboxes on both registration forms, 'What is FeeFlow?' link.
+- Sidebars: the menu button hides/shows the whole sidebar on desktop; the chevron in the sidebar header minimises it to an icon rail. Remembered per browser.
+- Legal pages corrected to describe only what exists today (no staff sub-roles, no auto-billing, FeeFlow does not hold funds); controller/processor roles, children's data, transfers, cookies and breach notice added.
+- `js/business.js`: one place for your registered business name, emails, address and ODPC number. Unset values show as a yellow "[... not set]" marker.
+- Migration 0014 (FK indexes; school admins can no longer edit `id`, `created_at`, `registered_by` or `admin_note` on their school row).
+
 ## You must do
+0. Edit `js/business.js` with your real business details. Migration 0014 may still need applying: run `supabase/migrations/20261101_0014_hardening_and_indexes.sql` in the SQL editor if the assistant could not.
 1. Dashboard -> Auth -> Password security: enable leaked-password protection.
 2. Enter each school's Daraja sandbox key / secret / passkey in School Admin -> Paybill; test one STK payment.
 3. Super Admin -> SMS: enter Africa's Talking username and API key.

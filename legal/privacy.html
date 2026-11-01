@@ -50,7 +50,7 @@
     </div>
 
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated 31 October 2026</p>
+    <p class="updated">Last updated 1 November 2026</p>
 
     <div class="ff-alert ff-alert-info" style="margin-bottom:22px">
       <i data-ico="info"></i>
@@ -62,7 +62,7 @@
     <h2 id="what">1. What we collect</h2>
     <ul>
       <li><strong>School records:</strong> school name, location, level (primary or secondary), paybill number, phone and address.</li>
-      <li><strong>Staff accounts:</strong> the name, work email and role of each person a school authorises — super-admin, school-admin, bursar, teacher or parent.</li>
+      <li><strong>Staff accounts:</strong> the name, work email and role of each person a school authorises — platform administrator, school administrator or parent.</li>
       <li><strong>Pupil records:</strong> name, admission number, class or grade, gender, and any guardian or transport or meal allocation the school enters.</li>
       <li><strong>Guardian records:</strong> name, phone number, and the pupils you are linked to.</li>
       <li><strong>Payment records:</strong> amount, date, M-Pesa receipt number, paybill and account number used, and the fee item paid.</li>
@@ -111,14 +111,33 @@
     <h2 id="security">6. How we protect it</h2>
     <p>Data is encrypted in transit using TLS. Passwords are never stored — authentication runs through our provider's password hashing. Each school's data is separated at the database level, and every staff action on money is written to an audit log the school can read.</p>
 
-    <h2 id="contact">7. Contact</h2>
+    <h2 id="role">7. Our role: controller and processor</h2>
+    <p>For pupil and guardian records entered by a school, <strong>the school is the data controller</strong> and FeeFlow acts as its <strong>data processor</strong>: we process those records only on the school's instructions. For the accounts people create to sign in (name, email, phone, password), FeeFlow is the controller.</p>
+
+    <h2 id="children">8. Children's data</h2>
+    <p>FeeFlow does not offer accounts to children. Pupil records are created by the school, and a parent can see a child's fee details only after the school approves the link. If you believe a child's record is wrong, or should not be linked to you, contact the school or us and we will act on it promptly.</p>
+
+    <h2 id="transfers">9. Where data is stored</h2>
+    <p>Data is hosted by Supabase on cloud infrastructure outside Kenya (the project is in the AWS eu-west-2 region, London). Transfers outside Kenya are made to a provider bound by a data processing agreement and appropriate safeguards, as the Data Protection Act, 2019 requires. SMS reminders, if a school turns them on, are sent through Africa's Talking, and M-Pesa payments through Safaricom's Daraja service; each receives only what it needs (a phone number and a message or amount).</p>
+
+    <h2 id="cookies">10. Cookies and local storage</h2>
+    <p>FeeFlow does not use advertising or tracking cookies. Your browser stores a sign-in session, your light/dark theme and sidebar preferences, and a cached copy of the app so it opens quickly. You can clear these in your browser settings; you will simply be signed out.</p>
+
+    <h2 id="breach">11. If something goes wrong</h2>
+    <p>If we become aware of a personal data breach that is likely to put people at risk, we will notify the Office of the Data Protection Commissioner within 72 hours and tell the affected schools, so they can inform the people concerned.</p>
+
+    <h2 id="changes">12. Changes</h2>
+    <p>We will update this page when our practices change and tell school administrators about significant changes.</p>
+
+    <h2 id="contact">13. Contact</h2>
     <div class="legal-card">
-      <p style="margin:0">Data Controller: <strong>FeeFlow Kenya</strong><br>
-      Data Protection Officer: <strong>dpo@feeflow.co.ke</strong><br>
-      Postal address: <strong>P.O. Box 1000-00200, Nairobi, Kenya</strong></p>
+      <p style="margin:0">Operator: <strong><span data-biz="name"></span></strong><br>
+      Data Protection Officer: <strong><span data-biz="dpoEmail"></span></strong><br>
+      Postal address: <strong><span data-biz="address"></span></strong></p>
       <p style="margin:10px 0 0">Before this service goes live, the school must complete its own registration with the Office of the Data Protection Commissioner. See <a href="data-protection.html">our Data Protection registration statement</a>.</p>
     </div>
   </main>
   <script src="../js/ff-ui.js"></script>
+  <script src="../js/business.js"></script>
 </body>
 </html>

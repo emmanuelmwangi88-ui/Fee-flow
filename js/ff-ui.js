@@ -51,6 +51,8 @@
     shield: '<path d="M12 3 5 6v5.5c0 4.4 3 8.2 7 9.5 4-1.3 7-5.1 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
     mobile: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
     chevron: '<path d="m9 5 7 7-7 7"/>',
+    chevronLeft: '<path d="m15 5-7 7 7 7"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     arrowRight: '<path d="M4 12h15m0 0-5.5-5.5M19 12l-5.5 5.5"/>',
     arrowLeft: '<path d="M20 12H5m0 0 5.5-5.5M5 12l5.5 5.5"/>',
     file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>',
@@ -164,6 +166,53 @@
     });
   }
 
+  /* ---------------------------------------------- sidebar: minimise / hide --- */
+  /* Two remembered desktop states: "collapsed" (icon rail) and "hidden" (no sidebar).
+     Both live on <body> so every page shares them, and are stored per browser. */
+  var NAV_KEY = 'ff.nav';
+  function readNav() { try { return JSON.parse(localStorage.getItem(NAV_KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function setNavState(which, on) {
+    document.body.classList.toggle('ff-nav-' + which, !!on);
+    var st = readNav(); st[which] = !!on;
+    try { localStorage.setItem(NAV_KEY, JSON.stringify(st)); } catch (e) { /* private mode: fine */ }
+    syncNavButtons();
+  }
+  function applyNavState() {
+    var st = readNav();
+    document.body.classList.toggle('ff-nav-collapsed', !!st.collapsed);
+    document.body.classList.toggle('ff-nav-hidden', !!st.hidden);
+  }
+  function syncNavButtons() {
+    var collapsed = document.body.classList.contains('ff-nav-collapsed');
+    document.querySelectorAll('.ff-collapse-btn').forEach(function (b) {
+      b.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+      b.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Minimise sidebar');
+      b.title = collapsed ? 'Expand sidebar' : 'Minimise sidebar';
+    });
+  }
+  /* Adds the minimise button and hover labels. Runs again whenever markup is added,
+     because parent.html builds its whole shell after loading. */
+  function decorateNav(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('.ff-brand').forEach(function (brand) {
+      if (!brand.closest('.ff-sidebar') || brand.querySelector('.ff-collapse-btn')) return;
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'ff-collapse-btn';
+      b.innerHTML = ico('chevronLeft', 'ff-ico-sm');
+      brand.appendChild(b);
+    });
+    scope.querySelectorAll('.ff-nav-item').forEach(function (it) {
+      if (!it.title) it.title = (it.textContent || '').replace(/\s+/g, ' ').trim().replace(/\s\d+$/, '');
+    });
+    syncNavButtons();
+  }
+
+  var decorateTimer = null;
+  function scheduleDecorate() {
+    if (decorateTimer) return;               // one pass per burst of DOM changes, never one per node
+    decorateTimer = setTimeout(function () { decorateTimer = null; decorateNav(document); }, 60);
+  }
+
   /* -------------------------------------------------------- navigation --- */
   var navWired = false;
   function wireNav() {
@@ -182,9 +231,13 @@
 
       const toggle = t.closest('[data-ff-nav-toggle]');
       if (toggle) {
-        document.body.classList.toggle('ff-nav-open');
+        // phones and tablets: slide-in drawer. Desktop: hide / show the whole sidebar.
+        if (window.innerWidth <= 980) document.body.classList.toggle('ff-nav-open');
+        else setNavState('hidden', !document.body.classList.contains('ff-nav-hidden'));
         return;
       }
+      const mini = t.closest('.ff-collapse-btn');
+      if (mini) { setNavState('collapsed', !document.body.classList.contains('ff-nav-collapsed')); return; }
       // tapping a nav item closes the drawer on a phone
       if (!document.body.classList.contains('ff-nav-open')) return;
       const item = t.closest('.ff-nav-item');
@@ -349,7 +402,9 @@
 
   /* --------------------------------------------------------------- boot -- */
   function boot() {
+    applyNavState();
     paint(document);
+    decorateNav(document);
     buildTabbar();
     wireModals();
     wireNav();
@@ -361,7 +416,7 @@
       new MutationObserver(function (muts) {
         for (const m of muts) {
           for (const n of m.addedNodes) {
-            if (n.nodeType === 1) { paint(n); if (n.matches && n.matches('.ff-modal')) wireModals(); }
+            if (n.nodeType === 1) { paint(n); scheduleDecorate(); if (n.matches && n.matches('.ff-modal')) wireModals(); }
           }
         }
       }).observe(document.documentElement, { childList: true, subtree: true });
@@ -374,7 +429,7 @@
     ico: ico, paint: paint, money: money, num: num, cap: cap, initials: initials,
     fmtDate: fmtDate, fmtDateTime: fmtDateTime, timeAgo: timeAgo, colorFor: colorFor,
     normalizeKePhone: normalizeKePhone, toast: toast, openModal: openModal, closeModal: closeModal,
-    wireNav: wireNav, wireModals: wireModals, setTheme: setTheme, loadTheme: loadTheme, buildTabbar: buildTabbar, syncTabbar: syncTabbar,
+    wireNav: wireNav, setNavState: setNavState, decorateNav: decorateNav, wireModals: wireModals, setTheme: setTheme, loadTheme: loadTheme, buildTabbar: buildTabbar, syncTabbar: syncTabbar,
     levelFlags: levelFlags, levelLabel: levelLabel, levelKind: levelKind,
     structureFor: structureFor, mkGrade: mkGrade, curriculumOf: curriculumOf,
     FEE_TEMPLATE: FEE_TEMPLATE, CATEGORIES: CATEGORIES, GRADE_SETS: GRADE_SETS

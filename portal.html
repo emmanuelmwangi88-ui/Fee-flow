@@ -31,10 +31,10 @@
     <!-- Left: what FeeFlow does                                           -->
     <!-- ---------------------------------------------------------------- -->
     <aside class="ff-auth-side">
-      <div class="ff-brand">
-        <div class="ff-brand-mark"><i data-ico="school"></i></div>
-        <div><div class="ff-brand-name" style="color:#fff">FeeFlow</div></div>
-      </div>
+      <a class="ff-auth-home" href="index.html" aria-label="FeeFlow home">
+        <span class="ff-brand-mark"><i data-ico="school"></i></span>
+        <span class="ff-brand-name">FeeFlow</span>
+      </a>
       <h1>School fees, sorted.</h1>
       <p>FeeFlow helps Kenyan schools set their fee structure, track every payment and give parents a clear, always-current picture of what is owed.</p>
       <ul class="ff-auth-list">
@@ -44,7 +44,10 @@
         <li><i data-ico="checkCircle"></i> Parents see their own children only</li>
         <li><i data-ico="checkCircle"></i> Every school's data stays private to that school</li>
       </ul>
-      <div class="ff-auth-side-foot">Built for Kenyan schools · CBC and 8-4-4</div>
+      <div class="ff-auth-side-foot">
+        <a href="index.html"><i data-ico="arrowLeft" data-size="ff-ico-sm"></i> What is FeeFlow?</a>
+        <span>Built for Kenyan schools · CBC and 8-4-4</span>
+      </div>
     </aside>
 
     <!-- ---------------------------------------------------------------- -->
@@ -131,6 +134,8 @@
           </div>
           <p class="ff-hint"><i data-ico="info"></i> Your school must already be registered on FeeFlow. If it is not, ask the school to register — it takes two minutes.</p>
         </div>
+        <label class="ff-consent"><input type="checkbox" id="regAgree">
+          <span>I have read the <a href="legal/terms.html" target="_blank" rel="noopener">Terms of Use</a> and <a href="legal/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, and I understand my child's fee details will be shown to me on FeeFlow.</span></label>
         <button class="ff-btn ff-btn-primary ff-btn-block" id="registerBtn" onclick="registerParent()"><i data-ico="user" data-size="ff-ico-sm"></i> Create account</button>
       </section>
 
@@ -204,6 +209,8 @@
             <input class="ff-input" type="password" id="regSchoolPassword2" placeholder="Repeat password" autocomplete="new-password">
           </div>
         </div>
+        <label class="ff-consent"><input type="checkbox" id="regSchoolAgree">
+          <span>I am authorised to register this school. I accept the <a href="legal/terms.html" target="_blank" rel="noopener">Terms of Use</a>, and I understand the school is the <em>data controller</em> for its pupils' records and FeeFlow acts as its <em>processor</em> (<a href="legal/data-protection.html" target="_blank" rel="noopener">details</a>).</span></label>
         <button class="ff-btn ff-btn-primary ff-btn-block" id="registerSchoolBtn" onclick="registerSchool()"><i data-ico="school" data-size="ff-ico-sm"></i> Create school account</button>
         <p class="ff-auth-note">Already registered? <button type="button" onclick="goBack()">Sign in instead</button></p>
       </section>
@@ -496,6 +503,7 @@ async function registerParent() {
   if (!schoolId) return showError('registerError', 'Search for and select your school.');
   if (pw.length < 8) return showError('registerError', 'Your password must be at least 8 characters.');
   if (pw !== pw2) return showError('registerError', 'The two passwords do not match.');
+  if (!document.getElementById('regAgree').checked) return showError('registerError', 'Please accept the Terms of Use and Privacy Policy to continue.');
 
   const reg = { kind: 'parent', school_id: schoolId, name, phone: '254' + phone9 };
   setBusy('registerBtn', true, 'Creating account…');
@@ -557,6 +565,7 @@ async function registerSchool() {
   if (!EMAIL_RE.test(email)) return showError('registerSchoolError', 'Enter a valid email address.');
   if (pw.length < 8) return showError('registerSchoolError', 'Your password must be at least 8 characters.');
   if (pw !== pw2) return showError('registerSchoolError', 'The two passwords do not match.');
+  if (!document.getElementById('regSchoolAgree').checked) return showError('registerSchoolError', 'Please confirm you are authorised and accept the Terms of Use.');
 
   const reg = {
     kind: 'school', name, location: town, level: schoolLevel, paybill,
@@ -692,6 +701,15 @@ async function init() {
   } catch (e) { /* stay on the sign-in form */ }
 }
 init();
+
+// deep links from the landing page: portal.html?mode=school | parent
+(function () {
+  const m = new URLSearchParams(location.search).get('mode');
+  const tab = m === 'school' ? 'school' : m === 'parent' ? 'register' : '';
+  if (!tab || recoveryMode) return;
+  const btn = document.querySelector('.ff-tab[data-tab="' + tab + '"]');
+  if (btn) switchTab(btn, tab);
+})();
 
 document.addEventListener('keydown', event => {
   if (event.key !== 'Enter' || event.altKey || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
