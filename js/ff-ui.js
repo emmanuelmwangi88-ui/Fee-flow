@@ -51,6 +51,9 @@
     shield: '<path d="M12 3 5 6v5.5c0 4.4 3 8.2 7 9.5 4-1.3 7-5.1 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
     mobile: '<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
     chevron: '<path d="m9 5 7 7-7 7"/>',
+    moon: '<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11Z"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
+    warning: '<path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4.5M12 17h.01"/>',
     chevronLeft: '<path d="m15 5-7 7 7 7"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     arrowRight: '<path d="M4 12h15m0 0-5.5-5.5M19 12l-5.5 5.5"/>',
@@ -115,6 +118,12 @@
     if (/^0[17]\d{8}$/.test(d)) return '254' + d.slice(1);
     if (/^[17]\d{8}$/.test(d)) return '254' + d;
     return null;
+  }
+
+  /* WhatsApp click-to-chat link (opens WhatsApp with the message ready; nothing is sent automatically) */
+  function waLink(phone, text) {
+    const n = normalizeKePhone(phone);
+    return n ? 'https://wa.me/' + n + (text ? '?text=' + encodeURIComponent(text) : '') : null;
   }
 
   /* ------------------------------------------------------------- toasts -- */
@@ -428,7 +437,7 @@
   window.FFUI = {
     ico: ico, paint: paint, money: money, num: num, cap: cap, initials: initials,
     fmtDate: fmtDate, fmtDateTime: fmtDateTime, timeAgo: timeAgo, colorFor: colorFor,
-    normalizeKePhone: normalizeKePhone, toast: toast, openModal: openModal, closeModal: closeModal,
+    normalizeKePhone: normalizeKePhone, waLink: waLink, toast: toast, openModal: openModal, closeModal: closeModal,
     wireNav: wireNav, setNavState: setNavState, decorateNav: decorateNav, wireModals: wireModals, setTheme: setTheme, loadTheme: loadTheme, buildTabbar: buildTabbar, syncTabbar: syncTabbar,
     levelFlags: levelFlags, levelLabel: levelLabel, levelKind: levelKind,
     structureFor: structureFor, mkGrade: mkGrade, curriculumOf: curriculumOf,

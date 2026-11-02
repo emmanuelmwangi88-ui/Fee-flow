@@ -63,6 +63,7 @@ async function openPage(page, o = {}) {
   vc.on('jsdomError', e => { const m = e.message.split('\n')[0]; if (/Not implemented: navigation/.test(m)) navs++; else errors.push(m); });
   const dom = new JSDOM(fs.readFileSync(path.join(ROOT, page), 'utf8'), { url: 'http://localhost/' + page, runScripts: 'dangerously', resources: new Loader(), virtualConsole: vc, pretendToBeVisual: true,
     beforeParse(w) {
+      if (o.pre) o.pre(w);
       w.supabase = { createClient: () => mock.client };
       w.alert = (m) => { (w.__alerts = w.__alerts || []).push(m); };
       w.confirm = (m) => { (w.__confirms = w.__confirms || []).push(m); return o.confirm !== false; };

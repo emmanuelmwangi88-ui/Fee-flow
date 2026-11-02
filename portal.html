@@ -64,6 +64,7 @@
           <button class="ff-tab active" data-tab="login" role="tab" aria-selected="true" onclick="switchTab(this,'login')"><i data-ico="key" data-size="ff-ico-sm"></i> Sign in</button>
           <button class="ff-tab" data-tab="register" role="tab" aria-selected="false" onclick="switchTab(this,'register')"><i data-ico="user" data-size="ff-ico-sm"></i> Parent</button>
           <button class="ff-tab" data-tab="school" role="tab" aria-selected="false" onclick="switchTab(this,'school')"><i data-ico="school" data-size="ff-ico-sm"></i> School</button>
+          <button class="ff-tab" data-tab="staff" role="tab" aria-selected="false" onclick="switchTab(this,'staff')"><i data-ico="users" data-size="ff-ico-sm"></i> Staff</button>
         </div>
 
         <div class="ff-auth-msg" id="loginNotice" role="status"><i data-ico="checkCircle"></i><div id="loginNoticeText"></div></div>
@@ -215,6 +216,24 @@
         <p class="ff-auth-note">Already registered? <button type="button" onclick="goBack()">Sign in instead</button></p>
       </section>
 
+      <!-- STAFF — join a school you were invited to -->
+      <section id="stepStaff" style="display:none">
+        <button class="ff-auth-back" type="button" onclick="goBack()"><i data-ico="arrowLeft" data-size="ff-ico-sm"></i> Back</button>
+        <h2>Join your school's team</h2>
+        <p class="ff-auth-sub">The school owner must invite your email address first. Register with exactly that address.</p>
+        <div class="ff-auth-msg error" id="registerStaffError" role="alert"><i data-ico="alert"></i><div id="registerStaffErrorText"></div></div>
+        <div class="ff-field"><label class="ff-label" for="regStaffName">Your full name</label><input class="ff-input" type="text" id="regStaffName" autocomplete="name"></div>
+        <div class="ff-field"><label class="ff-label" for="regStaffEmail">Email address</label><input class="ff-input" type="email" id="regStaffEmail" autocomplete="email"></div>
+        <div class="ff-row">
+          <div class="ff-field"><label class="ff-label" for="regStaffPassword">Password</label><input class="ff-input" type="password" id="regStaffPassword" autocomplete="new-password" placeholder="At least 8 characters"></div>
+          <div class="ff-field"><label class="ff-label" for="regStaffPassword2">Confirm password</label><input class="ff-input" type="password" id="regStaffPassword2" autocomplete="new-password"></div>
+        </div>
+        <label class="ff-consent"><input type="checkbox" id="regStaffAgree">
+          <span>I will use pupil and payment records only for my work at this school, and I accept the <a href="legal/terms.html" target="_blank" rel="noopener">Terms of Use</a>.</span></label>
+        <button class="ff-btn ff-btn-primary ff-btn-block" id="registerStaffBtn" onclick="registerStaff()"><i data-ico="users" data-size="ff-ico-sm"></i> Join school</button>
+        <p class="ff-auth-note">Already registered? <button type="button" onclick="goBack()">Sign in instead</button></p>
+      </section>
+
       <!-- STEP 3 — confirm the email address -->
       <section id="stepVerifyReg" style="display:none" class="ff-auth-centre">
         <div class="ff-round"><i data-ico="mail"></i></div>
@@ -305,6 +324,7 @@
 <script src="js/config.js"></script>
 <script src="js/ff-client.js"></script>
 <script src="js/ff-ui.js"></script>
+<script src="js/i18n.js"></script>
 <script>
 'use strict';
 // ============================================================
@@ -320,7 +340,7 @@ if (!window.FF) {
 const sb = FF.sb;
 const escapeHtml = FF.escapeHtml;
 const ico = FFUI.ico;
-const STEPS = ['stepLogin', 'stepRegister', 'stepSchool', 'stepVerifyReg', 'stepAddChildren', 'stepNewPassword'];
+const STEPS = ['stepLogin', 'stepRegister', 'stepSchool', 'stepStaff', 'stepVerifyReg', 'stepAddChildren', 'stepNewPassword'];
 const CHILD_COLORS = ['#1a6dcc', '#0ea5a4', '#8b5cf6', '#d97706', '#dc2626', '#059669'];
 
 let SCHOOLS = [];
@@ -370,8 +390,8 @@ function switchTab(el, tab) {
   document.querySelectorAll('.ff-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
   el.classList.add('active');
   el.setAttribute('aria-selected', 'true');
-  hideError('loginError'); hideError('registerError'); hideError('registerSchoolError'); hideNotice();
-  showStep(tab === 'login' ? 'stepLogin' : tab === 'school' ? 'stepSchool' : 'stepRegister');
+  hideError('loginError'); hideError('registerError'); hideError('registerSchoolError'); hideError('registerStaffError'); hideNotice();
+  showStep(tab === 'login' ? 'stepLogin' : tab === 'school' ? 'stepSchool' : tab === 'staff' ? 'stepStaff' : 'stepRegister');
   if (tab !== 'login') loadSchools();
 }
 function goBack() {
@@ -467,6 +487,10 @@ async function routeAfterLogin(user) {
     await completeSchoolRegistration(user, reg);
     return;
   }
+  if (reg && reg.kind === 'staff') {
+    await completeStaffRegistration(user, reg);
+    return;
+  }
   if (reg && reg.school_id) {
     currentParentId = await completeRegistration(user, reg);
     registeredChildren = [];
@@ -530,6 +554,44 @@ async function registerParent() {
     showError('registerError', FF.friendlyError(e));
   } finally {
     setBusy('registerBtn', false);
+  }
+}
+
+// ---------- staff joining an invited school ----------
+async function completeStaffRegistration(user, reg) {
+  const { error } = await sb.rpc('accept_staff_invite', { p_name: reg.name });
+  if (error) { await sb.auth.signOut(); throw error; }
+  sb.auth.updateUser({ data: { reg: null } }).catch(() => {});
+  const profile = await FF.getProfile();
+  go(profile ? FF.routeFor(profile.role) : 'schooladmin.html');
+}
+
+async function registerStaff() {
+  hideError('registerStaffError');
+  const name = val('regStaffName'), email = val('regStaffEmail').toLowerCase();
+  const pw = document.getElementById('regStaffPassword').value, pw2 = document.getElementById('regStaffPassword2').value;
+  if (name.length < 2) return showError('registerStaffError', 'Enter your full name.');
+  if (!EMAIL_RE.test(email)) return showError('registerStaffError', 'Enter a valid email address.');
+  if (pw.length < 8) return showError('registerStaffError', 'Your password must be at least 8 characters.');
+  if (pw !== pw2) return showError('registerStaffError', 'The two passwords do not match.');
+  if (!document.getElementById('regStaffAgree').checked) return showError('registerStaffError', 'Please accept the Terms of Use to continue.');
+  const reg = { kind: 'staff', name };
+  setBusy('registerStaffBtn', true, 'Joining…');
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: pw,
+      options: { data: { full_name: name, reg }, emailRedirectTo: new URL('portal.html', location.href).href }
+    });
+    if (error) throw error;
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      throw new Error('An account with this email already exists. Please log in instead.');
+    }
+    if (data.session) await completeStaffRegistration(data.user, reg);
+    else { document.getElementById('confirmEmailAddress').textContent = email; showStep('stepVerifyReg'); }
+  } catch (e) {
+    showError('registerStaffError', /invitation/i.test(String(e && e.message)) ? e.message : FF.friendlyError(e));
+  } finally {
+    setBusy('registerStaffBtn', false);
   }
 }
 
@@ -705,7 +767,7 @@ init();
 // deep links from the landing page: portal.html?mode=school | parent
 (function () {
   const m = new URLSearchParams(location.search).get('mode');
-  const tab = m === 'school' ? 'school' : m === 'parent' ? 'register' : '';
+  const tab = m === 'school' ? 'school' : m === 'parent' ? 'register' : m === 'staff' ? 'staff' : '';
   if (!tab || recoveryMode) return;
   const btn = document.querySelector('.ff-tab[data-tab="' + tab + '"]');
   if (btn) switchTab(btn, tab);
@@ -718,6 +780,7 @@ document.addEventListener('keydown', event => {
   if (visible('stepLogin') && (id === 'loginEmail' || id === 'loginPassword')) { event.preventDefault(); signIn(); }
   else if (visible('stepRegister') && ['regName', 'regPhone', 'regEmail', 'regPassword', 'regPassword2'].includes(id)) { event.preventDefault(); registerParent(); }
   else if (visible('stepSchool') && ['regSchoolName', 'regSchoolLocation', 'regSchoolPhone', 'regSchoolPaybill', 'regSchoolAdminName', 'regSchoolEmail', 'regSchoolPassword', 'regSchoolPassword2'].includes(id)) { event.preventDefault(); registerSchool(); }
+  else if (visible('stepStaff') && ['regStaffName', 'regStaffEmail', 'regStaffPassword', 'regStaffPassword2'].includes(id)) { event.preventDefault(); registerStaff(); }
   else if (visible('stepAddChildren') && ['childName', 'childAdm', 'childClass'].includes(id)) { event.preventDefault(); addChild(); }
   else if (visible('stepNewPassword') && (id === 'newPassword' || id === 'newPassword2')) { event.preventDefault(); updatePassword(); }
 });

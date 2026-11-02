@@ -54,7 +54,7 @@ tests/         front-end tests (simulated browser + mock Supabase)
 npm install      # jsdom, for the front-end tests only
 npm test         # front-end checks
 ```
-SQL tests are in `supabase/tests/` (`rls_smoke.sql`, `access_matrix.sql`, `migration_0006.sql`, `fee_adjustments.sql`); each ends with a deliberate error that rolls everything back, and a successful run is a message listing only `PASS` lines. Re-run them after any schema or policy change.
+SQL tests are in `supabase/tests/` (`rls_smoke.sql`, `access_matrix.sql`, `migration_0006.sql`, `fee_adjustments.sql`, `operations.sql`); each ends with a deliberate error that rolls everything back, and a successful run is a message listing only `PASS` lines. Re-run them after any schema or policy change.
 
 ## Still to do
 

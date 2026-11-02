@@ -9,7 +9,7 @@
 /* Bump this whenever the shell changes. `activate` deletes every cache whose name is not
    this one, so the bump is what evicts files that were removed from SHELL and guarantees
    existing installs pick up new code instead of serving a stale copy. */
-const VERSION = 'feeflow-v3';
+const VERSION = 'feeflow-v4';
 const SHELL = [
   './',
   './index.html',
@@ -19,6 +19,8 @@ const SHELL = [
   './superadmin.html',
   './fee-structure-manager.html',
   './fee-adjustments.html',
+  './school-tools.html',
+  './platform-tools.html',
   './legal/privacy.html',
   './legal/terms.html',
   './legal/data-protection.html',
@@ -27,8 +29,11 @@ const SHELL = [
   './js/ff-client.js',
   './js/ff-ui.js',
   './js/business.js',
+  './js/i18n.js',
   './js/fee-manager.js',
   './js/fee-adjustments.js',
+  './js/school-tools.js',
+  './js/platform-tools.js',
   './js/config.js',
   './js/vendor/supabase-2.117.2.js',
   './manifest.webmanifest',

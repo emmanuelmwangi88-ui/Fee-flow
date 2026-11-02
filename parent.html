@@ -122,6 +122,7 @@
   <script src="js/config.js"></script>
   <script src="js/ff-client.js"></script>
 <script src="js/ff-ui.js"></script>
+<script src="js/i18n.js"></script>
   <script>
     'use strict';
     if (!window.FF) { document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;text-align:center;">FeeFlow could not load. Check your internet connection and refresh the page.</div>'; throw new Error('FeeFlow client failed to load'); }
@@ -226,6 +227,7 @@
       subscribeRealtime();
     }
 
+    let plans = [], certs = [];
     async function loadSchoolData() {
       const pid = parent.id, sid = parent.school_id;
       const [schoolR, kidsR, payR, notifR, linksR, pubR, termsR] = await Promise.all([
@@ -259,6 +261,15 @@
         date: fmtDateTime(x.completed_at || x.created_at), paybill: school.paybill
       }));
       notifications = (notifR.data || []).map(n => ({ ...n, time: timeAgo(n.created_at) }));
+      // Optional extras: a missing table or permission must never stop the page loading.
+      try {
+        const [plR, clR] = await Promise.all([
+          sb.from('instalment_plans').select('id, student_id, parts, paid_at_creation, instalment_items(seq, due_date, amount)').eq('active', true),
+          sb.from('clearance_certificates').select('student_id, serial, issued_at, label').order('issued_at', { ascending: false })
+        ]);
+        plans = plR.error ? [] : (plR.data || []);
+        certs = clR.error ? [] : (clR.data || []);
+      } catch (e) { plans = []; certs = []; }
       const links = linksR.data || [];
       pendingCount = links.filter(l => l.status === 'pending').length;
       rejectedCount = links.filter(l => l.status === 'rejected').length;
@@ -667,6 +678,30 @@ function renderShell() {
       }).join("");
     }
 
+    // instalment schedule + clearance certificates the school has set up for this child
+    function extrasMarkup(child) {
+      let html = '';
+      const plan = plans.find(p => p.student_id === child.id);
+      if (plan) {
+        const items = (plan.instalment_items || []).slice().sort((a, b) => a.seq - b.seq);
+        const paidSince = Math.max(0, child.paid - Number(plan.paid_at_creation || 0)); let cum = 0;
+        const today = new Date().toISOString().slice(0, 10);
+        html += `<div style="margin-bottom:20px;"><h4 style="margin:0 0 8px 0;color:var(--ff-text);font-size:14px;">Instalment plan agreed with the school</h4><div class="ff-table-wrap"><table style="width:100%;font-size:12.5px;"><thead><tr><th>#</th><th>Due</th><th>Amount</th><th>Status</th></tr></thead><tbody>` +
+          items.map(it => { cum += Number(it.amount); const done = paidSince >= cum - 0.005; const late = !done && it.due_date < today;
+            return `<tr><td>${it.seq}</td><td>${escapeHtml(fmtDate(it.due_date))}</td><td>${money(it.amount)}</td><td>${done ? '<span class="ff-badge green">Paid</span>' : late ? '<span class="ff-badge red">Overdue</span>' : '<span class="ff-badge blue">Upcoming</span>'}</td></tr>`; }).join('') + '</tbody></table></div></div>';
+      }
+      const c = certs.find(x => x.student_id === child.id);
+      if (c) html += `<div class="ff-alert success" style="margin-bottom:20px;"><div><strong>Fee clearance ${escapeHtml(c.serial)}</strong> was issued on ${escapeHtml(fmtDate(c.issued_at))}${c.label ? ' (' + escapeHtml(c.label) + ')' : ''}. Ask the school office for the stamped copy.</div></div>`;
+      if (Number(child.balance) > 0 && !child.noFee) html += `<div style="margin-bottom:20px;"><button class="ff-btn ff-btn-outline" type="button" onclick="shareBalance('${escapeHtml(child.id)}')">${ico('send', 'ff-ico-sm')} Share balance on WhatsApp</button></div>`;
+      return html;
+    }
+    // opens WhatsApp with the message ready (e.g. to send to the other parent); nothing is sent automatically
+    function shareBalance(childId) {
+      const child = children.find(c => c.id === childId); if (!child) return;
+      const text = child.name + ' (' + child.adm + ') has a fee balance of ' + money(child.balance) + ' at ' + (school.name || 'school') + '. Pay via M-Pesa paybill ' + (school.paybill || '(ask the school)') + ', account ' + child.adm + '.';
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+    }
+
     function openChildDetailsModal(childId) {
       const child = children.find(c => c.id === childId);
       if (!child) return;
@@ -707,6 +742,7 @@ function renderShell() {
           </div>
           ${feeBreakdownHtml}
         </div>
+        ${extrasMarkup(child)}
         <div>
           <h4 style="margin:0 0 8px 0;color:var(--ff-text);font-size:14px;">Payment History (${childPayments.length})</h4>
           <div class="ff-table-wrap"><table style="width:100%;font-size:12.5px;"><thead><tr><th>Date</th><th>Ref</th><th>Amount</th><th>Status</th></tr></thead><tbody>${payRows}</tbody></table></div>

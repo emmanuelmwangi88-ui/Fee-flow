@@ -25,7 +25,7 @@
     const user = await getUser();
     if (!user) return null;
     const { data, error } = await sb.from('profiles')
-      .select('id, role, school_id, full_name').eq('id', user.id).maybeSingle();
+      .select('id, role, school_id, full_name, staff_role').eq('id', user.id).maybeSingle();
     if (error) throw error;
     return data ? { ...data, email: user.email } : null;
   }

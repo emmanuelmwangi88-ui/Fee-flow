@@ -120,6 +120,24 @@ const rolesUser = { id: 'u-1', email: 'x@example.com', user_metadata: {} };
   await tryReg({ regPassword2: 'different12' }, /do not match/i, 'password mismatch rejected');
   ok(!p.mock.calls.some(c => c[0] === 'signUp'), 'nothing sent to the server while the form is invalid');
 
+  // ---------- staff joining an invited school ----------
+  p = await open({ signUpSession: true, profile: { id: 'u-new', role: 'school_admin', school_id: 's-1' }, rpc: { accept_staff_invite: () => ({ data: 's-1', error: null }) } });
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="staff"]'), 'staff');
+  ok(p.shown('stepStaff') && !p.shown('stepLogin'), 'Staff tab opens the staff form');
+  const fillStaff = (o = {}) => { const v = { regStaffName: 'Sam Bursar', regStaffEmail: 'Sam@School.ke', regStaffPassword: 'longenough1', regStaffPassword2: 'longenough1', ...o }; for (const k in v) if (k !== 'agree') p.set(k, v[k]); p.d.getElementById('regStaffAgree').checked = o.agree !== false; };
+  fillStaff({ agree: false }); await p.w.registerStaff(); await tick();
+  ok(/Terms of Use/i.test(p.err('registerStaffError')) && !p.mock.calls.some(c => c[0] === 'signUp'), 'staff sign-up needs the terms checkbox');
+  fillStaff({ regStaffPassword2: 'nope12345' }); await p.w.registerStaff(); await tick();
+  ok(/do not match/i.test(p.err('registerStaffError')), 'staff password mismatch rejected');
+  fillStaff(); await p.w.registerStaff(); await tick();
+  const sus = p.mock.calls.find(c => c[0] === 'signUp')[1];
+  ok(sus.email === 'sam@school.ke' && sus.options.data.reg.kind === 'staff', 'staff signUp carries reg.kind=staff and lower-cased email');
+  ok(p.mock.calls.some(c => c[0] === 'rpc' && c[1] === 'accept_staff_invite') && p.nav().includes('schooladmin.html'), 'staff accept the invite and land on the school dashboard');
+  p = await open({ signUpSession: true, rpc: { accept_staff_invite: () => ({ data: null, error: { message: 'No staff invitation was found for this email address' } }) } });
+  p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="staff"]'), 'staff');
+  fillStaff(); await p.w.registerStaff(); await tick();
+  ok(/invitation/i.test(p.err('registerStaffError')) && p.mock.calls.some(c => c[0] === 'signOut'), 'uninvited staff sign-up is refused, shown why, and signed out');
+
   // ---------- registration success (email confirmation OFF) ----------
   p = await open({ signUpSession: true, rpc: { register_parent: () => ({ data: 'parent-uuid-1', error: null }) } });
   p.w.switchTab(p.d.querySelector('.ff-tab[data-tab="register"]'), 'register');

@@ -63,6 +63,7 @@
                     <div class="ff-nav-item" data-section="outstanding" onclick="navigate('outstanding',this)"><i data-ico="alert"></i> Outstanding <span class="ff-nav-badge" id="navOverdueCount">0</span></div>
                     <div class="ff-nav-item" data-section="mpesa" onclick="navigate('mpesa',this)"><i data-ico="mobile"></i> M-Pesa Reconcile</div>
                     <div class="ff-nav-item" data-section="adjustments" onclick="window.location.href='fee-adjustments.html'"><i data-ico="receipt"></i> Bursaries &amp; Discounts</div>
+                    <div class="ff-nav-item" data-section="operations" onclick="window.location.href='school-tools.html'"><i data-ico="clipboard"></i> Operations</div>
                 </div>
                 <div class="ff-nav-group">
                     <div class="ff-nav-label">Tools</div>
@@ -867,6 +868,7 @@
 <script src="js/config.js"></script>
 <script src="js/ff-client.js"></script>
 <script src="js/ff-ui.js"></script>
+<script src="js/i18n.js"></script>
 <script>
 'use strict';
 // ============================================================
@@ -1221,8 +1223,19 @@ function renderOutstanding() {
             <td>${s.overdueDays > 0 ? `<span class="overdue-badge ${oc}">${s.overdueDays}d</span>` : '<span style="font-size:12px;color:var(--ff-muted);">—</span>'}</td>
             <td style="font-size:12px;">${esc(s.parentPhone)}</td>
             <td><button class="ff-btn ff-btn-outline ff-btn-sm" onclick="sendReminder('${esc(s.id)}')" aria-label="Send reminder"><i data-ico="send"></i></button>
+                <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="whatsappReminder('${esc(s.id)}')" aria-label="Remind on WhatsApp" title="Remind on WhatsApp"><i data-ico="phone"></i></button>
                 <button class="ff-btn ff-btn-outline ff-btn-sm" onclick="viewStudentLedger('${esc(s.id)}')" aria-label="View ledger"><i data-ico="eye"></i></button></td></tr>`;
     }).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ff-muted);">No outstanding balances. 🎉</td></tr>';
+}
+
+// Opens WhatsApp with the reminder typed out; the bursar presses send. Nothing is sent automatically.
+function whatsappReminder(id) {
+    const s = schoolData.students.find(x => x.id === id); if (!s) return;
+    const sch = school || {};
+    const text = 'Dear parent of ' + s.name + ' (' + s.adm + '), ' + (sch.name || 'the school') + ' reminds you that the fee balance is ' + money(s.balance) + '. Pay via M-Pesa paybill' + (sch.paybill ? ' ' + sch.paybill : '') + ', account ' + s.adm + '. Thank you.';
+    const url = FFUI.waLink(s.parentPhone, text);
+    if (!url) { showToast('This pupil has no valid guardian phone number.', 'error'); return; }
+    window.open(url, '_blank', 'noopener');
 }
 
 function renderMpesa() {

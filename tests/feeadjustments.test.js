@@ -61,7 +61,7 @@ const base = (extra = {}) => ({
   ok(p.errors.length === 0, 'page loads with no script errors', p.errors.join('|'));
   ok(p.d.getElementById('ffApp').style.display === 'flex', 'the app shell is shown for a school admin');
   ok(/Don Bosco Ituru/.test(p.text('schoolNameDisplay')), 'the school name is shown');
-  ok(p.d.querySelectorAll('.ff-nav-item').length === 4, 'four sections in the sidebar');
+  ok(p.d.querySelectorAll('.ff-nav-item[data-tab]').length === 4 && !!p.d.querySelector('a.ff-nav-item[href="school-tools.html"]'), 'four sections in the sidebar plus a link to Operations');
   ok(p.d.getElementById('view-discounts').classList.contains('active') && p.d.querySelectorAll('.ff-view').length === 4, 'discounts view is the default');
 ok(p.d.getElementById('adjustKindFilter').querySelectorAll('option').length === 10, 'the kind filter offers every kind plus "all"');
 

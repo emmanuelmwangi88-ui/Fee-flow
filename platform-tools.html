@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FeeFlow — Platform tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0c2d57">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FeeFlow">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png">
+  <meta name="description" content="FeeFlow — platform health, school invoices, trials and the support inbox.">
+  <link rel="stylesheet" href="css/ff.css">
+</head>
+<body>
+
+<div id="app">
+  <div id="unauthorizedPage" style="display:none">
+    <div class="ff-empty">
+      <i data-ico="lock"></i>
+      <h2>Access Denied</h2>
+      <p>You need to be signed in as the FeeFlow platform administrator to use this page.</p>
+      <a href="portal.html" class="ff-btn ff-btn-primary"><i data-ico="key"></i> Go to Login</a>
+    </div>
+  </div>
+
+  <div class="ff-app" id="ffApp" style="display:none">
+    <aside class="ff-sidebar">
+      <div class="ff-brand">
+        <div class="ff-brand-mark"><i data-ico="student"></i></div>
+        <div>
+          <div class="ff-brand-name">FeeFlow</div>
+          <span class="ff-brand-tag">PLATFORM</span>
+        </div>
+      </div>
+            
+      <nav class="ff-nav">
+        <div class="ff-nav-group">
+          <div class="ff-nav-label">Platform</div>
+          <div class="ff-nav-item active" data-tab="health" onclick="PT.go('health',this)" data-short="Health"><i data-ico="shield"></i> Health</div>
+          <div class="ff-nav-item" data-tab="billing" onclick="PT.go('billing',this)" data-short="Billing"><i data-ico="receipt"></i> Invoices</div>
+          <div class="ff-nav-item" data-tab="trials" onclick="PT.go('trials',this)" data-short="Trials"><i data-ico="clock"></i> Trials</div>
+          <div class="ff-nav-item" data-tab="support" onclick="PT.go('support',this)" data-short="Support"><i data-ico="mail"></i> Support inbox</div>
+        </div>
+      </nav>
+
+      <div class="ff-sidebar-foot">
+        <button class="ff-btn ff-btn-outline ff-btn-block" type="button" onclick="window.location.href='superadmin.html'">
+          <i data-ico="arrowLeft" data-size="ff-ico-sm"></i> Back to Super Admin
+        </button>
+      </div>
+    </aside>
+
+    <div class="ff-main">
+      <header class="ff-topbar">
+        <button class="ff-btn ff-btn-icon ff-btn-ghost" type="button" data-ff-nav-toggle aria-label="Menu"><i data-ico="menu"></i></button>
+        <div class="ff-crumb">FeeFlow / <strong id="pageTitle">Health</strong></div>
+        <div class="ff-topbar-right">
+          <button class="ff-btn ff-btn-icon ff-btn-ghost" type="button" id="themeBtn" aria-label="Toggle dark mode"><i data-ico="moon"></i></button>
+        </div>
+      </header>
+
+      <div class="ff-content">
+        <div class="ff-alert warning" id="banner" style="display:none;margin-bottom:16px" role="alert"><i data-ico="alert"></i><div id="bannerText"></div></div>
+
+        <section class="ff-view active" id="view-health"></section>
+        <section class="ff-view" id="view-billing"></section>
+        <section class="ff-view" id="view-trials"></section>
+        <section class="ff-view" id="view-support"></section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- generic modal used for every small form on this page -->
+<div class="ff-modal" id="modal-op">
+  <div class="ff-modal-box">
+    <div class="ff-modal-head">
+      <div class="ff-modal-title" id="opTitle">…</div>
+      <button class="ff-btn ff-btn-icon ff-btn-ghost" type="button" onclick="FFUI.closeModal('op')" aria-label="Close"><i data-ico="times"></i></button>
+    </div>
+    <div class="ff-modal-body" id="opBody"></div>
+    <div class="ff-modal-foot">
+      <button class="ff-btn ff-btn-outline" type="button" onclick="FFUI.closeModal('op')">Cancel</button>
+      <button class="ff-btn ff-btn-primary" type="button" id="opOk">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script src="js/config.js"></script>
+<script src="js/ff-client.js"></script>
+<script src="js/ff-ui.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/platform-tools.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>

@@ -12,7 +12,7 @@ const { ok, tick, summary, openPage } = require('./lib');
 const ROOT = path.resolve(__dirname, '..');
 const PAGES = [
   'portal.html', 'parent.html', 'schooladmin.html', 'superadmin.html',
-  'fee-structure-manager.html', 'fee-adjustments.html', 'index.html'
+  'fee-structure-manager.html', 'fee-adjustments.html', 'school-tools.html', 'platform-tools.html', 'index.html'
 ];
 const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
