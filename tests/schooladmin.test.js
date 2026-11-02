@@ -283,5 +283,23 @@ const q = (p, f) => p.mock.calls.filter(c => c.kind === 'query' && f(c));
   p = await openPage('schooladmin.html', base()); p.w.logout(); await tick(); ok(p.mock.calls.some(c => c.kind === 'signOut'), 'logout signs out');
   ok(!p.mock.calls.some(c => c.kind === 'query' && c.table === 'schools' && !c.filters.some(f => f[0] === 'id' && f[1] === 'sc-1') && c.op === 'select'), 'only ever asks for its own school row');
 
+  // ---------- settings page: tabs keep it visible; light/dark and compact work ----------
+  p = await openPage('schooladmin.html', base());
+  p.w.navigate('settings', p.d.querySelector('[data-section="settings"]'));
+  const vis = id => p.d.getElementById(id).classList.contains('active');
+  ok(vis('sec-settings') && vis('settings-school'), 'Settings opens with School Info showing');
+  for (const t of ['paybill', 'terms', 'notifications', 'appearance', 'school']) {
+    p.w.switchSettingsTab(t, null);
+    ok(vis('sec-settings') && vis('settings-' + t) && p.d.querySelectorAll('[id^="settings-"].active').length === 1, `Settings tab "${t}" shows and Settings itself stays visible`);
+  }
+  p.w.switchSettingsTab('appearance', null);
+  const sel = p.d.getElementById('themeSelect');
+  sel.value = 'dark'; sel.dispatchEvent(new p.w.Event('change'));
+  ok(p.d.documentElement.getAttribute('data-theme') === 'dark', 'choosing Dark switches the theme');
+  sel.value = 'light'; sel.dispatchEvent(new p.w.Event('change'));
+  ok(p.d.documentElement.getAttribute('data-theme') === 'light', 'choosing Light switches back');
+  const cb = p.d.getElementById('compactTables'); cb.checked = true; p.w.savePreferences();
+  ok(p.d.body.classList.contains('ff-compact'), 'compact table spacing applies');
+
   summary();
 })().catch(e => { console.error('HARNESS ERROR', e); process.exit(2); });

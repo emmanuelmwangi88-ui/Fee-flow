@@ -590,7 +590,7 @@
                     </div>
 
                     <!-- School Info -->
-                    <div class="ff-view" id="settings-school">
+                    <div class="ff-view active" id="settings-school">
                         <div class="ff-card">
                             <div class="ff-card-head"><div class="ff-card-title">School Information</div></div>
                             <div class="ff-card-body">
@@ -1377,15 +1377,15 @@ function populateSelects() {
 // ============================================================
 function navigate(section, el) {
     document.querySelectorAll('.ff-nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('[id^="sec-"]').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
     $('sec-' + section).classList.add('active');
     $('breadcrumb').textContent = cap(section);
 }
 function showSection(section) { navigate(section, document.querySelector(`[data-section=${section}]`)); }
 function switchSettingsTab(tab, btn) {
-    document.querySelectorAll('.ff-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.ff-view').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#sec-settings .ff-tabs .ff-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('[id^="settings-"]').forEach(s => s.classList.remove('active'));
     if (btn) btn.classList.add('active');
     $('settings-' + tab).classList.add('active');
     if (tab === 'paybill') loadMpesaStatus();
@@ -1760,8 +1760,9 @@ async function changePassword() {
     $('newPasswordInput').value = ''; $('newPasswordInput2').value = '';
     showToast('Password changed', 'success');
 }
-function setTheme(mode) { try { localStorage.setItem('ff_theme', mode); } catch (e) { /* ignore */ } const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme:dark)').matches); document.body.classList.toggle('dark', dark); }
-function savePreferences() { try { localStorage.setItem('ff_compact', $('compactTables') && $('compactTables').checked ? '1' : '0'); } catch (e) { /* ignore */ } showToast('Preferences saved', 'success'); }
+function setTheme(mode) { FFUI.setTheme(mode); }
+function applyCompact(on) { document.body.classList.toggle('ff-compact', !!on); }
+function savePreferences() { const on = !!($('compactTables') && $('compactTables').checked); try { localStorage.setItem('ff_compact', on ? '1' : '0'); } catch (e) { /* ignore */ } applyCompact(on); showToast('Preferences saved', 'success'); }
 
 // ============================================================
 // EXPORTS (real CSV downloads)
@@ -1803,9 +1804,9 @@ function showToast(message, type) { FFUI.toast(message, type || 'info'); }
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    let theme = 'light'; try { theme = localStorage.getItem('ff_theme') || 'light'; } catch (e) { /* ignore */ }
-    setTheme(theme);
+    const theme = FFUI.loadTheme();
     const t = $('themeSelect'); if (t) t.value = theme;
+    try { const c = $('compactTables'); if (c) { c.checked = localStorage.getItem('ff_compact') === '1'; applyCompact(c.checked); } } catch (e) { /* ignore */ }
     checkAuth();
 });
 </script>
